@@ -7,9 +7,9 @@ import { notFoundHandler } from './common/middleware/notFound';
 import { errorHandler } from './common/middleware/errorHandler';
 import { authRouter } from './modules/auth/auth.routes';
 import { usersRouter } from './modules/users/users.routes';
+import { museumsRouter } from './modules/museums/museums.routes';
+import { artifactsRouter } from './modules/artifacts/artifacts.routes';
 // Future module routers:
-// import { museumsRouter } from './modules/museums/museums.routes';
-// import { artifactsRouter } from './modules/artifacts/artifacts.routes';
 // import { restoredArtifactsRouter } from './modules/restored-artifacts/restoredArtifacts.routes';
 // import { ticketsRouter } from './modules/tickets/tickets.routes';
 // import { eventsRouter } from './modules/events/events.routes';
@@ -34,8 +34,8 @@ app.get('/health', (_req, res) => {
 // Module routers
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
-// app.use('/api/museums', museumsRouter);
-// app.use('/api/artifacts', artifactsRouter);
+app.use('/api/museums', museumsRouter);
+app.use('/api/artifacts', artifactsRouter);
 // app.use('/api/restored-artifacts', restoredArtifactsRouter);
 // app.use('/api/tickets', ticketsRouter);
 // app.use('/api/events', eventsRouter);
