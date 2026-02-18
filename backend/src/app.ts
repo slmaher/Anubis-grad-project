@@ -12,12 +12,12 @@ import { artifactsRouter } from './modules/artifacts/artifacts.routes';
 import { ticketsRouter } from './modules/tickets/tickets.routes';
 import { eventsRouter } from './modules/events/events.routes';
 import { restoredArtifactsRouter } from './modules/restored-artifacts/restoredArtifacts.routes';
+import { chatRouter } from './modules/chat/chat.routes';
 // Future module routers:
 // import { reviewsRouter } from './modules/reviews/reviews.routes';
 // import { donationsRouter } from './modules/donations/donations.routes';
 // import { volunteersRouter } from './modules/volunteers/volunteers.routes';
 // import { tourGuidesRouter } from './modules/tour-guides/tourGuides.routes';
-// import { chatRouter } from './modules/chat/chat.routes';
 
 const app = express();
 
@@ -39,11 +39,11 @@ app.use('/api/artifacts', artifactsRouter);
 app.use('/api/tickets', ticketsRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/restored-artifacts', restoredArtifactsRouter);
+app.use('/api/chat', chatRouter);
 // app.use('/api/reviews', reviewsRouter);
 // app.use('/api/donations', donationsRouter);
 // app.use('/api/volunteers', volunteersRouter);
 // app.use('/api/tour-guides', tourGuidesRouter);
-// app.use('/api/chat', chatRouter);
 
 // 404 + error handlers
 app.use(notFoundHandler);
