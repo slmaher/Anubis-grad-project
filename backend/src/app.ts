@@ -11,8 +11,8 @@ import { museumsRouter } from './modules/museums/museums.routes';
 import { artifactsRouter } from './modules/artifacts/artifacts.routes';
 import { ticketsRouter } from './modules/tickets/tickets.routes';
 import { eventsRouter } from './modules/events/events.routes';
+import { restoredArtifactsRouter } from './modules/restored-artifacts/restoredArtifacts.routes';
 // Future module routers:
-// import { restoredArtifactsRouter } from './modules/restored-artifacts/restoredArtifacts.routes';
 // import { reviewsRouter } from './modules/reviews/reviews.routes';
 // import { donationsRouter } from './modules/donations/donations.routes';
 // import { volunteersRouter } from './modules/volunteers/volunteers.routes';
@@ -38,7 +38,7 @@ app.use('/api/museums', museumsRouter);
 app.use('/api/artifacts', artifactsRouter);
 app.use('/api/tickets', ticketsRouter);
 app.use('/api/events', eventsRouter);
-// app.use('/api/restored-artifacts', restoredArtifactsRouter);
+app.use('/api/restored-artifacts', restoredArtifactsRouter);
 // app.use('/api/reviews', reviewsRouter);
 // app.use('/api/donations', donationsRouter);
 // app.use('/api/volunteers', volunteersRouter);
