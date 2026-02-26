@@ -12,16 +12,19 @@ export default function MuseumProfile() {
   const [activeTab, setActiveTab] = useState("Overview");
   const [isFavorite, setIsFavorite] = useState(false);
 
-  // Museum data (in real app, fetch based on params.id)
+  // Museum data (now receives real data via params where possible)
   const museum = {
-    id: params.id || 1,
+    id: params.id,
     name: params.name || "Grand Egyptian Museum",
     price: "120 LE/ Person",
     rating: 4.6,
+    imageUrl: params.imageUrl,
     image: require("../assets/images/grand-museum.png"),
     type: "Archaeological museum",
-    description: "The Museum of Egyptian Antiquities, commonly known as the Egyptian Museum, located in Cairo, Egypt, houses the largest collection of Egyptian antiquities in the world. It houses over 120,000 items, with a representative amount on display.",
-    hours: "07/09",
+    description:
+      params.description ||
+      "The Museum of Egyptian Antiquities, commonly known as the Egyptian Museum, located in Cairo, Egypt, houses the largest collection of Egyptian antiquities in the world. It houses over 120,000 items, with a representative amount on display.",
+    hours: params.hours || "07/09",
     capacity: "4/10",
     duration: "1 day",
   };
@@ -96,7 +99,11 @@ export default function MuseumProfile() {
       {/* Header Image */}
       <View style={styles.imageContainer}>
         <Image
-          source={museum.image}
+          source={
+            museum.imageUrl
+              ? { uri: museum.imageUrl }
+              : museum.image
+          }
           style={styles.museumImage}
           resizeMode="cover"
         />
@@ -150,7 +157,13 @@ export default function MuseumProfile() {
         style={[styles.tab, activeTab === tab && styles.activeTab]}
         onPress={() => {
           if (tab === "Reviews") {
-            router.push("/reviews");
+            router.push({
+              pathname: "/reviews",
+              params: {
+                museumId: museum.id,
+                museumName: museum.name,
+              },
+            });
           } else if (tab === "Nearby") {
             router.push("/NearbyPlaces");
           } else {

@@ -1,6 +1,8 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, ScrollView } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
+import { api } from "../api/client";
+import { saveAuthSession } from "../api/authStorage";
 
 export default function Signup() {
   const router = useRouter();
@@ -9,6 +11,31 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async () => {
+    if (!firstName || !lastName || !email || !password) {
+      Alert.alert("Missing details", "Please fill in all fields.");
+      return;
+    }
+
+    const name = `${firstName.trim()} ${lastName.trim()}`.trim();
+
+    try {
+      setLoading(true);
+      const result = await api.register(name, email.trim(), password);
+      await saveAuthSession(result);
+      router.replace("/(tabs)/home");
+    } catch (error) {
+      console.error("Signup failed", error);
+      Alert.alert(
+        "Sign up failed",
+        error?.message || "Please check your details and try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -110,9 +137,14 @@ export default function Signup() {
           {/* Sign up Button - UPDATED NAVIGATION */}
           <TouchableOpacity 
             style={styles.signupButton}
-            onPress={() => router.replace("/(tabs)/home")}
+            onPress={handleSignup}
+            disabled={loading}
           >
-            <Text style={styles.signupButtonText}>Sign up</Text>
+            {loading ? (
+              <ActivityIndicator color="#000" />
+            ) : (
+              <Text style={styles.signupButtonText}>Sign up</Text>
+            )}
           </TouchableOpacity>
 
           {/* Social Login */}

@@ -1,12 +1,37 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, ScrollView } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
+import { api } from "../api/client";
+import { saveAuthSession } from "../api/authStorage";
 
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Missing details", "Please enter both email and password.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const result = await api.login(email.trim(), password);
+      await saveAuthSession(result);
+      router.replace("/(tabs)/home");
+    } catch (error) {
+      console.error("Login failed", error);
+      Alert.alert(
+        "Login failed",
+        error?.message || "Please check your credentials and try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -92,9 +117,14 @@ export default function Login() {
           {/* Log in Button - UPDATED NAVIGATION */}
           <TouchableOpacity 
             style={styles.loginButton}
-            onPress={() => router.replace("/(tabs)/home")}
+            onPress={handleLogin}
+            disabled={loading}
           >
-            <Text style={styles.loginButtonText}>Log in</Text>
+            {loading ? (
+              <ActivityIndicator color="#000" />
+            ) : (
+              <Text style={styles.loginButtonText}>Log in</Text>
+            )}
           </TouchableOpacity>
 
           {/* Social Login */}
