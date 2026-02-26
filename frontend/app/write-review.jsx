@@ -8,12 +8,17 @@ import {
   Image,
   Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
+import { api } from "./api/client";
+import { getAuthToken } from "./api/authStorage";
 
 export default function WriteReview() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const museumId = params.museumId;
+  const museumName = params.museumName || "Grand Egyptian Museum";
   const [overallRating, setOverallRating] = useState(0);
   const [recommend, setRecommend] = useState(false);
   const [easeRating, setEaseRating] = useState(0);
@@ -21,6 +26,7 @@ export default function WriteReview() {
   const [reviewText, setReviewText] = useState("");
   const [title, setTitle] = useState("");
   const [photos, setPhotos] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
 
   const handlePickPhoto = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -38,12 +44,56 @@ export default function WriteReview() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (overallRating === 0) {
       Alert.alert("Rating Required", "Please select an overall rating");
       return;
     }
-    router.replace("/review-success");
+
+    if (!museumId) {
+      Alert.alert(
+        "Missing museum",
+        "We couldn't identify which museum you're reviewing. Please go back and try again."
+      );
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const token = await getAuthToken();
+      if (!token) {
+        Alert.alert(
+          "Login required",
+          "Please log in before submitting a review.",
+          [
+            {
+              text: "Go to Login",
+              onPress: () => router.replace("/auth/login"),
+            },
+            { text: "Cancel", style: "cancel" },
+          ]
+        );
+        return;
+      }
+
+      const payload = {
+        museum: museumId,
+        rating: overallRating,
+        comment: reviewText || title || undefined,
+      };
+
+      await api.createReview(payload, token);
+      router.replace("/review-success");
+    } catch (error) {
+      console.error("Failed to submit review", error);
+      Alert.alert(
+        "Submission failed",
+        error?.message || "Unable to submit your review. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const StarRating = ({ rating, onRate, size = 40 }) => (
@@ -116,7 +166,7 @@ export default function WriteReview() {
             resizeMode="cover"
           />
           <View style={styles.museumInfo}>
-            <Text style={styles.museumName}>Grand Egyptian Museum</Text>
+            <Text style={styles.museumName}>{museumName}</Text>
             <Text style={styles.museumLocation}>Cairo, Egypt</Text>
           </View>
         </View>
@@ -221,7 +271,9 @@ export default function WriteReview() {
 
         {/* Submit Button */}
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Submit your Review</Text>
+          <Text style={styles.submitButtonText}>
+            {submitting ? "Submitting..." : "Submit your Review"}
+          </Text>
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />

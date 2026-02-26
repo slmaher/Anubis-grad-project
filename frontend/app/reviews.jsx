@@ -1,59 +1,51 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
+import { api } from "./api/client";
 
 export default function Reviews() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const museumId = params.museumId;
+  const museumName = params.museumName;
 
-  // Reviews data
-  const reviews = [
-    {
-      id: 1,
-      name: "Nischal",
-      rating: 4,
-      comment: "Amazing experience! Truly loved it",
-    },
-    {
-      id: 2,
-      name: "Nischal",
-      rating: 5,
-      comment: "So well organized and full of history",
-    },
-    {
-      id: 3,
-      name: "Nischal",
-      rating: 5,
-      comment: "Absolutely breathtaking — a must-see!",
-    },
-    {
-      id: 4,
-      name: "Nischal",
-      rating: 5,
-      comment: "Beautiful place and friendly staff",
-    },
-    {
-      id: 5,
-      name: "Nischal",
-      rating: 4,
-      comment: "Great museum, learned so much!",
-    },
-    {
-      id: 6,
-      name: "Nischal",
-      rating: 5,
-      comment: "Perfect for history lovers",
-    },
-    {
-      id: 7,
-      name: "Nischal",
-      rating: 5,
-      comment: "A memorable visit — will come again!",
-    },
-  ];
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const renderStars = (rating) => {
     return "⭐".repeat(rating);
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      try {
+        setLoading(true);
+        const result = await api.getReviews(
+          museumId ? { museumId } : {}
+        );
+        const list = result?.data || [];
+        if (isMounted) {
+          setReviews(list);
+        }
+      } catch (err) {
+        console.error("Failed to load reviews", err);
+        if (isMounted) {
+          setError(err?.message || "Failed to load reviews");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [museumId]);
 
   return (
     <View style={styles.container}>
@@ -65,7 +57,9 @@ export default function Reviews() {
         >
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Reviews</Text>
+        <Text style={styles.headerTitle}>
+          {museumName ? `${museumName} Reviews` : "Reviews"}
+        </Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -74,9 +68,27 @@ export default function Reviews() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
+        {loading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#000" />
+          </View>
+        )}
+
+        {!loading && error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
+
+        {!loading && !error && reviews.length === 0 && (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No reviews yet. Be the first to write one!</Text>
+          </View>
+        )}
+
         {/* Reviews List */}
-        {reviews.map((review, index) => (
-          <View key={review.id}>
+        {!loading && !error && reviews.map((review, index) => (
+          <View key={review._id || index}>
             <View style={styles.reviewCard}>
               {/* Avatar and Name */}
               <View style={styles.reviewHeader}>
@@ -84,10 +96,12 @@ export default function Reviews() {
                   <View style={styles.avatar}>
                     <Text style={styles.avatarText}>👤</Text>
                   </View>
-                  <Text style={styles.reviewerName}>{review.name}</Text>
+                  <Text style={styles.reviewerName}>
+                    {review.user?.name || "Visitor"}
+                  </Text>
                 </View>
                 {/* Stars */}
-                <Text style={styles.stars}>{renderStars(review.rating)}</Text>
+                <Text style={styles.stars}>{renderStars(review.rating || 0)}</Text>
               </View>
 
               {/* Comment */}
@@ -105,7 +119,12 @@ export default function Reviews() {
       {/* Floating Add Button */}
       <TouchableOpacity 
         style={styles.addButton}
-        onPress={() => router.push("/write-review")}
+        onPress={() =>
+          router.push({
+            pathname: "/write-review",
+            params: { museumId, museumName },
+          })
+        }
       >
         <Text style={styles.addButtonText}>+</Text>
       </TouchableOpacity>

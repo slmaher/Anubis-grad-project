@@ -1,54 +1,66 @@
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image } from "react-native";
-import { useState } from "react";
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image, ActivityIndicator } from "react-native";
+import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
+import { api } from "../api/client";
 
 export default function Explore() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
+  const [museums, setMuseums] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Museum data
-  const recentSearches = [
-    {
-      id: 1,
-      name: "The Grand Egyptian Museum",
-      rating: 4.6,
-      reviews: "13k",
-      image: require("../../assets/images/The-Grand-Egyptian-Museum.png"),
-    },
-    {
-      id: 2,
-      name: "The National Museum of Egypt",
-      rating: 4.7,
-      reviews: "27k",
-      image: require("../../assets/images/The-National-Museum-Of-Egypt.png"),
-    },
-  ];
+  useEffect(() => {
+    let isMounted = true;
 
-  const featuredMuseums = [
-    {
-      id: 1,
-      name: "Grand Egyptian Museum",
-      price: "120 LE/ Person",
-      image: require("../../assets/images/Grand-Egyptian-Museum.png"),
-    },
-    {
-      id: 2,
-      name: "Egyptian Museum",
-      price: "80 LE/ Person",
-      image: require("../../assets/images/Egyptian-Museum-Explore-Screen.png"),
-    },
-  ];
+    (async () => {
+      try {
+        setLoading(true);
+        const result = await api.getMuseums();
+        const list = result?.data || [];
+        if (isMounted) {
+          setMuseums(list);
+        }
+      } catch (err) {
+        console.error("Failed to load museums", err);
+        if (isMounted) {
+          setError(err?.message || "Failed to load museums");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleMuseumPress = (museum) => {
     router.push({
       pathname: "/museum-profile",
       params: { 
-        id: museum.id,
+        id: museum._id || museum.id,
         name: museum.name,
+        city: museum.city,
+        description: museum.description,
+        imageUrl: museum.imageUrl,
       }
     });
   };
+
+  const filteredMuseums = museums.filter((museum) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      museum.name?.toLowerCase().includes(query) ||
+      museum.city?.toLowerCase().includes(query) ||
+      museum.location?.toLowerCase().includes(query)
+    );
+  });
 
   return (
     <View style={styles.container}>
@@ -61,6 +73,18 @@ export default function Explore() {
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
       >
+        {loading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#000" />
+          </View>
+        )}
+
+        {!loading && error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
+
         {/* Search Bar */}
         <View style={styles.searchContainer}>
           <View style={styles.searchBar}>
@@ -101,62 +125,76 @@ export default function Explore() {
           ))}
         </View>
 
-        {/* Recent Search */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Search</Text>
-          
-          <View style={styles.recentSearchGrid}>
-            {recentSearches.map((museum) => (
-              <TouchableOpacity
-                key={museum.id}
-                style={styles.recentCard}
-                onPress={() => handleMuseumPress(museum)}
-              >
-                <Image
-                  source={museum.image}
-                  style={styles.recentImage}
-                  resizeMode="cover"
-                />
-                <View style={styles.recentInfo}>
-                  <Text style={styles.recentName} numberOfLines={2}>
-                    {museum.name}
-                  </Text>
-                  <View style={styles.ratingContainer}>
-                    <Text style={styles.rating}>{museum.rating}</Text>
-                    <Text style={styles.stars}>⭐⭐⭐⭐⭐</Text>
-                    <Text style={styles.reviews}>({museum.reviews})</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Featured Museums */}
-        <View style={styles.section}>
-          {featuredMuseums.map((museum) => (
-            <TouchableOpacity
-              key={museum.id}
-              style={styles.featuredCard}
-              onPress={() => handleMuseumPress(museum)}
-            >
-              <Image
-                source={museum.image}
-                style={styles.featuredImage}
-                resizeMode="cover"
-              />
-              <View style={styles.featuredOverlay}>
-                <Text style={styles.featuredName}>{museum.name}</Text>
-                <View style={styles.featuredFooter}>
-                  <Text style={styles.featuredPrice}>{museum.price}</Text>
-                  <View style={styles.arrowButton}>
-                    <Text style={styles.arrowIcon}>→</Text>
-                  </View>
-                </View>
+        {!loading && !error && filteredMuseums.length > 0 && (
+          <>
+            {/* Recent Search */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Museums</Text>
+              
+              <View style={styles.recentSearchGrid}>
+                {filteredMuseums.slice(0, 2).map((museum) => (
+                  <TouchableOpacity
+                    key={museum._id}
+                    style={styles.recentCard}
+                    onPress={() => handleMuseumPress(museum)}
+                  >
+                    <Image
+                      source={
+                        museum.imageUrl
+                          ? { uri: museum.imageUrl }
+                          : require("../../assets/images/The-Grand-Egyptian-Museum.png")
+                      }
+                      style={styles.recentImage}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.recentInfo}>
+                      <Text style={styles.recentName} numberOfLines={2}>
+                        {museum.name}
+                      </Text>
+                      <View style={styles.ratingContainer}>
+                        <Text style={styles.rating}>4.6</Text>
+                        <Text style={styles.stars}>⭐⭐⭐⭐⭐</Text>
+                        <Text style={styles.reviews}>(reviews)</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
               </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+            </View>
+
+            {/* Featured Museums */}
+            <View style={styles.section}>
+              {filteredMuseums.map((museum) => (
+                <TouchableOpacity
+                  key={museum._id}
+                  style={styles.featuredCard}
+                  onPress={() => handleMuseumPress(museum)}
+                >
+                  <Image
+                    source={
+                      museum.imageUrl
+                        ? { uri: museum.imageUrl }
+                        : require("../../assets/images/Grand-Egyptian-Museum.png")
+                    }
+                    style={styles.featuredImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.featuredOverlay}>
+                    <Text style={styles.featuredName}>{museum.name}</Text>
+                    <View style={styles.featuredFooter}>
+                      <Text style={styles.featuredPrice}>
+                        {museum.openingHours || "Open today"}
+                      </Text>
+                      <View style={styles.arrowButton}>
+                        <Text style={styles.arrowIcon}>→</Text>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -182,6 +220,19 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  errorContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  errorText: {
+    color: "#b00020",
+    fontSize: 14,
   },
   searchContainer: {
     paddingHorizontal: 20,
