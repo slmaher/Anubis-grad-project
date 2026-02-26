@@ -3,6 +3,51 @@ import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { api } from "../api/client";
 
+// Different local image for each museum (when remote fails or is missing)
+const MUSEUM_LOCAL_IMAGES = [
+  require("../../assets/images/Grand-Egyptian-Museum.png"),
+  require("../../assets/images/The-Grand-Egyptian-Museum.png"),
+  require("../../assets/images/Egyptian-Museum-Explore-Screen.png"),
+  require("../../assets/images/The-National-Museum-Of-Egypt.png"),
+  require("../../assets/images/egyptian-museum-interior.jpg"),
+  require("../../assets/images/Museum-of-Islamic-Art.jpg"),
+  require("../../assets/images/Coptic-Museum.jpg"),
+  require("../../assets/images/Egyptian-Civilization.jpg"),
+  require("../../assets/images/grand-museum.png"),
+  require("../../assets/images/Grand-Museum-Profile.png"),
+  require("../../assets/images/grand-museum-night.webp"),
+  require("../../assets/images/egyptian-museum.png"),
+];
+
+const MUSEUM_NAME_TO_IMAGE = {
+  "Grand Egyptian Museum": MUSEUM_LOCAL_IMAGES[0],
+  "The Grand Egyptian Museum": MUSEUM_LOCAL_IMAGES[1],
+  "Egyptian Museum": MUSEUM_LOCAL_IMAGES[2],
+  "The Egyptian Museum": MUSEUM_LOCAL_IMAGES[2],
+  "National Museum of Egyptian Civilization": MUSEUM_LOCAL_IMAGES[3],
+  "The National Museum of Egypt": MUSEUM_LOCAL_IMAGES[3],
+  "Museum of Islamic Art, Cairo": MUSEUM_LOCAL_IMAGES[5],
+  "Museum of Islamic Art": MUSEUM_LOCAL_IMAGES[5],
+  "Coptic Museum": MUSEUM_LOCAL_IMAGES[6],
+  "Agricultural Museum": MUSEUM_LOCAL_IMAGES[4],
+  "Mukhtar Museum": MUSEUM_LOCAL_IMAGES[7],
+  "Sadat Museum": MUSEUM_LOCAL_IMAGES[8],
+  "Sharm El Sheikh Museum": MUSEUM_LOCAL_IMAGES[9],
+  "Hurghada Museum": MUSEUM_LOCAL_IMAGES[10],
+  "Museum of Tal Basta Antiquities": MUSEUM_LOCAL_IMAGES[11],
+  "Al-Muizz Street (Historic Open‑Air Museum)": MUSEUM_LOCAL_IMAGES[1],
+  "Beit Al‑Suhaymi": MUSEUM_LOCAL_IMAGES[2],
+  "Qasr Samihah Kamel (Samihah Kamel Palace)": MUSEUM_LOCAL_IMAGES[0],
+};
+
+function getLocalImageForMuseum(museum) {
+  const name = museum?.name?.trim?.();
+  if (name && MUSEUM_NAME_TO_IMAGE[name]) return MUSEUM_NAME_TO_IMAGE[name];
+  const id = (museum?._id || name || "").toString();
+  const index = id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return MUSEUM_LOCAL_IMAGES[Math.abs(index) % MUSEUM_LOCAL_IMAGES.length];
+}
+
 export default function Explore() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
@@ -10,6 +55,8 @@ export default function Explore() {
   const [museums, setMuseums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Track remote images that failed to load so we show local fallback
+  const [failedImageIds, setFailedImageIds] = useState({});
 
   useEffect(() => {
     let isMounted = true;
@@ -61,6 +108,15 @@ export default function Explore() {
       museum.location?.toLowerCase().includes(query)
     );
   });
+
+  const getImageSource = (museum) => {
+    const useRemote = museum.imageUrl && !failedImageIds[museum._id];
+    return useRemote ? { uri: museum.imageUrl } : getLocalImageForMuseum(museum);
+  };
+
+  const handleImageError = (museumId) => {
+    setFailedImageIds((prev) => ({ ...prev, [museumId]: true }));
+  };
 
   return (
     <View style={styles.container}>
@@ -139,13 +195,10 @@ export default function Explore() {
                     onPress={() => handleMuseumPress(museum)}
                   >
                     <Image
-                      source={
-                        museum.imageUrl
-                          ? { uri: museum.imageUrl }
-                          : require("../../assets/images/The-Grand-Egyptian-Museum.png")
-                      }
+                      source={getImageSource(museum)}
                       style={styles.recentImage}
                       resizeMode="cover"
+                      onError={() => handleImageError(museum._id)}
                     />
                     <View style={styles.recentInfo}>
                       <Text style={styles.recentName} numberOfLines={2}>
@@ -171,13 +224,10 @@ export default function Explore() {
                   onPress={() => handleMuseumPress(museum)}
                 >
                   <Image
-                    source={
-                      museum.imageUrl
-                        ? { uri: museum.imageUrl }
-                        : require("../../assets/images/Grand-Egyptian-Museum.png")
-                    }
+                    source={getImageSource(museum)}
                     style={styles.featuredImage}
                     resizeMode="cover"
+                    onError={() => handleImageError(museum._id)}
                   />
                   <View style={styles.featuredOverlay}>
                     <Text style={styles.featuredName}>{museum.name}</Text>
@@ -325,6 +375,7 @@ const styles = StyleSheet.create({
   recentImage: {
     width: "100%",
     height: 120,
+    backgroundColor: "#E0E0E0",
   },
   recentInfo: {
     padding: 12,
@@ -373,6 +424,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     position: "absolute",
+    backgroundColor: "#1a2332",
   },
   featuredOverlay: {
     flex: 1,

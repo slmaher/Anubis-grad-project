@@ -6,6 +6,8 @@ export interface IMuseum extends Document {
   location: string;
   city: string;
   imageUrl?: string;
+  /** Google Places photo reference – when set, use GET /api/museums/:id/image to get the image from Google */
+  googlePhotoReference?: string;
   openingHours?: string;
   isActive: boolean;
   createdAt: Date;
@@ -19,6 +21,7 @@ const MuseumSchema = new Schema<IMuseum>(
     location: { type: String, required: true, trim: true },
     city: { type: String, required: true, trim: true },
     imageUrl: { type: String, trim: true },
+    googlePhotoReference: { type: String, trim: true },
     openingHours: { type: String, trim: true },
     isActive: { type: Boolean, default: true }
   },
