@@ -1,227 +1,98 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { api } from "../api/client";
+import { getAuthToken, getAuthUser } from "../api/authStorage";
+import { useChatSocket } from "../hooks/useChatSocket";
 
 export default function ChatScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const [message, setMessage] = useState("");
+  const [chatMessages, setChatMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
+  const scrollViewRef = useRef(null);
 
   const contactName = params.contactName || "Contact";
-  const contactId = params.contactId || "1";
+  const contactId = params.contactId;
 
-  // Different messages for each contact
-  const getChatMessages = (id) => {
-    const messagesData = {
-      "1": [ // Shane Haq
-        {
-          id: 1,
-          text: "Hi There! Are you available for talk?",
-          time: "10:30 AM",
-          isSent: false,
-        },
-        {
-          id: 2,
-          text: "Yes, I'm free now. What's up?",
-          time: "10:31 AM",
-          isSent: true,
-          hasCheckmark: true,
-        },
-        {
-          id: 3,
-          text: "I wanted to discuss the museum visit plans!",
-          time: "10:32 AM",
-          isSent: false,
-        },
-        {
-          id: 4,
-          text: "Sounds great! When are you planning to go?",
-          time: "10:33 AM",
-          isSent: true,
-          hasCheckmark: true,
-        },
-      ],
-      "2": [ // Maria Bali
-        {
-          id: 1,
-          text: "Hey! How was your day?",
-          time: "11:15 AM",
-          isSent: false,
-        },
-        {
-          id: 2,
-          text: "It was good! Just finished visiting the pyramids",
-          time: "11:20 AM",
-          isSent: true,
-          hasCheckmark: true,
-        },
-        {
-          id: 3,
-          images: [
-            require("../../assets/images/chat-image-1.jpg"),
-            require("../../assets/images/chat-image-2.jpg"),
-            require("../../assets/images/chat-image-3.jpg"),
-          ],
-          time: "11:21 AM",
-          isSent: true,
-          hasCheckmark: true,
-        },
-        {
-          id: 4,
-          text: "Wow! These photos are amazing!",
-          time: "11:25 AM",
-          isSent: false,
-        },
-      ],
-      "3": [ // Gualtiero Cea
-        {
-          id: 1,
-          text: "Yeah, but John, if The Pirates of the Caribbean breaks down,",
-          time: "6:55 AM",
-          isSent: false,
-        },
-        {
-          id: 2,
-          text: "Eventually, you do plan to have dinosaurs on your dinosaur tour, right? Checkmate...",
-          time: "6:55 AM",
-          isSent: true,
-          hasCheckmark: true,
-        },
-        {
-          id: 3,
-          images: [
-            require("../../assets/images/chat-image-1.jpg"),
-            require("../../assets/images/chat-image-2.jpg"),
-            require("../../assets/images/chat-image-3.jpg"),
-          ],
-          time: "6:55 AM",
-          isSent: false,
-        },
-        {
-          id: 4,
-          text: "Eventually, you do plan to have dinosaurs on your dinosaur tour, right? Checkmate...",
-          time: "6:55 AM",
-          isSent: true,
-          hasCheckmark: true,
-        },
-        {
-          id: 5,
-          text: "Yes, I'm done!",
-          time: "6:55 AM",
-          isSent: false,
-        },
-      ],
-      "4": [ // Marta Zarco
-        {
-          id: 1,
-          text: "Is this my espresso machine?",
-          time: "7:00 AM",
-          isSent: false,
-        },
-        {
-          id: 2,
-          text: "Haha, no! That's mine 😄",
-          time: "7:05 AM",
-          isSent: true,
-          hasCheckmark: true,
-        },
-        {
-          id: 3,
-          text: "Oh my bad! It looks exactly like mine",
-          time: "7:06 AM",
-          isSent: false,
-        },
-        {
-          id: 4,
-          text: "No worries! Want to grab coffee later?",
-          time: "7:10 AM",
-          isSent: true,
-          hasCheckmark: true,
-        },
-        {
-          id: 5,
-          text: "Sure! Let's meet at 3 PM",
-          time: "7:12 AM",
-          isSent: false,
-        },
-      ],
-      "5": [ // Rosita Marcos
-        {
-          id: 1,
-          text: "I gave it a cold? I gave it a virus...",
-          time: "1:00 PM",
-          isSent: false,
-        },
-        {
-          id: 2,
-          text: "What are you talking about?",
-          time: "1:05 PM",
-          isSent: true,
-          hasCheckmark: true,
-        },
-        {
-          id: 3,
-          text: "Just kidding! It's a movie quote 😂",
-          time: "1:06 PM",
-          isSent: false,
-        },
-        {
-          id: 4,
-          text: "Haha you got me there!",
-          time: "1:08 PM",
-          isSent: true,
-          hasCheckmark: true,
-        },
-      ],
-      "6": [ // Agueda Pedro
-        {
-          id: 1,
-          text: "If The Pirates of the Caribbean breaks down, the pirates don't eat the tourists",
-          time: "2:30 PM",
-          isSent: false,
-        },
-        {
-          id: 2,
-          text: "Classic Jurassic Park reference! Love it!",
-          time: "2:35 PM",
-          isSent: true,
-          hasCheckmark: true,
-        },
-        {
-          id: 3,
-          images: [
-            require("../../assets/images/chat-image-1.jpg"),
-            require("../../assets/images/chat-image-2.jpg"),
-            require("../../assets/images/chat-image-3.jpg"),
-          ],
-          time: "2:36 PM",
-          isSent: false,
-        },
-        {
-          id: 4,
-          text: "These remind me of that movie!",
-          time: "2:38 PM",
-          isSent: false,
-        },
-        {
-          id: 5,
-          text: "Indeed! Great memories",
-          time: "2:40 PM",
-          isSent: true,
-          hasCheckmark: true,
-        },
-      ],
-    };
+  const fetchMessages = useCallback(async () => {
+    try {
+      const token = await getAuthToken();
+      const user = await getAuthUser();
+      setCurrentUser(user);
 
-    return messagesData[id] || messagesData["3"]; // Default to Gualtiero's messages
-  };
+      if (!token || !contactId) return;
 
-  const chatMessages = getChatMessages(contactId);
+      const response = await api.getMessages(contactId, token);
+      if (response.success) {
+        const formatted = response.data.map((msg) => ({
+          id: msg._id,
+          text: msg.content,
+          time: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isSent: msg.sender._id === user?.id || msg.sender === user?.id,
+          hasCheckmark: msg.isRead,
+        }));
+        setChatMessages(formatted.reverse()); // Backend returns descending, we want ascending for display
 
-  const handleSend = () => {
+        // Mark as read
+        await api.markConversationAsRead(contactId, token);
+      }
+    } catch (error) {
+      console.error("Failed to fetch messages:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [contactId]);
+
+  useEffect(() => {
+    fetchMessages();
+  }, [fetchMessages]);
+
+  const handleNewMessage = useCallback((msg) => {
+    // Only add if it's from the current contact
+    if (msg.sender._id === contactId || msg.sender === contactId) {
+      const formatted = {
+        id: msg._id,
+        text: msg.content,
+        time: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isSent: false,
+        hasCheckmark: false,
+      };
+      setChatMessages((prev) => [...prev, formatted]);
+
+      // Mark as read in backend
+      getAuthToken().then(token => {
+        if (token) api.markConversationAsRead(contactId, token);
+      });
+    }
+  }, [contactId]);
+
+  useChatSocket(handleNewMessage);
+
+  const handleSend = async () => {
     if (message.trim()) {
-      console.log("Sending message:", message);
-      setMessage("");
+      try {
+        const token = await getAuthToken();
+        if (!token || !contactId) return;
+
+        const response = await api.sendMessage(contactId, message, token);
+        if (response.success) {
+          const msg = response.data;
+          const formatted = {
+            id: msg._id,
+            text: msg.content,
+            time: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isSent: true,
+            hasCheckmark: false,
+          };
+          setChatMessages((prev) => [...prev, formatted]);
+          setMessage("");
+        }
+      } catch (error) {
+        console.error("Failed to send message:", error);
+      }
     }
   };
 
@@ -255,11 +126,15 @@ export default function ChatScreen() {
 
       {/* Chat Messages */}
       <ScrollView 
+        ref={scrollViewRef}
         style={styles.messagesContainer}
         contentContainerStyle={styles.messagesContent}
         showsVerticalScrollIndicator={false}
+        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
-        {chatMessages.map((msg) => (
+        {loading ? (
+          <ActivityIndicator size="small" color="#6B5B4F" />
+        ) : chatMessages.map((msg) => (
           <View key={msg.id} style={styles.messageWrapper}>
             {msg.images ? (
               <View style={[styles.messageBubble, styles.receivedBubble]}>

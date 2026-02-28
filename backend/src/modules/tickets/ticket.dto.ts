@@ -22,6 +22,10 @@ export class CreateTicketDto {
 
 export class UpdateTicketDto {
   @IsOptional()
+  @IsMongoId()
+  museum?: string;
+
+  @IsOptional()
   @IsDateString()
   visitDate?: string;
 
