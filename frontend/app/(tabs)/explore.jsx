@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image, ImageBackground, ActivityIndicator } from "react-native";
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { api } from "../api/client";
@@ -119,146 +119,162 @@ export default function Explore() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Museums and Sites</Text>
-      </View>
-
-      <ScrollView 
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-      >
-        {loading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#000" />
-          </View>
-        )}
-
-        {!loading && error && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
-
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchBar}>
-            <Text style={styles.searchIcon}>≡</Text>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholderTextColor="#999"
-            />
-            <TouchableOpacity>
-              <Text style={styles.searchIconRight}>🔍</Text>
-            </TouchableOpacity>
-          </View>
+    <ImageBackground
+      source={require("../../assets/images/community-background.png")}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Museums and Sites</Text>
         </View>
 
-        {/* Filter Tabs */}
-        <View style={styles.filterContainer}>
-          {["All", "Popular", "Recommended"].map((filter) => (
-            <TouchableOpacity
-              key={filter}
-              style={[
-                styles.filterButton,
-                activeFilter === filter && styles.filterButtonActive,
-              ]}
-              onPress={() => setActiveFilter(filter)}
-            >
-              <Text
+        <ScrollView 
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+        >
+          {loading && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#8B7B6C" />
+            </View>
+          )}
+
+          {!loading && error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+
+          {/* Search Bar */}
+          <View style={styles.searchContainer}>
+            <View style={styles.searchBar}>
+              <Text style={styles.searchIcon}>≡</Text>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholderTextColor="#999"
+              />
+              <TouchableOpacity>
+                <Image
+                  source={require("../../assets/images/search-icon.png")}
+                  style={styles.searchIconImage}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Filter Tabs */}
+          <View style={styles.filterContainer}>
+            {["All", "Popular", "Recommended"].map((filter) => (
+              <TouchableOpacity
+                key={filter}
                 style={[
-                  styles.filterText,
-                  activeFilter === filter && styles.filterTextActive,
+                  styles.filterButton,
+                  activeFilter === filter && styles.filterButtonActive,
                 ]}
+                onPress={() => setActiveFilter(filter)}
               >
-                {filter}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+                <Text
+                  style={[
+                    styles.filterText,
+                    activeFilter === filter && styles.filterTextActive,
+                  ]}
+                >
+                  {filter}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-        {!loading && !error && filteredMuseums.length > 0 && (
-          <>
-            {/* Recent Search */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Museums</Text>
-              
-              <View style={styles.recentSearchGrid}>
-                {filteredMuseums.slice(0, 2).map((museum) => (
+          {!loading && !error && filteredMuseums.length > 0 && (
+            <>
+              {/* Recent Search */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Museums</Text>
+                
+                <View style={styles.recentSearchGrid}>
+                  {filteredMuseums.slice(0, 2).map((museum) => (
+                    <TouchableOpacity
+                      key={museum._id}
+                      style={styles.recentCard}
+                      onPress={() => handleMuseumPress(museum)}
+                    >
+                      <Image
+                        source={getImageSource(museum)}
+                        style={styles.recentImageFull}
+                        resizeMode="cover"
+                        onError={() => handleImageError(museum._id)}
+                      />
+                      <View style={styles.recentOverlay}>
+                        <View style={styles.glassyBubble}>
+                          <Text style={styles.recentName} numberOfLines={2}>
+                            {museum.name}
+                          </Text>
+                          <View style={styles.ratingContainer}>
+                            <Text style={styles.rating}>4.6</Text>
+                            <Text style={styles.stars}>⭐⭐⭐⭐⭐</Text>
+                            <Text style={styles.reviews}>(reviews)</Text>
+                          </View>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Featured Museums */}
+              <View style={styles.section}>
+                {filteredMuseums.map((museum) => (
                   <TouchableOpacity
                     key={museum._id}
-                    style={styles.recentCard}
+                    style={styles.featuredCard}
                     onPress={() => handleMuseumPress(museum)}
                   >
                     <Image
                       source={getImageSource(museum)}
-                      style={styles.recentImage}
+                      style={styles.featuredImage}
                       resizeMode="cover"
                       onError={() => handleImageError(museum._id)}
                     />
-                    <View style={styles.recentInfo}>
-                      <Text style={styles.recentName} numberOfLines={2}>
-                        {museum.name}
-                      </Text>
-                      <View style={styles.ratingContainer}>
-                        <Text style={styles.rating}>4.6</Text>
-                        <Text style={styles.stars}>⭐⭐⭐⭐⭐</Text>
-                        <Text style={styles.reviews}>(reviews)</Text>
+                    <View style={styles.featuredOverlay}>
+                      <Text style={styles.featuredName}>{museum.name}</Text>
+                      <View style={styles.featuredFooter}>
+                        <Text style={styles.featuredPrice}>
+                          {museum.openingHours || "Open today"}
+                        </Text>
+                        <View style={styles.arrowButton}>
+                          <Text style={styles.arrowIcon}>→</Text>
+                        </View>
                       </View>
                     </View>
                   </TouchableOpacity>
                 ))}
               </View>
-            </View>
+            </>
+          )}
 
-            {/* Featured Museums */}
-            <View style={styles.section}>
-              {filteredMuseums.map((museum) => (
-                <TouchableOpacity
-                  key={museum._id}
-                  style={styles.featuredCard}
-                  onPress={() => handleMuseumPress(museum)}
-                >
-                  <Image
-                    source={getImageSource(museum)}
-                    style={styles.featuredImage}
-                    resizeMode="cover"
-                    onError={() => handleImageError(museum._id)}
-                  />
-                  <View style={styles.featuredOverlay}>
-                    <Text style={styles.featuredName}>{museum.name}</Text>
-                    <View style={styles.featuredFooter}>
-                      <Text style={styles.featuredPrice}>
-                        {museum.openingHours || "Open today"}
-                      </Text>
-                      <View style={styles.arrowButton}>
-                        <Text style={styles.arrowIcon}>→</Text>
-                      </View>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </>
-        )}
-
-        <View style={{ height: 100 }} />
-      </ScrollView>
-    </View>
+          <View style={{ height: 120 }} />
+        </ScrollView>
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
   container: {
     flex: 1,
-    backgroundColor: "#E8DDD0",
+    backgroundColor: "transparent",
   },
   header: {
-    backgroundColor: "#E8DDD0",
+    backgroundColor: "transparent",
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 20,
@@ -266,7 +282,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#000",
+    color: "#8B7B6C",
   },
   scrollView: {
     flex: 1,
@@ -285,24 +301,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   searchContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,
     marginBottom: 20,
   },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.7)",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   searchIcon: {
     fontSize: 20,
@@ -314,8 +332,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#000",
   },
-  searchIconRight: {
-    fontSize: 18,
+  searchIconImage: {
+    width: 18,
+    height: 18,
+    tintColor: "#666",
   },
   filterContainer: {
     flexDirection: "row",
@@ -326,14 +346,14 @@ const styles = StyleSheet.create({
   filterButton: {
     paddingVertical: 8,
     paddingHorizontal: 20,
-    borderRadius: 20,
-    backgroundColor: "#fff",
+    borderRadius: 25,
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: "rgba(255, 255, 255, 0.7)",
   },
   filterButtonActive: {
-    backgroundColor: "#E8DDD0",
-    borderColor: "#fff",
+    backgroundColor: "rgba(212, 175, 55, 0.4)",
+    borderColor: "rgba(212, 175, 55, 0.6)",
   },
   filterText: {
     fontSize: 14,
@@ -341,7 +361,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   filterTextActive: {
-    color: "#000",
+    color: "#333",
     fontWeight: "600",
   },
   section: {
@@ -351,7 +371,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#000",
+    color: "#8B7B6C",
     marginBottom: 15,
   },
   recentSearchGrid: {
@@ -360,31 +380,45 @@ const styles = StyleSheet.create({
   },
   recentCard: {
     flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 15,
+    height: 200,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 20,
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 5,
+    position: "relative",
   },
-  recentImage: {
+  recentImageFull: {
     width: "100%",
-    height: 120,
-    backgroundColor: "#E0E0E0",
+    height: "100%",
+    position: "absolute",
   },
-  recentInfo: {
+  recentOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 10,
+    justifyContent: "flex-end",
+  },
+  glassyBubble: {
+    backgroundColor: "rgba(159, 159, 159, 0.6)",
+    borderRadius: 20,
     padding: 12,
+    borderWidth: 1,
+    borderColor: "rgba(168, 168, 168, 0.6)",
   },
   recentName: {
     fontSize: 13,
-    fontWeight: "600",
-    color: "#000",
-    marginBottom: 8,
+    fontWeight: "700",
+    color: "#ffffff",
+    marginBottom: 6,
     lineHeight: 18,
   },
   ratingContainer: {
@@ -395,19 +429,19 @@ const styles = StyleSheet.create({
   rating: {
     fontSize: 13,
     fontWeight: "bold",
-    color: "#000",
+    color: "#ffffff",
   },
   stars: {
     fontSize: 10,
     color: "#FFD700",
   },
   reviews: {
-    fontSize: 11,
-    color: "#666",
+    fontSize: 13,
+    color: "#ffffff",
   },
   featuredCard: {
     backgroundColor: "#1a2332",
-    borderRadius: 20,
+    borderRadius: 25,
     overflow: "hidden",
     marginBottom: 15,
     height: 200,
@@ -417,7 +451,7 @@ const styles = StyleSheet.create({
       height: 4,
     },
     shadowOpacity: 0.2,
-    shadowRadius: 10,
+    shadowRadius: 12,
     elevation: 6,
   },
   featuredImage: {

@@ -1,10 +1,14 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions, Alert } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, Dimensions, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import * as Sharing from 'expo-sharing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import AntDesign from '@expo/vector-icons/AntDesign';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const MUSEUM_LOCAL_IMAGES = [
   require("../assets/images/Grand-Egyptian-Museum.png"),
@@ -37,8 +41,8 @@ const MUSEUM_NAME_TO_IMAGE = {
   "Sharm El Sheikh Museum": MUSEUM_LOCAL_IMAGES[9],
   "Hurghada Museum": MUSEUM_LOCAL_IMAGES[10],
   "Museum of Tal Basta Antiquities": MUSEUM_LOCAL_IMAGES[11],
-  "Al-Muizz Street (Historic Open\u2011Air Museum)": MUSEUM_LOCAL_IMAGES[1],
-  "Beit Al\u2011Suhaymi": MUSEUM_LOCAL_IMAGES[2],
+  "Al-Muizz Street (Historic Open‑Air Museum)": MUSEUM_LOCAL_IMAGES[1],
+  "Beit Al‑Suhaymi": MUSEUM_LOCAL_IMAGES[2],
   "Qasr Samihah Kamel (Samihah Kamel Palace)": MUSEUM_LOCAL_IMAGES[0],
 };
 
@@ -56,7 +60,7 @@ export default function MuseumProfile() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  // Museum data (now receives real data via params where possible)
+  // Museum data
   const museum = {
     id: params.id,
     name: params.name || "Grand Egyptian Museum",
@@ -81,10 +85,8 @@ export default function MuseumProfile() {
         return;
       }
 
-      // Create shareable text
       const shareText = `Check out ${museum.name}!\n\nPrice: ${museum.price}\nRating: ⭐ ${museum.rating}\n\n${museum.description}\n\nDiscover more amazing museums in Egypt with Anubis app!`;
       
-      // For text sharing, we need to use React Native's Share API instead
       const Share = require('react-native').Share;
       await Share.share({
         message: shareText,
@@ -98,20 +100,16 @@ export default function MuseumProfile() {
 
   const handleFavorite = async () => {
     try {
-      // Get existing favorites
       const existingFavorites = await AsyncStorage.getItem('favorites');
       let favoritesArray = existingFavorites ? JSON.parse(existingFavorites) : [];
 
-      // Check if already in favorites
       const alreadyFavorite = favoritesArray.some(fav => fav.id === museum.id);
 
       if (alreadyFavorite) {
-        // Remove from favorites
         favoritesArray = favoritesArray.filter(fav => fav.id !== museum.id);
         setIsFavorite(false);
         Alert.alert('Removed', 'Removed from your favorites');
       } else {
-        // Add to favorites
         const favoriteItem = {
           id: museum.id,
           name: museum.name,
@@ -123,7 +121,6 @@ export default function MuseumProfile() {
         favoritesArray.push(favoriteItem);
         setIsFavorite(true);
         
-        // Save to storage
         await AsyncStorage.setItem('favorites', JSON.stringify(favoritesArray));
         
         Alert.alert('Success', 'Added to your favorites!', [
@@ -138,143 +135,172 @@ export default function MuseumProfile() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header Image */}
-      <View style={styles.imageContainer}>
-        <Image
-          source={
-            museum.imageUrl && !imageError
-              ? { uri: museum.imageUrl }
-              : getLocalImageForMuseum(museum.name)
-          }
-          style={styles.museumImage}
-          resizeMode="cover"
-          onError={() => setImageError(true)}
-        />
-        
-        {/* Back Button */}
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+    <ImageBackground
+      source={require("../assets/images/beige-background.jpeg")}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <View style={styles.container}>
+        {/* Header Image */}
+        <View style={styles.imageContainer}>
+          <Image
+            source={
+              museum.imageUrl && !imageError
+                ? { uri: museum.imageUrl }
+                : getLocalImageForMuseum(museum.name)
+            }
+            style={styles.museumImage}
+            resizeMode="cover"
+            onError={() => setImageError(true)}
+          />
+          
+          {/* Back Button */}
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backIcon}>←</Text>
+          </TouchableOpacity>
 
-        {/* Share Button */}
-        <TouchableOpacity 
-          style={styles.shareButton}
-          onPress={handleShare}
-        >
-          <Text style={styles.shareIcon}>↗</Text>
-        </TouchableOpacity>
+          {/* Share Button */}
+          <TouchableOpacity 
+            style={styles.shareButton}
+            onPress={handleShare}
+          >
+            <Text style={styles.shareIcon}>↗</Text>
+          </TouchableOpacity>
 
-        {/* Info Overlay */}
-        <View style={styles.imageOverlay}>
-          <Text style={styles.museumName}>{museum.name}</Text>
-          <View style={styles.priceRatingContainer}>
-            <Text style={styles.price}>{museum.price}</Text>
-            <View style={styles.ratingBadge}>
-              <Text style={styles.ratingText}>⭐ {museum.rating}</Text>
+          {/* Info Overlay */}
+          <View style={styles.imageOverlay}>
+            <Text style={styles.museumName}>{museum.name}</Text>
+            <View style={styles.priceRatingContainer}>
+              <Text style={styles.price}>{museum.price}</Text>
+              <View style={styles.ratingBadge}>
+                <Text style={styles.ratingText}>⭐ {museum.rating}</Text>
+              </View>
             </View>
           </View>
+
+          {/* Bookmark Button with Glassy Bubble */}
+          <View style={styles.bookmarkContainer}>
+            <View style={styles.bookmarkBubble} />
+            <TouchableOpacity 
+              style={styles.bookmarkButton}
+              onPress={handleFavorite}
+            >
+              <FontAwesome6 
+                name={isFavorite ? "bookmark" : "bookmark"} 
+                size={24} 
+                color="#333" 
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Bookmark Button */}
-        <TouchableOpacity 
-          style={styles.bookmarkButton}
-          onPress={handleFavorite}
+        {/* Tabs */}
+        <View style={styles.tabsContainer}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tabsContent}
+          >
+            {["Overview", "Reviews", "Artifacts", "Nearby"].map((tab) => (
+              <TouchableOpacity
+                key={tab}
+                style={styles.tab}
+                onPress={() => {
+                  if (tab === "Reviews") {
+                    router.push({
+                      pathname: "/reviews",
+                      params: {
+                        museumId: museum.id,
+                        museumName: museum.name,
+                      },
+                    });
+                  } else if (tab === "Nearby") {
+                    router.push("/NearbyPlaces");
+                  } else {
+                    setActiveTab(tab);
+                  }
+                }}
+              >
+                <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+                  {tab}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        <ScrollView 
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.bookmarkIcon}>{isFavorite ? '🔖' : '🔖'}</Text>
-        </TouchableOpacity>
-      </View>
+          {/* Info Cards */}
+          <View style={styles.infoCards}>
+            <View style={styles.infoCard}>
+              <MaterialIcons name="date-range" size={20} color="#666" />
+              <Text style={styles.infoText}>{museum.hours}</Text>
+            </View>
+            <View style={styles.infoCard}>
+              <MaterialCommunityIcons name="account-group" size={20} color="#666" />
+              <Text style={styles.infoText}>{museum.capacity}</Text>
+            </View>
+            <View style={styles.infoCard}>
+              <AntDesign name="clockcircle" size={20} color="#666" />
+              <Text style={styles.infoText}>{museum.duration}</Text>
+            </View>
+          </View>
 
-{/* Tabs */}
-<View style={styles.tabsContainer}>
-  <ScrollView 
-    horizontal 
-    showsHorizontalScrollIndicator={false}
-    contentContainerStyle={styles.tabsContent}
-  >
-    {["Overview", "Reviews", "Artifacts", "Nearby"].map((tab) => (
-      <TouchableOpacity
-        key={tab}
-        style={[styles.tab, activeTab === tab && styles.activeTab]}
-        onPress={() => {
-          if (tab === "Reviews") {
-            router.push({
-              pathname: "/reviews",
-              params: {
-                museumId: museum.id,
-                museumName: museum.name,
-              },
-            });
-          } else if (tab === "Nearby") {
-            router.push("/NearbyPlaces");
-          } else {
-            setActiveTab(tab);
-          }
-        }}
-      >
-        <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
-          {tab}
-        </Text>
-      </TouchableOpacity>
-    ))}
-  </ScrollView>
-</View>
+          {/* Museum Type */}
+          <Text style={styles.museumType}>{museum.type}</Text>
 
-      <ScrollView 
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Info Cards */}
-        <View style={styles.infoCards}>
-          <View style={styles.infoCard}>
-            <Text style={styles.infoIcon}>📅</Text>
-            <Text style={styles.infoText}>{museum.hours}</Text>
-          </View>
-          <View style={styles.infoCard}>
-            <Text style={styles.infoIcon}>👥</Text>
-            <Text style={styles.infoText}>{museum.capacity}</Text>
-          </View>
-          <View style={styles.infoCard}>
-            <Text style={styles.infoIcon}>⏱</Text>
-            <Text style={styles.infoText}>{museum.duration}</Text>
-          </View>
+          {/* Description */}
+          <Text style={styles.description}>{museum.description}</Text>
+
+          <View style={{ height: 140 }} />
+        </ScrollView>
+
+        {/* Book Ticket Button */}
+        <View style={styles.bookButtonContainer}>
+          <TouchableOpacity style={styles.bookButton}>
+            <Text style={styles.bookButtonText}>Book Ticket</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* Museum Type */}
-        <Text style={styles.museumType}>{museum.type}</Text>
-
-        {/* Description */}
-        <Text style={styles.description}>{museum.description}</Text>
-
-        <View style={{ height: 120 }} />
-      </ScrollView>
-
-      {/* Book Ticket Button */}
-      <View style={styles.bookButtonContainer}>
-        <TouchableOpacity style={styles.bookButton}>
-          <Text style={styles.bookButtonText}>Book Ticket</Text>
-        </TouchableOpacity>
       </View>
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
   container: {
     flex: 1,
-    backgroundColor: "#E8DDD0",
+    backgroundColor: "transparent",
   },
   imageContainer: {
     width: width,
-    height: 400,
+    height: height * 0.55,
     position: "relative",
+    marginBottom: 15,
   },
   museumImage: {
     width: "100%",
     height: "100%",
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
   },
   backButton: {
     position: "absolute",
@@ -311,10 +337,10 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 20,
     left: 20,
-    right: 80,
+    right: 100,
   },
   museumName: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#fff",
     marginBottom: 8,
@@ -328,7 +354,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   price: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#fff",
     fontWeight: "500",
     textShadowColor: "rgba(0, 0, 0, 0.75)",
@@ -342,49 +368,45 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   ratingText: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#fff",
     fontWeight: "600",
   },
-  bookmarkButton: {
+  bookmarkContainer: {
     position: "absolute",
     bottom: 20,
     right: 20,
+  },
+  bookmarkBubble: {
+    position: "absolute",
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.7)",
+  },
+  bookmarkButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  bookmarkIcon: {
-    fontSize: 24,
+    zIndex: 1,
   },
   tabsContainer: {
-    backgroundColor: "#E8DDD0",
-    paddingTop: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E8DDD0",
+    backgroundColor: "transparent",
+    paddingTop: 10,
+    paddingBottom: 15,
   },
   tabsContent: {
     paddingHorizontal: 20,
+    gap: 5,
   },
   tab: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginRight: 15,
-  },
-  activeTab: {
-    borderBottomWidth: 3,
-    borderBottomColor: "#D4AF37",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginRight: 10,
   },
   tabText: {
     fontSize: 16,
@@ -393,7 +415,7 @@ const styles = StyleSheet.create({
   },
   activeTabText: {
     color: "#000",
-    fontWeight: "600",
+    fontWeight: "700",
   },
   scrollView: {
     flex: 1,
@@ -401,66 +423,51 @@ const styles = StyleSheet.create({
   infoCards: {
     flexDirection: "row",
     paddingHorizontal: 20,
-    paddingTop: 25,
-    gap: 12,
+    paddingTop: 10,
+    gap: 10,
   },
   infoCard: {
     flex: 1,
-    backgroundColor: "#F8F8F8",
-    borderRadius: 12,
-    padding: 15,
+    backgroundColor: "#E5E5E5",
+    borderRadius: 10,
+    padding: 10,
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E5E5E5",
-  },
-  infoIcon: {
-    fontSize: 24,
-    marginBottom: 8,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 6,
   },
   infoText: {
-    fontSize: 13,
-    color: "#333",
+    fontSize: 12,
+    color: "#666",
     fontWeight: "600",
   },
   museumType: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#000",
+    color: "#333",
     paddingHorizontal: 20,
-    marginTop: 25,
-    marginBottom: 15,
+    marginTop: 20,
+    marginBottom: 12,
   },
   description: {
-    fontSize: 15,
-    lineHeight: 24,
+    fontSize: 14,
+    lineHeight: 22,
     color: "#666",
     paddingHorizontal: 20,
   },
   bookButtonContainer: {
     position: "absolute",
-    bottom: 0,
+    bottom: 20,
     left: 0,
     right: 0,
-    backgroundColor: "#E8DDD0",
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    paddingBottom: 30,
-    borderTopWidth: 1,
-    borderTopColor: "#E8DDD0",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
+    alignItems: "center",
+    paddingHorizontal: 40,
   },
   bookButton: {
     backgroundColor: "#000",
     paddingVertical: 16,
+    paddingHorizontal: 60,
     borderRadius: 30,
-    alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -476,5 +483,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-
-

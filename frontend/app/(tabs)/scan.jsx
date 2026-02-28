@@ -1,8 +1,10 @@
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Alert, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { useState, useEffect, useRef } from "react";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from 'expo-image-picker';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 const { width, height } = Dimensions.get('window');
 
@@ -120,7 +122,12 @@ export default function Scan() {
         >
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Scan Artifact</Text>
+        
+        {/* Title with rounded bubble */}
+        <View style={styles.titleBubble}>
+          <Text style={styles.headerTitle}>Scan Artifact</Text>
+        </View>
+        
         <View style={styles.placeholder} />
       </View>
 
@@ -156,37 +163,42 @@ export default function Scan() {
 
       {/* Bottom Controls */}
       <View style={styles.controls}>
-        <TouchableOpacity 
-          style={styles.controlButton}
-          onPress={handleGallery}
-        >
-          <View style={styles.iconCircle}>
-            <Text style={styles.controlIcon}>🖼️</Text>
-          </View>
-        </TouchableOpacity>
+        <View style={styles.controlsInner}>
+          <TouchableOpacity 
+            style={styles.controlButton}
+            onPress={handleGallery}
+          >
+            <View style={styles.iconCircle}>
+              <MaterialIcons name="photo-library" size={28} color="#fff" />
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.scanButton}
-          onPress={handleScan}
-          disabled={isScanning}
-        >
-          <View style={[styles.scanButtonInner, isScanning && styles.scanningActive]}>
-            {isScanning ? (
-              <Text style={styles.scanningText}>⌛</Text>
-            ) : (
-              <View style={styles.scanButtonDot} />
-            )}
-          </View>
-        </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.scanButton}
+            onPress={handleScan}
+            disabled={isScanning}
+          >
+            <View style={[styles.scanButtonInner, isScanning && styles.scanningActive]}>
+              {isScanning ? (
+                <Text style={styles.scanningText}>⌛</Text>
+              ) : (
+                <FontAwesome5 name="camera" size={28} color="#000" />
+              )}
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.controlButton}
-          onPress={toggleCameraFacing}
-        >
-          <View style={styles.iconCircle}>
-            <Text style={styles.controlIcon}>🔄</Text>
-          </View>
-        </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.controlButton}
+            onPress={toggleCameraFacing}
+          >
+            <View style={styles.iconCircle}>
+              <Image
+                source={require("../../assets/images/round-arrows.png")}
+                style={styles.rotateIcon}
+              />
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -227,7 +239,7 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingHorizontal: 20,
     paddingBottom: 15,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    backgroundColor: "transparent",
     zIndex: 10,
   },
   backButton: {
@@ -235,13 +247,24 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 20,
   },
   backIcon: {
-    fontSize: 28,
+    fontSize: 24,
     color: "#fff",
   },
+  titleBubble: {
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    margin:5,
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     color: "#fff",
   },
@@ -261,8 +284,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   scanFrame: {
-    width: width * 0.7,
-    height: width * 0.9,
+    width: width * 0.65,
+    height: width * 0.85,
     position: "relative",
     justifyContent: "center",
     alignItems: "center",
@@ -304,35 +327,43 @@ const styles = StyleSheet.create({
   scanningLine: {
     width: "100%",
     height: 3,
-    backgroundColor: "#D4AF37",
+    backgroundColor: "#dfdfdf",
     position: "absolute",
     top: "50%",
-    shadowColor: "#D4AF37",
+    shadowColor: "#dfdfdf",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 10,
   },
   instructionsContainer: {
     position: "absolute",
-    bottom: -80,
+    bottom: 60,
   },
   instructionsText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 18,
     textAlign: "center",
   },
   controls: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    paddingVertical: 30,
+    paddingVertical: 20,
     paddingHorizontal: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.9)",
-    paddingBottom: 50,
+    backgroundColor: "transparent",
+    paddingBottom: 40,
+    alignItems: "center",
+  },
+  controlsInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    borderRadius: 40,
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+    gap: 35,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
   controlButton: {
-    width: 60,
-    height: 60,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -344,36 +375,27 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  controlIcon: {
-    fontSize: 24,
+  rotateIcon: {
+    width: 24,
+    height: 24,
+    tintColor: "#fff",
   },
   scanButton: {
-    width: 80,
-    height: 80,
     justifyContent: "center",
     alignItems: "center",
   },
   scanButtonInner: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 65,
+    height: 65,
+    borderRadius: 32.5,
     backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 4,
-    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   scanningActive: {
-    backgroundColor: "#D4AF37",
-  },
-  scanButtonDot: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#D4AF37",
+    backgroundColor: "#d3d3d3",
   },
   scanningText: {
     fontSize: 32,
   },
 });
-
