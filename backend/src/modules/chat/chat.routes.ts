@@ -5,6 +5,7 @@ import { UserModel } from '../users/user.model';
 import { CreateMessageDto, MarkAsReadDto } from './message.dto';
 import { authenticate, AuthenticatedRequest } from '../../common/middleware/auth';
 import { validateBody } from '../../common/middleware/validationMiddleware';
+import { SocketService } from './socket.service';
 
 const chatRouter = Router();
 
@@ -40,8 +41,13 @@ chatRouter.post(
         { path: 'receiver', select: 'name email' }
       ]);
 
-      // TODO: Emit WebSocket event here when WebSocket is integrated
-      // socketIO.to(receiverId).emit('new_message', populated);
+      // Emit real-time update
+      try {
+        const socketService = SocketService.getInstance();
+        socketService.emitToUser(dto.receiver, 'new_message', populated);
+      } catch (err) {
+        console.error('Failed to emit socket event:', err);
+      }
 
       return res.status(201).json({
         success: true,

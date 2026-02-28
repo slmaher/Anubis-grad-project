@@ -1,6 +1,9 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, Animated, PanResponder } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, Animated, PanResponder, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { api } from "../api/client";
+import { getAuthToken } from "../api/authStorage";
+import { useChatSocket } from "../hooks/useChatSocket";
 
 // Swipeable Message Item Component
 const SwipeableMessageItem = ({ item, onPress, onDelete }) => {
@@ -112,6 +115,8 @@ const SwipeableMessageItem = ({ item, onPress, onDelete }) => {
 export default function MessagesList() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("Messages");
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const friends = [
     { id: 1, name: "Benjamin", image: require("../../assets/images/profile-benjamin.png") },
@@ -121,59 +126,45 @@ export default function MessagesList() {
     { id: 5, name: "Alex", image: require("../../assets/images/profile-alex.png") },
   ];
 
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      name: "Shane Haq",
-      message: "Hi There! Are you available for talk?",
-      time: "12:00",
-      avatar: require("../../assets/images/profile-farita.png"),
-      unread: false,
-    },
-    {
-      id: 2,
-      name: "Maria Bali",
-      message: "I don't talk now, I'm on the way to...",
-      time: "12:00",
-      avatar: require("../../assets/images/profile-you.png"),
-      unread: true,
-    },
-    {
-      id: 3,
-      name: "Gualtiero Cea",
-      message: "Hey! What, Up? Talk me from front...",
-      time: "13:00",
-      avatar: require("../../assets/images/profile-alex.png"),
-      unread: false,
-    },
-    {
-      id: 4,
-      name: "Marta Zarco",
-      message: "Is this my espresso machine? Why what is...",
-      time: "7:00",
-      avatar: require("../../assets/images/profile-marie.png"),
-      unread: false,
-    },
-    {
-      id: 5,
-      name: "Rosita Marcos",
-      message: "I gave it a cold? I gave it a virus...",
-      time: "13:00",
-      avatar: require("../../assets/images/profile-claire.png"),
-      unread: false,
-    },
-    {
-      id: 6,
-      name: "Agueda Pedro",
-      message: "If The Pirates of the Caribbean...",
-      time: "14:00",
-      avatar: require("../../assets/images/profile-benjamin.png"),
-      unread: false,
-    },
-  ]);
+  const fetchConversations = useCallback(async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) return;
+
+      const response = await api.getConversations(token);
+      if (response.success) {
+        const formatted = response.data.map((conv) => ({
+          id: conv.user._id,
+          name: conv.user.name,
+          message: conv.lastMessage?.content || "No messages yet",
+          time: conv.lastMessage
+            ? new Date(conv.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : "",
+          avatar: require("../../assets/images/profile-farita.png"), // Default for now
+          unread: conv.unreadCount > 0,
+        }));
+        setConversations(formatted);
+      }
+    } catch (error) {
+      console.error("Failed to fetch conversations:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+
+  const handleNewMessage = useCallback((message) => {
+    // Refresh conversations list when a new message arrives
+    fetchConversations();
+  }, [fetchConversations]);
+
+  useChatSocket(handleNewMessage);
 
   const handleDelete = (id) => {
-    setMessages(messages.filter(msg => msg.id !== id));
+    setConversations(conversations.filter(msg => msg.id !== id));
   };
 
   const handleChatPress = (contact) => {
@@ -272,13 +263,24 @@ export default function MessagesList() {
       </View>
 
       {/* Messages List */}
-      <FlatList
-        data={messages}
-        renderItem={renderMessageItem}
-        keyExtractor={(item) => item.id.toString()}
-        style={styles.messagesList}
-        contentContainerStyle={styles.messagesContent}
-      />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#6B5B4F" />
+        </View>
+      ) : (
+        <FlatList
+          data={conversations}
+          renderItem={renderMessageItem}
+          keyExtractor={(item) => item.id.toString()}
+          style={styles.messagesList}
+          contentContainerStyle={styles.messagesContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No conversations found</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
@@ -481,5 +483,18 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     tintColor: "#fff",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: "center",
+  },
+  emptyText: {
+    color: "#999",
+    fontSize: 16,
   },
 });
