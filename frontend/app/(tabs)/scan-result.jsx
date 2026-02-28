@@ -4,7 +4,6 @@ import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from 'react';
-//AI Enhancement
 const { width } = Dimensions.get('window');
 
 export default function ScanResult() {
