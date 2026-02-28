@@ -149,6 +149,7 @@ ticketsRouter.patch(
         req.params.id,
         {
           $set: {
+            ...(dto.museum != null && { museum: dto.museum }),
             ...(dto.visitDate != null && { visitDate: new Date(dto.visitDate) }),
             ...(dto.numberOfGuests != null && { numberOfGuests: dto.numberOfGuests }),
             ...(dto.totalPrice != null && { totalPrice: dto.totalPrice }),

@@ -79,5 +79,26 @@ export const api = {
       token,
     });
   },
+
+  // Chat
+  getConversations(token) {
+    return apiRequest("/api/chat/conversations", { token });
+  },
+  getMessages(conversationWith, token) {
+    return apiRequest(`/api/chat/messages?conversationWith=${conversationWith}`, { token });
+  },
+  sendMessage(receiverId, content, token) {
+    return apiRequest("/api/chat/messages", {
+      method: "POST",
+      body: { receiver: receiverId, content },
+      token,
+    });
+  },
+  markConversationAsRead(userId, token) {
+    return apiRequest(`/api/chat/conversations/${userId}/read-all`, {
+      method: "PATCH",
+      token,
+    });
+  },
 };
 
