@@ -1,7 +1,0 @@
-0 tutankhamun_mask
-1 rosetta_stone
-2 ramses_ii_statue
-3 nefertiti_bust
-4 anubis_statue
-5 sphinx_giza
-6 hieroglyphic_tablet
