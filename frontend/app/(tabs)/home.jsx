@@ -1,190 +1,191 @@
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image, ImageBackground } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
+import Ionicons from '@expo/vector-icons/Ionicons';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 export default function Home() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <View style={styles.container}>
-      {/* Header with hamburger menu */}
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.menuButton}>
-          <Text style={styles.menuIcon}>☰</Text>
-        </TouchableOpacity>
-        
-        <View style={styles.searchContainer}>
-          <View style={styles.searchBar}>
-            <Text style={styles.searchIconText}>🔍</Text>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholderTextColor="#999"
-            />
-          </View>
+    <ImageBackground
+      source={require("../../assets/images/home-background.jpeg")}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <View style={styles.container}>
+        {/* Header with hamburger menu */}
+        <View style={styles.topBar}>
+          <TouchableOpacity style={styles.menuButton}>
+            <Text style={styles.menuIcon}>☰</Text>
+          </TouchableOpacity>
           
-          <TouchableOpacity 
-            style={styles.chatButton}
-            onPress={() => router.push("/ai/chatbot")}
-          >
-            <View style={styles.chatIconContainer}>
-              <Text style={styles.chatBubble}>💬</Text>
+          <View style={styles.searchContainer}>
+            <View style={styles.searchBar}>
+              <Image
+                source={require("../../assets/images/search-icon.png")}
+                style={styles.searchIconImage}
+              />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholderTextColor="#999"
+              />
             </View>
-            <Text style={styles.chatText}>Chat with{"\n"}AI</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView 
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Title */}
-        <Text style={styles.title}>Explore Egypt</Text>
-
-        {/* Navigation Cards Grid */}
-        <View style={styles.cardsGrid}>
-          {/* Museums Card - UPDATED WITH NAVIGATION */}
-          <TouchableOpacity 
-            style={styles.navCard}
-            onPress={() => router.push("/(tabs)/explore")}
-          >
-            <View style={styles.navIconContainer}>
-              <Text style={styles.navIcon}>🏛️</Text>
-            </View>
-            <Text style={styles.navLabel}>Museums</Text>
-          </TouchableOpacity>
-
-          {/* Souvenirs Card */}
-          <TouchableOpacity 
-            style={styles.navCard}
-            onPress={() => router.push("/marketplace")}
-          >
-            <View style={styles.navIconContainer}>
-              <Text style={styles.navIcon}>🎁</Text>
-            </View>
-            <Text style={styles.navLabel}>Souvenirs</Text>
-          </TouchableOpacity>
-
-          {/* Map Card */}
-          <TouchableOpacity 
-            style={styles.navCard}
-            onPress={() => router.push("/map")}
-          >
-            <View style={styles.navIconContainer}>
-              <Text style={styles.navIcon}>🗺️</Text>
-            </View>
-            <Text style={styles.navLabel}>Map</Text>
-          </TouchableOpacity>
-
-          {/* Tickets Card */}
-          <TouchableOpacity 
-            style={styles.navCard}
-            onPress={() => router.push("/tickets")}
-          >
-            <View style={styles.navIconContainer}>
-              <Text style={styles.navIcon}>🎫</Text>
-            </View>
-            <Text style={styles.navLabel}>Tickets</Text>
-          </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.chatButton}
+              onPress={() => router.push("/ai/chatbot")}
+            >
+              <Ionicons name="chatbubble-ellipses-outline" size={20} color="#8B7B6C" />
+              <Text style={styles.chatText}>Chat with{"\n"}AI?</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Featured Section */}
-        <View style={styles.featuredSection}>
-          <View style={styles.featuredHeader}>
-            <Text style={styles.featuredTitle}>Featured</Text>
-            {/* See all Button - UPDATED WITH NAVIGATION */}
-            <TouchableOpacity onPress={() => router.push("/(tabs)/explore")}>
-              <Text style={styles.seeAll}>See all</Text>
+        <ScrollView 
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Title */}
+          <Text style={styles.title}>Explore Egypt</Text>
+
+          {/* Navigation Cards Grid */}
+          <View style={styles.cardsGrid}>
+            {/* Museums Card */}
+            <TouchableOpacity 
+              style={styles.navCard}
+              onPress={() => router.push("/(tabs)/explore")}
+            >
+              <View style={styles.navIconContainer}>
+                <Image
+                  source={require("../../assets/images/Museum-icon.png")}
+                  style={styles.navIconImage}
+                  resizeMode="contain"
+                />
+              </View>
+              <Text style={styles.navLabel}>Museums</Text>
+            </TouchableOpacity>
+
+            {/* Souvenirs Card */}
+            <TouchableOpacity 
+              style={styles.navCard}
+              onPress={() => router.push("/marketplace")}
+            >
+              <View style={styles.navIconContainer}>
+                <Image
+                  source={require("../../assets/images/Souvenirs.png")}
+                  style={styles.navIconImage}
+                  resizeMode="contain"
+                />
+              </View>
+              <Text style={styles.navLabel}>Souvenirs</Text>
+            </TouchableOpacity>
+
+            {/* Tickets Card */}
+            <TouchableOpacity 
+              style={styles.navCard}
+              onPress={() => router.push("/tickets")}
+            >
+              <View style={styles.navIconContainer}>
+                <Image
+                  source={require("../../assets/images/Tickets.png")}
+                  style={styles.navIconImage}
+                  resizeMode="contain"
+                />
+              </View>
+              <Text style={styles.navLabel}>Tickets</Text>
+            </TouchableOpacity>
+
+            {/* Map Card */}
+            <TouchableOpacity 
+              style={styles.navCard}
+              onPress={() => router.push("/map")}
+            >
+              <View style={styles.navIconContainer}>
+                <FontAwesome5 name="map-marked-alt" size={32} color="#8B7B6C" />
+              </View>
+              <Text style={styles.navLabel}>Map</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Featured Museum Cards */}
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.museumCardsContainer}
-          >
-            {/* Grand Egyptian Museum Card - UPDATED WITH NAVIGATION */}
-            <TouchableOpacity 
-              style={styles.museumCard}
-              onPress={() => router.push({
-                pathname: "/museum-profile",
-                params: { id: 1, name: "Grand Egyptian Museum" }
-              })}
+          {/* Featured Section */}
+          <View style={styles.featuredSection}>
+            <View style={styles.featuredHeader}>
+              <Text style={styles.featuredTitle}>Featured</Text>
+              <TouchableOpacity onPress={() => router.push("/(tabs)/explore")}>
+                <Text style={styles.seeAll}>See all</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Featured Museum Cards */}
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.museumCardsContainer}
             >
-              <Image
-                source={require("../../assets/images/grand-museum.png")}
-                style={styles.museumImage}
-                resizeMode="cover"
-              />
-              <View style={styles.museumCardOverlay}>
-                <Text style={styles.museumCardTitle}>Grand Egyptian{"\n"}Museum</Text>
-              </View>
-            </TouchableOpacity>
+              {/* Grand Egyptian Museum Card */}
+              <TouchableOpacity 
+                style={styles.museumCard}
+                onPress={() => router.push({
+                  pathname: "/museum-profile",
+                  params: { id: 1, name: "Grand Egyptian Museum" }
+                })}
+              >
+                <Image
+                  source={require("../../assets/images/grand-museum.png")}
+                  style={styles.museumImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.museumCardOverlay}>
+                  <View style={styles.museumTitleBubble}>
+                    <Text style={styles.museumCardTitle}>Grand Egyptian{"\n"}Museum</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
 
-            {/* Egyptian Museum Card - UPDATED WITH NAVIGATION */}
-            <TouchableOpacity 
-              style={styles.museumCard}
-              onPress={() => router.push({
-                pathname: "/museum-profile",
-                params: { id: 2, name: "Egyptian Museum" }
-              })}
-            >
-              <Image
-                source={require("../../assets/images/egyptian-museum.png")}
-                style={styles.museumImage}
-                resizeMode="cover"
-              />
-              <View style={styles.museumCardOverlay}>
-                <Text style={styles.museumCardTitle}>Egyptian{"\n"}Museum</Text>
-              </View>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-      </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navItemIcon}>🏛</Text>
-          <Text style={[styles.navItemLabel, styles.navItemActive]}>Home</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navItemIcon}>🧭</Text>
-          <Text style={styles.navItemLabel}>Explore</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navItemIcon}>📷</Text>
-          <Text style={styles.navItemLabel}>Scan</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navItemIcon}>📅</Text>
-          <Text style={styles.navItemLabel}>Events</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navItemIcon}>👥</Text>
-          <Text style={styles.navItemLabel}>Community</Text>
-        </TouchableOpacity>
+              {/* Egyptian Museum Card */}
+              <TouchableOpacity 
+                style={styles.museumCard}
+                onPress={() => router.push({
+                  pathname: "/museum-profile",
+                  params: { id: 2, name: "Egyptian Museum" }
+                })}
+              >
+                <Image
+                  source={require("../../assets/images/egyptian-museum.png")}
+                  style={styles.museumImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.museumCardOverlay}>
+                  <View style={styles.museumTitleBubble}>
+                    <Text style={styles.museumCardTitle}>Egyptian{"\n"}Museum</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </ScrollView>
       </View>
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
   container: {
     flex: 1,
-    backgroundColor: "#E8DDD0",
+    backgroundColor: "transparent",
   },
   topBar: {
-    backgroundColor: "#E8DDD0",
+    backgroundColor: "transparent",
     paddingTop: 50,
     paddingHorizontal: 15,
     paddingBottom: 15,
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
   },
   menuIcon: {
     fontSize: 24,
-    color: "#000",
+    color: "#8B7B6C",
   },
   searchContainer: {
     flexDirection: "row",
@@ -208,14 +209,18 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
     borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 10,
     gap: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.6)",
   },
-  searchIconText: {
-    fontSize: 16,
+  searchIconImage: {
+    width: 18,
+    height: 18,
+    tintColor: "#666",
   },
   searchInput: {
     flex: 1,
@@ -223,39 +228,32 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   chatButton: {
-    backgroundColor: "#E8DDD0",
+    backgroundColor: "transparent",
     borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 75,
-  },
-  chatIconContainer: {
-    marginBottom: 2,
-  },
-  chatBubble: {
-    fontSize: 16,
+    minWidth: 70,
   },
   chatText: {
-    color: "#000",
-    fontSize: 9,
+    color: "#8B7B6C",
+    fontSize: 8,
     fontWeight: "600",
     textAlign: "center",
-    lineHeight: 11,
+    lineHeight: 10,
+    marginTop: 2,
   },
   scrollView: {
     flex: 1,
-    backgroundColor: "#E8DDD0",
   },
   title: {
     fontSize: 26,
     fontWeight: "bold",
-    color: "#000",
+    color: "#8B7B6C",
     paddingHorizontal: 15,
     paddingTop: 20,
     paddingBottom: 15,
-    backgroundColor: "#E8DDD0",
   },
   cardsGrid: {
     flexDirection: "row",
@@ -263,34 +261,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     gap: 12,
     marginBottom: 20,
-    backgroundColor: "#E8DDD0",
   },
   navCard: {
     width: "48%",
-    backgroundColor: "#fff",
-    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
+    borderRadius: 20,
     padding: 20,
     alignItems: "center",
     justifyContent: "center",
     minHeight: 100,
     borderWidth: 1,
-    borderColor: "#E0D9CE",
+    borderColor: "rgba(255, 255, 255, 0.6)",
   },
   navIconContainer: {
     marginBottom: 8,
   },
-  navIcon: {
-    fontSize: 36,
+  navIconImage: {
+    width: 40,
+    height: 40,
   },
   navLabel: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#333",
+    color: "#6B5B4F",
   },
   featuredSection: {
     paddingHorizontal: 15,
-    paddingBottom: 100,
-    backgroundColor: "#E8DDD0",
+    paddingBottom: 120,
   },
   featuredHeader: {
     flexDirection: "row",
@@ -301,11 +298,11 @@ const styles = StyleSheet.create({
   featuredTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#000",
+    color: "#8B7B6C",
   },
   seeAll: {
     fontSize: 13,
-    color: "#D4AF37",
+    color: "#8B7B6C",
     fontWeight: "600",
   },
   museumCardsContainer: {
@@ -313,19 +310,19 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   museumCard: {
-    width: 180,
-    height: 220,
-    borderRadius: 15,
+    width: 220,
+    height: 280,
+    borderRadius: 20,
     overflow: "hidden",
     backgroundColor: "#fff",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 8,
   },
   museumImage: {
     width: "100%",
@@ -333,53 +330,21 @@ const styles = StyleSheet.create({
   },
   museumCardOverlay: {
     position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.75)",
+    bottom: 15,
+    left: 15,
+    right: 15,
+  },
+  museumTitleBubble: {
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    borderRadius: 15,
     padding: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.7)",
   },
   museumCardTitle: {
-    color: "#fff",
+    color: "#333",
     fontSize: 14,
-    fontWeight: "bold",
+    fontWeight: "700",
     lineHeight: 18,
-  },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#E8DDD0",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 12,
-    paddingBottom: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E5E5",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
-  },
-  navItem: {
-    alignItems: "center",
-    gap: 4,
-  },
-  navItemIcon: {
-    fontSize: 22,
-  },
-  navItemLabel: {
-    fontSize: 10,
-    color: "#999",
-    fontWeight: "500",
-  },
-  navItemActive: {
-    color: "#D4AF37",
-    fontWeight: "600",
   },
 });
