@@ -5,9 +5,9 @@ import { env } from './config/env';
 async function bootstrap() {
   await connectDatabase();
 
-  app.listen(env.port, () => {
-    console.log(`Revive Egypt API running on http://localhost:${env.port}`);
-  });
+app.listen(env.port, '0.0.0.0', () => {
+  console.log(`Revive Egypt API running on port ${env.port}`);
+});
 }
 
 
@@ -17,5 +17,4 @@ async function bootstrap() {
 bootstrap().catch((err) => {
   console.error('Failed to start server:', err);
   process.exit(1);
-});
-
+})   ;
