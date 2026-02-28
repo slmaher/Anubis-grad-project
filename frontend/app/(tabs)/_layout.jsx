@@ -55,9 +55,23 @@ function CustomTabBar({ state, descriptors, navigation }) {
 
   const currentRoute = state.routes[state.index].name;
 
-  if (currentRoute === 'scan' || currentRoute === 'community' || currentRoute === 'scan-result') {
-    return null;
+const hideTabBar = currentRoute === 'scan' || currentRoute === 'community' || currentRoute === 'scan-result';
+
+useEffect(() => {
+  if (hideTabBar) {
+    Animated.spring(bubblePosition, {
+      toValue: -1, // move bubble offscreen smoothly
+      useNativeDriver: true,
+      friction: 7,
+      tension: 60,
+    }).start();
   }
+}, [hideTabBar]);
+
+if (hideTabBar) {
+  return null;
+}
+
 
   return (
     <View style={styles.tabBarContainer}>
@@ -138,15 +152,15 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   tabBarContainer: {
     position: 'absolute',
-    bottom: 20,
-    left: 40,
-    right: 40,
+    bottom: 30,
+    left: 30,
+    right: 30,
   },
 
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.85)', // 🔥 less transparent
-    borderRadius: 35,
+    backgroundColor: 'rgba(255, 255, 255, 0.90)', // 🔥 less transparent
+    borderRadius: 38,
     paddingVertical: 8,
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.9)',
@@ -163,12 +177,12 @@ const styles = StyleSheet.create({
 
   activeBubble: {
     position: 'absolute',
-    height: 65, // 🔥 bigger bubble
+    height: 70, // 🔥 bigger bubble
     borderRadius: 35,
     backgroundColor: 'rgba(255,255,255,0.9)',
 
     top: 4,
-    left: 0,
+    left: -5,
 
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
