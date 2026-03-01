@@ -309,8 +309,8 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   savedIcon: {
-    backgroundColor: "rgba(212, 175, 55, 0.7)",
-    borderColor: "rgba(212, 175, 55, 0.8)",
+    backgroundColor: "rgba(255, 232, 197, 0.84)",
+    borderColor: "rgba(255, 232, 197, 0.84)",
   },
   iconImage: {
     width: 28,

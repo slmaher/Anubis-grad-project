@@ -154,6 +154,9 @@ export default function MuseumProfile() {
             onError={() => setImageError(true)}
           />
           
+          {/* Shadow Layer under image */}
+          <View style={styles.imageShadow} />
+          
           {/* Back Button */}
           <TouchableOpacity 
             style={styles.backButton}
@@ -258,7 +261,7 @@ export default function MuseumProfile() {
           {/* Description */}
           <Text style={styles.description}>{museum.description}</Text>
 
-          <View style={{ height: 140 }} />
+          <View style={{ height: 180 }} />
         </ScrollView>
 
         {/* Book Ticket Button */}
@@ -291,16 +294,26 @@ const styles = StyleSheet.create({
   museumImage: {
     width: "100%",
     height: "100%",
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    borderBottomLeftRadius: 50,
+    borderBottomRightRadius: 50,
+  },
+  imageShadow: {
+    position: "absolute",
+    bottom: -15,
+    left: 20,
+    right: 20,
+    height: 30,
+    backgroundColor: "transparent",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 6,
+      height: 10,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 10,
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 15,
+    borderBottomLeftRadius: 50,
+    borderBottomRightRadius: 50,
   },
   backButton: {
     position: "absolute",
@@ -354,7 +367,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   price: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#fff",
     fontWeight: "500",
     textShadowColor: "rgba(0, 0, 0, 0.75)",
@@ -362,13 +375,13 @@ const styles = StyleSheet.create({
     textShadowRadius: 3,
   },
   ratingBadge: {
-    backgroundColor: "rgba(212, 175, 55, 0.9)",
+    backgroundColor: "transparent",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   ratingText: {
-    fontSize: 13,
+    fontSize: 15,
     color: "#fff",
     fontWeight: "600",
   },
@@ -401,15 +414,15 @@ const styles = StyleSheet.create({
   },
   tabsContent: {
     paddingHorizontal: 20,
-    gap: 5,
+    gap: -9,
   },
   tab: {
     paddingVertical: 10,
     paddingHorizontal: 20,
-    marginRight: 10,
+    marginRight: 3,
   },
   tabText: {
-    fontSize: 16,
+    fontSize: 19,
     color: "#999",
     fontWeight: "500",
   },
@@ -428,8 +441,8 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     flex: 1,
-    backgroundColor: "#E5E5E5",
-    borderRadius: 10,
+    backgroundColor: "#ffffff",
+    borderRadius: 20,
     padding: 10,
     alignItems: "center",
     flexDirection: "row",
@@ -437,7 +450,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   infoText: {
-    fontSize: 12,
+    fontSize: 14,
     color: "#666",
     fontWeight: "600",
   },
@@ -457,7 +470,7 @@ const styles = StyleSheet.create({
   },
   bookButtonContainer: {
     position: "absolute",
-    bottom: 20,
+    bottom: 70,
     left: 0,
     right: 0,
     alignItems: "center",
@@ -465,9 +478,9 @@ const styles = StyleSheet.create({
   },
   bookButton: {
     backgroundColor: "#000",
-    paddingVertical: 16,
-    paddingHorizontal: 60,
-    borderRadius: 30,
+    paddingVertical: 20,
+    paddingHorizontal: 120,
+    borderRadius: 40,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
