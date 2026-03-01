@@ -178,13 +178,16 @@ export default function Scan() {
             onPress={handleScan}
             disabled={isScanning}
           >
-            <View style={[styles.scanButtonInner, isScanning && styles.scanningActive]}>
-              {isScanning ? (
-                <Text style={styles.scanningText}>⌛</Text>
-              ) : (
-                <FontAwesome5 name="camera" size={28} color="#000" />
-              )}
-            </View>
+<View style={[styles.scanButtonInner, isScanning && styles.scanningActive]}>
+  {isScanning ? (
+    <Image
+      source={require("../../assets/images/loading.png")}
+      style={styles.loadingIcon}
+    />
+  ) : (
+    <FontAwesome5 name="camera" size={28} color="#000" />
+  )}
+</View>
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -394,6 +397,10 @@ const styles = StyleSheet.create({
   },
   scanningActive: {
     backgroundColor: "#d3d3d3",
+  },
+    loadingIcon: {
+    width: 32,
+    height: 32,
   },
   scanningText: {
     fontSize: 32,
