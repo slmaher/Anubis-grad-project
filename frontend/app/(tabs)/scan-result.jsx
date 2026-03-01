@@ -111,7 +111,7 @@ export default function ScanResult() {
 
   return (
     <ImageBackground
-      source={require("../../assets/images/community-background.png")}
+      source={require("../../assets/images/beige-background.jpeg")}
       style={styles.backgroundImage}
       resizeMode="cover"
     >
@@ -172,7 +172,7 @@ export default function ScanResult() {
               onPress={handleShare}
             >
               <View style={styles.actionIcon}>
-                <Entypo name="share" size={26} color="#333" />
+                <Entypo name="share" size={28} color="#333" />
               </View>
               <Text style={styles.actionLabel}>Share</Text>
             </TouchableOpacity>
