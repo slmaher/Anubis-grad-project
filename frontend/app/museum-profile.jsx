@@ -250,7 +250,7 @@ export default function MuseumProfile() {
               <Text style={styles.infoText}>{museum.capacity}</Text>
             </View>
             <View style={styles.infoCard}>
-              <AntDesign name="clockcircle" size={20} color="#666" />
+              <AntDesign  name="clock-circle" size={20} color="#666" />
               <Text style={styles.infoText}>{museum.duration}</Text>
             </View>
           </View>
