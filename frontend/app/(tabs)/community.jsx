@@ -1,10 +1,26 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, ImageBackground } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, ImageBackground, Modal, KeyboardAvoidingView, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import * as ImagePicker from "expo-image-picker";
 
 export default function Community() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isPostModalVisible, setPostModalVisible] = useState(false);
+  const [newPostContent, setNewPostContent] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
+    }
+  };
 
   const stories = [
     { id: 1, name: "You", image: require("../../assets/images/profile-you.png"), isUser: true },
@@ -154,8 +170,78 @@ export default function Community() {
         ))}
       </ScrollView>
 
+      {/* Post Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isPostModalVisible}
+        onRequestClose={() => setPostModalVisible(false)}
+      >
+        <KeyboardAvoidingView 
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Create Post</Text>
+              <TouchableOpacity onPress={() => {
+                setPostModalVisible(false);
+                setSelectedImage(null);
+                setNewPostContent("");
+              }}>
+                <Text style={styles.closeModalText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.postInput}
+              placeholder="What's going on?"
+              multiline
+              value={newPostContent}
+              onChangeText={setNewPostContent}
+              placeholderTextColor="#999"
+              autoFocus={true}
+            />
+            
+            {selectedImage && (
+              <View style={styles.imagePreviewContainer}>
+                <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+                <TouchableOpacity 
+                  style={styles.removeImageButton}
+                  onPress={() => setSelectedImage(null)}
+                >
+                  <Text style={styles.removeImageText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.attachButton} onPress={pickImage}>
+                <Text style={styles.attachIcon}>📷</Text>
+                <Text style={styles.attachText}>Add Photo</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.postButton, (!newPostContent.trim() && !selectedImage) && styles.postButtonDisabled]}
+              disabled={!newPostContent.trim() && !selectedImage}
+              onPress={() => {
+                // Here we would normally dispatch the post action to the backend
+                setPostModalVisible(false);
+                setNewPostContent("");
+                setSelectedImage(null);
+              }}
+            >
+              <Text style={styles.postButtonText}>Post</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
       {/* Floating Action Button */}
-      <TouchableOpacity style={styles.fab}>
+      <TouchableOpacity 
+        style={styles.fab}
+        onPress={() => setPostModalVisible(true)}
+      >
         <Text style={styles.fabIcon}>+</Text>
       </TouchableOpacity>
 
@@ -457,6 +543,112 @@ const styles = StyleSheet.create({
   navLabel: {
     fontSize: 10,
     color: "#666",
+    fontWeight: "500",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    minHeight: "50%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  closeModalText: {
+    fontSize: 20,
+    color: "#666",
+    padding: 5,
+  },
+  postInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#333",
+    textAlignVertical: "top",
+    minHeight: 150,
+  },
+  postButton: {
+    backgroundColor: "#000",
+    paddingVertical: 15,
+    borderRadius: 25,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  postButtonDisabled: {
+    backgroundColor: "#ccc",
+  },
+  postButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  imagePreviewContainer: {
+    paddingVertical: 10,
+    position: "relative",
+    alignItems: "center",
+  },
+  imagePreview: {
+    width: "100%",
+    height: 200,
+    borderRadius: 15,
+    resizeMode: "cover",
+  },
+  removeImageButton: {
+    position: "absolute",
+    top: 20,
+    right: 15,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  removeImageText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  modalActions: {
+    flexDirection: "row",
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    marginTop: 10,
+  },
+  attachButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  attachIcon: {
+    fontSize: 18,
+    marginRight: 5,
+  },
+  attachText: {
+    color: "#333",
+    fontSize: 14,
     fontWeight: "500",
   },
 });
