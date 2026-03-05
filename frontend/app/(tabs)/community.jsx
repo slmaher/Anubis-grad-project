@@ -1,10 +1,78 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, ImageBackground } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, ImageBackground, Modal, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import * as ImagePicker from "expo-image-picker";
+import { api } from "../api/client";
+import { getAuthToken } from "../api/authStorage";
 
 export default function Community() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isPostModalVisible, setPostModalVisible] = useState(false);
+  const [newPostContent, setNewPostContent] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchPosts = async () => {
+    try {
+      const response = await api.getPosts();
+      setPosts(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch posts:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const handleCreatePost = async () => {
+    if (!newPostContent.trim() && !selectedImage) return;
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        alert("You must be logged in to post.");
+        return;
+      }
+      
+      let base64Image = selectedImage;
+      if (selectedImage && !selectedImage.startsWith('data:')) {
+         // Optionally, handling base64, but assuming the image is processed properly
+      }
+
+      await api.createPost(
+        { content: newPostContent, image: base64Image },
+        token
+      );
+      setPostModalVisible(false);
+      setNewPostContent("");
+      setSelectedImage(null);
+      fetchPosts(); // Refresh posts
+    } catch (error) {
+      console.error("Failed to create post:", error);
+      alert("Failed to create post. " + error.message);
+    }
+  };
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.5,
+      base64: true,
+    });
+
+    if (!result.canceled) {
+      if (result.assets[0].base64) {
+        setSelectedImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+      } else {
+        setSelectedImage(result.assets[0].uri);
+      }
+    }
+  };
 
   const stories = [
     { id: 1, name: "You", image: require("../../assets/images/profile-you.png"), isUser: true },
@@ -12,33 +80,6 @@ export default function Community() {
     { id: 3, name: "Farita", image: require("../../assets/images/profile-farita.png"), isUser: false },
     { id: 4, name: "Marie", image: require("../../assets/images/profile-marie.png"), isUser: false },
     { id: 5, name: "Claire", image: require("../../assets/images/profile-claire.png"), isUser: false },
-  ];
-
-  const posts = [
-    {
-      id: 1,
-      author: "James",
-      time: "1 hour ago",
-      content: "Loved my visit to the Grand Egyptian Museum! Amazing exhibits and a wonderful atmosphere — a must-see in Egypt!",
-      avatar: require("../../assets/images/profile-james.png"),
-      likes: 0,
-    },
-    {
-      id: 2,
-      author: "Tomas",
-      time: "2 hour ago",
-      content: "Hello! I'm heading to the National Museum of Egyptian Civilization on Saturday, October 19th at 11:00 AM. If anyone is interested in visiting, let's go together and enjoy the tour!",
-      avatar: require("../../assets/images/profile-tomas.png"),
-      likes: 0,
-    },
-    {
-      id: 3,
-      author: "Alex",
-      time: "3 hour ago",
-      content: "A hidden gem! The Museum of Islamic Art showcases breathtaking patterns, calligraphy, and rare historical artifacts. It's peaceful, informative, and beautifully designed.",
-      avatar: require("../../assets/images/profile-alex.png"),
-      likes: 0,
-    },
   ];
 
   return (
@@ -122,40 +163,117 @@ export default function Community() {
         </ScrollView>
 
         {/* Recent Posts */}
+        {/* Recent Posts */}
         <Text style={styles.sectionTitle}>Recent posts</Text>
 
-        {posts.map((post) => (
-          <View key={post.id} style={styles.postCard}>
-            <View style={styles.postHeader}>
-              <Image
-                source={post.avatar}
-                style={styles.postAvatar}
-              />
-              <View style={styles.postInfo}>
-                <Text style={styles.postAuthor}>{post.author}</Text>
-                <Text style={styles.postTime}>{post.time}</Text>
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#000" style={{ marginTop: 20 }} />
+        ) : posts.length === 0 ? (
+          <Text style={{ textAlign: 'center', marginTop: 20, color: '#666' }}>No posts yet. Be the first to post!</Text>
+        ) : (
+          posts.map((post) => (
+            <View key={post._id || post.id} style={styles.postCard}>
+              <View style={styles.postHeader}>
+                <Image
+                  source={(post.user && post.user.avatar) ? { uri: post.user.avatar } : require("../../assets/images/profile-you.png")}
+                  style={styles.postAvatar}
+                />
+                <View style={styles.postInfo}>
+                  <Text style={styles.postAuthor}>{post.user?.name || post.author || "Anonymous"}</Text>
+                  <Text style={styles.postTime}>
+                    {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : post.time || "Just now"}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.postContent}>{post.content}</Text>
+              {post.image && (
+                <Image source={{ uri: post.image }} style={styles.postImage} />
+              )}
+
+              <View style={styles.postActions}>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Text style={styles.actionIcon}>♡ {post.likes || 0}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Text style={styles.actionIcon}>💬</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Text style={styles.actionIcon}>↗</Text>
+                </TouchableOpacity>
               </View>
             </View>
-
-            <Text style={styles.postContent}>{post.content}</Text>
-
-            <View style={styles.postActions}>
-              <TouchableOpacity style={styles.actionButton}>
-                <Text style={styles.actionIcon}>♡</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Text style={styles.actionIcon}>💬</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Text style={styles.actionIcon}>↗</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
+          ))
+        )}
       </ScrollView>
 
+      {/* Post Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isPostModalVisible}
+        onRequestClose={() => setPostModalVisible(false)}
+      >
+        <KeyboardAvoidingView 
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Create Post</Text>
+              <TouchableOpacity onPress={() => {
+                setPostModalVisible(false);
+                setSelectedImage(null);
+                setNewPostContent("");
+              }}>
+                <Text style={styles.closeModalText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.postInput}
+              placeholder="What's going on?"
+              multiline
+              value={newPostContent}
+              onChangeText={setNewPostContent}
+              placeholderTextColor="#999"
+              autoFocus={true}
+            />
+            
+            {selectedImage && (
+              <View style={styles.imagePreviewContainer}>
+                <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+                <TouchableOpacity 
+                  style={styles.removeImageButton}
+                  onPress={() => setSelectedImage(null)}
+                >
+                  <Text style={styles.removeImageText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.attachButton} onPress={pickImage}>
+                <Text style={styles.attachIcon}>📷</Text>
+                <Text style={styles.attachText}>Add Photo</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.postButton, (!newPostContent.trim() && !selectedImage) && styles.postButtonDisabled]}
+              disabled={!newPostContent.trim() && !selectedImage}
+              onPress={handleCreatePost}
+            >
+              <Text style={styles.postButtonText}>Post</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
       {/* Floating Action Button */}
-      <TouchableOpacity style={styles.fab}>
+      <TouchableOpacity 
+        style={styles.fab}
+        onPress={() => setPostModalVisible(true)}
+      >
         <Text style={styles.fabIcon}>+</Text>
       </TouchableOpacity>
 
@@ -384,6 +502,13 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 12,
   },
+  postImage: {
+    width: "100%",
+    height: 200,
+    borderRadius: 10,
+    marginBottom: 12,
+    resizeMode: "cover",
+  },
   postActions: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -457,6 +582,112 @@ const styles = StyleSheet.create({
   navLabel: {
     fontSize: 10,
     color: "#666",
+    fontWeight: "500",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    minHeight: "50%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  closeModalText: {
+    fontSize: 20,
+    color: "#666",
+    padding: 5,
+  },
+  postInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#333",
+    textAlignVertical: "top",
+    minHeight: 150,
+  },
+  postButton: {
+    backgroundColor: "#000",
+    paddingVertical: 15,
+    borderRadius: 25,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  postButtonDisabled: {
+    backgroundColor: "#ccc",
+  },
+  postButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  imagePreviewContainer: {
+    paddingVertical: 10,
+    position: "relative",
+    alignItems: "center",
+  },
+  imagePreview: {
+    width: "100%",
+    height: 200,
+    borderRadius: 15,
+    resizeMode: "cover",
+  },
+  removeImageButton: {
+    position: "absolute",
+    top: 20,
+    right: 15,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  removeImageText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  modalActions: {
+    flexDirection: "row",
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    marginTop: 10,
+  },
+  attachButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  attachIcon: {
+    fontSize: 18,
+    marginRight: 5,
+  },
+  attachText: {
+    color: "#333",
+    fontSize: 14,
     fontWeight: "500",
   },
 });

@@ -80,6 +80,18 @@ export const api = {
     });
   },
 
+  // Posts
+  getPosts() {
+    return apiRequest("/api/posts");
+  },
+  createPost(payload, token) {
+    return apiRequest("/api/posts", {
+      method: "POST",
+      body: payload,
+      token,
+    });
+  },
+
   // Chat
   getConversations(token) {
     return apiRequest("/api/chat/conversations", { token });
