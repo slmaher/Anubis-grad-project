@@ -112,5 +112,10 @@ export const api = {
       token,
     });
   },
+
+  // Users
+  getUserProfile(id, token) {
+    return apiRequest(`/api/users/profile/${id}`, { token });
+  },
 };
 
