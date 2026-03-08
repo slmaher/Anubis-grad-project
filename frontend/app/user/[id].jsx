@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import { api } from "../api/client";
 import { getAuthToken } from "../api/authStorage";
+import * as ImagePicker from "expo-image-picker";
 
 export default function UserProfile() {
   const { id } = useLocalSearchParams();
@@ -11,6 +12,8 @@ export default function UserProfile() {
   const [loading, setLoading] = useState(true);
   const [friendRequestSent, setFriendRequestSent] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
+  const [isCurrentUser, setIsCurrentUser] = useState(false);
+  const [isUpdatingPhoto, setIsUpdatingPhoto] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -24,10 +27,15 @@ export default function UserProfile() {
 
         const response = await api.getUserProfile(id, token);
         const postsResponse = await api.getPosts(id);
+        const meResponse = await api.getMe(token);
 
         if (response.success && response.data) {
           setProfile(response.data);
           setUserPosts(postsResponse.data || []);
+          
+          if (meResponse.success && meResponse.data._id === response.data._id) {
+            setIsCurrentUser(true);
+          }
         } else {
           Alert.alert("Error", "Failed to load user profile.");
           router.back();
@@ -45,6 +53,37 @@ export default function UserProfile() {
       fetchProfile();
     }
   }, [id]);
+
+  const handleChangePhoto = async () => {
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+        base64: true,
+      });
+
+      if (!result.canceled) {
+        setIsUpdatingPhoto(true);
+        const token = await getAuthToken();
+        const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+        
+        const response = await api.updateProfile({ avatar: base64Image }, token);
+        if (response.success) {
+          setProfile(prev => ({ ...prev, avatar: response.data.avatar }));
+          Alert.alert("Success", "Profile photo updated!");
+        } else {
+          Alert.alert("Error", "Failed to update photo.");
+        }
+      }
+    } catch (error) {
+      console.error("Error updating photo:", error);
+      Alert.alert("Error", "An error occurred while updating photo.");
+    } finally {
+      setIsUpdatingPhoto(false);
+    }
+  };
 
   const handleSendFriendRequest = () => {
     // In a real app, this would call an API
@@ -100,7 +139,22 @@ export default function UserProfile() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profileCard}>
-          <Image source={avatarSource} style={styles.avatar} />
+          <View style={styles.avatarContainer}>
+            <Image source={avatarSource} style={styles.avatar} />
+            {isCurrentUser && (
+              <TouchableOpacity 
+                style={styles.editBadge} 
+                onPress={handleChangePhoto}
+                disabled={isUpdatingPhoto}
+              >
+                {isUpdatingPhoto ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.editIcon}>✎</Text>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
           <Text style={styles.name}>{profile.name}</Text>
           <Text style={styles.role}>{profile.role || "Member"}</Text>
 
@@ -242,17 +296,43 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.5)",
   },
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: 20,
+  },
   avatar: {
     width: 120,
     height: 120,
     borderRadius: 60,
     borderWidth: 4,
     borderColor: "#fff",
-    marginBottom: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
+  },
+  editBadge: {
+    position: 'absolute',
+    bottom: 5,
+    right: 5,
+    backgroundColor: '#6B5B4F',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  editIcon: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   name: {
     fontSize: 28,

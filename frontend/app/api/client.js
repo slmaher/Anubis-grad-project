@@ -50,6 +50,9 @@ export const api = {
       body: { name, email, password, role: "Visitor" },
     });
   },
+  getMe(token) {
+    return apiRequest("/api/users/me", { token });
+  },
 
   // Museums
   getMuseums() {
@@ -117,6 +120,13 @@ export const api = {
   // Users
   getUserProfile(id, token) {
     return apiRequest(`/api/users/profile/${id}`, { token });
+  },
+  updateProfile(payload, token) {
+    return apiRequest("/api/users/me", {
+      method: "PATCH",
+      body: payload,
+      token,
+    });
   },
 };
 
