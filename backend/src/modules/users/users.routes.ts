@@ -27,6 +27,38 @@ usersRouter.get(
 }
 );
 
+// PATCH /api/users/me - update current user profile
+usersRouter.patch(
+  '/me',
+  authenticate,
+  validateBody(UpdateUserDto),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const dto = req.body as UpdateUserDto;
+      const userId = req.user!.id;
+
+      const user = await UserModel.findByIdAndUpdate(
+        userId,
+        {
+          $set: {
+            ...(dto.name && { name: dto.name }),
+            ...(dto.avatar && { avatar: dto.avatar })
+          }
+        },
+        { new: true }
+      ).select('-password');
+
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      return res.json({ success: true, data: user });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 // GET /api/users/profile/:id - view user profile
 usersRouter.get(
   '/profile/:id',
