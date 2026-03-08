@@ -81,8 +81,9 @@ export const api = {
   },
 
   // Posts
-  getPosts() {
-    return apiRequest("/api/posts");
+  getPosts(userId = null) {
+    const url = userId ? `/api/posts?userId=${userId}` : "/api/posts";
+    return apiRequest(url);
   },
   createPost(payload, token) {
     return apiRequest("/api/posts", {

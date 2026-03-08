@@ -11,7 +11,10 @@ postsRouter.get(
   '/',
   async (req, res: Response, next: NextFunction) => {
     try {
-      const posts = await PostModel.find()
+      const { userId } = req.query;
+      const filter = userId ? { user: userId } : {};
+
+      const posts = await PostModel.find(filter)
         .populate('user', 'name email avatar')
         .sort({ createdAt: -1 });
 
