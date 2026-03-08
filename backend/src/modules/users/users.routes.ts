@@ -27,6 +27,23 @@ usersRouter.get(
 }
 );
 
+// GET /api/users/profile/:id - view user profile
+usersRouter.get(
+  '/profile/:id',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const user = await UserModel.findById(req.params.id).select('-password');
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+      return res.json({ success: true, data: user });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 // ADMIN: list all users
 usersRouter.get(
   '/',

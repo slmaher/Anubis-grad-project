@@ -57,6 +57,11 @@ export default function Community() {
     }
   };
 
+  const handleUserClick = (userId) => {
+    if (!userId) return;
+    router.push(`/user/${userId}`);
+  };
+
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
@@ -179,7 +184,9 @@ export default function Community() {
                   style={styles.postAvatar}
                 />
                 <View style={styles.postInfo}>
-                  <Text style={styles.postAuthor}>{post.user?.name || post.author || "Anonymous"}</Text>
+                  <TouchableOpacity onPress={() => handleUserClick(post.user?._id || post.user?.id)}>
+                    <Text style={styles.postAuthor}>{post.user?.name || post.author || "Anonymous"}</Text>
+                  </TouchableOpacity>
                   <Text style={styles.postTime}>
                     {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : post.time || "Just now"}
                   </Text>
