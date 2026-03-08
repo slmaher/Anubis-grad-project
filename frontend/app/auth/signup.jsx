@@ -16,20 +16,29 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async () => {
+    if (loading) return; // Prevent double submit
     if (!firstName || !lastName || !email || !password) {
       Alert.alert("Missing details", "Please fill in all fields.");
       return;
     }
 
+    const trimmedEmail = email.trim().toLowerCase();
     const name = `${firstName.trim()} ${lastName.trim()}`.trim();
+
+    console.log("[Signup] Attempting registration for email:", trimmedEmail);
 
     try {
       setLoading(true);
-      const result = await api.register(name, email.trim(), password);
+      const result = await api.register(name, trimmedEmail, password);
       
-      // DON'T save the session - just create the account
-      // User must log in manually after signup
-      
+      console.log("[Signup] Registration successful:", result?.data?.user?.email);
+
+      // Clear fields after successful registration
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      setPassword("");
+
       // Show success message and redirect to login
       Alert.alert(
         "Account Created!",
@@ -44,7 +53,7 @@ export default function Signup() {
         ]
       );
     } catch (error) {
-      console.error("Signup failed", error);
+      console.error("[Signup] failed:", error?.message);
       Alert.alert(
         "Sign up failed",
         error?.message || "Please check your details and try again."
