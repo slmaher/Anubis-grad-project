@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, ImageBackground, Alert } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, ImageBackground, Alert, ScrollView } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import { api } from "../api/client";
@@ -10,6 +10,7 @@ export default function UserProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [friendRequestSent, setFriendRequestSent] = useState(false);
+  const [userPosts, setUserPosts] = useState([]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -22,8 +23,11 @@ export default function UserProfile() {
         }
 
         const response = await api.getUserProfile(id, token);
+        const postsResponse = await api.getPosts(id);
+
         if (response.success && response.data) {
           setProfile(response.data);
+          setUserPosts(postsResponse.data || []);
         } else {
           Alert.alert("Error", "Failed to load user profile.");
           router.back();
@@ -94,7 +98,7 @@ export default function UserProfile() {
         <View style={styles.headerRight} />
       </View>
 
-      <View style={styles.content}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profileCard}>
           <Image source={avatarSource} style={styles.avatar} />
           <Text style={styles.name}>{profile.name}</Text>
@@ -102,7 +106,7 @@ export default function UserProfile() {
 
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
-              <Text style={styles.statNumber}>12</Text>
+              <Text style={styles.statNumber}>{userPosts.length}</Text>
               <Text style={styles.statLabel}>Posts</Text>
             </View>
             <View style={styles.statDivider} />
@@ -128,7 +132,45 @@ export default function UserProfile() {
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+
+        <Text style={styles.sectionTitle}>User Posts</Text>
+        
+        {userPosts.length === 0 ? (
+          <Text style={styles.noPostsText}>This user hasn't posted anything yet.</Text>
+        ) : (
+          userPosts.map((post) => (
+            <View key={post._id || post.id} style={styles.postCard}>
+              <View style={styles.postHeader}>
+                <Image
+                  source={avatarSource}
+                  style={styles.postAvatar}
+                />
+                <View style={styles.postInfo}>
+                  <Text style={styles.postAuthor}>{profile.name}</Text>
+                  <Text style={styles.postTime}>
+                    {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : post.time || "Just now"}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.postContent}>{post.content}</Text>
+              {post.image && (
+                <Image source={{ uri: post.image }} style={styles.postImage} />
+              )}
+
+              <View style={styles.postActions}>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Text style={styles.actionIcon}>♡ {post.likes || 0}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Text style={styles.actionIcon}>💬</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))
+        )}
+        <View style={{ height: 40 }} />
+      </ScrollView>
     </ImageBackground>
   );
 }
@@ -293,5 +335,76 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: "#6B5B4F",
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#4A3E39",
+    marginTop: 30,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+  },
+  noPostsText: {
+    textAlign: 'center',
+    color: '#666',
+    fontSize: 15,
+    marginTop: 20,
+  },
+  postCard: {
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    marginBottom: 15,
+    borderRadius: 15,
+    padding: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  postHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  postAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  postInfo: {
+    flex: 1,
+  },
+  postAuthor: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#000",
+  },
+  postTime: {
+    fontSize: 12,
+    color: "#999",
+    marginTop: 2,
+  },
+  postContent: {
+    fontSize: 13,
+    color: "#333",
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  postImage: {
+    width: "100%",
+    height: 200,
+    borderRadius: 10,
+    marginBottom: 12,
+    resizeMode: "cover",
+  },
+  postActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 15,
+  },
+  actionIcon: {
+    fontSize: 18,
+    color: "#666",
   },
 });
