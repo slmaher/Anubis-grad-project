@@ -1,0 +1,216 @@
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+const { width, height } = Dimensions.get('window');
+const TABS = ['Facts', 'Highlights', 'Collections', 'Blogs'];
+
+export default function ArtifactDetailScreen() {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState('Facts');
+
+  return (
+    <View style={styles.root}>
+
+      {/* Full-width hero image */}
+      <View style={styles.hero}>
+        <View style={styles.heroImgPlaceholder}>
+          <Text style={styles.heroEmoji}>🗿</Text>
+        </View>
+
+        {/* Back button */}
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Text style={styles.backArrow}>‹</Text>
+          <Text style={styles.backLabel}>Anubis</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Bottom sheet */}
+      <View style={styles.sheet}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+
+          {/* Tabs */}
+          <View style={styles.tabs}>
+            {TABS.map((tab) => (
+              <TouchableOpacity
+                key={tab}
+                style={styles.tabItem}
+                onPress={() => setActiveTab(tab)}
+              >
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    activeTab === tab && styles.tabLabelActive,
+                  ]}
+                >
+                  {tab}
+                </Text>
+
+                {activeTab === tab && <View style={styles.tabUnderline} />}
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Content */}
+          <View style={styles.content}>
+            <Text style={styles.contentTitle}>Discover Anubis</Text>
+            <Text style={styles.contentBody}>
+              Exquisite handcrafted replicas of ancient Egyptian artifacts,
+              meticulously made in Egypt by master artisans. This piece is a
+              museum-quality treasure that brings the mystique of ancient Egypt
+              into your home or collection. Each artifact is carefully crafted
+              with attention to historical detail and authentic materials.
+            </Text>
+          </View>
+
+          {/* CTA Button */}
+          <View style={styles.ctaContainer}>
+            <TouchableOpacity style={styles.ctaBtn} activeOpacity={0.85}>
+              <Text style={styles.ctaTxt}>Take a virtual tour</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </View>
+
+    </View>
+  );
+}
+
+/* =======================
+   STYLES (React Native CSS)
+   ======================= */
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#1a1108',
+  },
+
+  hero: {
+    width: '100%',
+    height: height * 0.58,
+    backgroundColor: '#2a1e0e',
+    position: 'relative',
+  },
+
+  heroImgPlaceholder: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(80,55,25,0.8)',
+  },
+
+  heroEmoji: {
+    fontSize: 120,
+  },
+
+  backBtn: {
+    position: 'absolute',
+    top: 52,
+    left: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+
+  backArrow: {
+    fontSize: 28,
+    color: '#fff',
+    lineHeight: 32,
+  },
+
+  backLabel: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '500',
+  },
+
+  sheet: {
+    flex: 1,
+    backgroundColor: '#1a1108',
+  },
+
+  tabs: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 20,
+  },
+
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 14,
+    position: 'relative',
+  },
+
+  tabLabel: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.4)',
+    fontWeight: '500',
+  },
+
+  tabLabelActive: {
+    color: '#fff',
+  },
+
+  tabUnderline: {
+    position: 'absolute',
+    bottom: 0,
+    left: '20%',
+    right: '20%',
+    height: 2,
+    backgroundColor: '#fff',
+    borderRadius: 1,
+  },
+
+  content: {
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 20,
+  },
+
+  contentTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 12,
+  },
+
+  contentBody: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.6)',
+    lineHeight: 20,
+  },
+
+  ctaContainer: {
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+
+  ctaBtn: {
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 30,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+
+  ctaTxt: {
+    fontSize: 15,
+    color: '#fff',
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+});
