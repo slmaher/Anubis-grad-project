@@ -74,13 +74,12 @@ export default function FAQScreen() {
 
   return (
     <ImageBackground
-      source={require('../assets/images/bg.png')}
+      source={require('../../assets/images/bg.png')}
       style={styles.background}
       resizeMode="cover"
     >
       <SafeAreaView style={styles.safeArea}>
         <ScrollView showsVerticalScrollIndicator={false}>
-
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
