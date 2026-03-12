@@ -20,21 +20,21 @@ const featuredArtifacts = [
   {
     id: 1,
     title: 'Anubis statue',
-    image: require('../assets/images/Anubis-Statue.png'),
+    image: require('../../assets/images/Anubis-Statue.png'),
     route: '/ArtifactDetailScreen',
   },
   {
     id: 2,
     title: 'Tutankhamum mask',
-    image: require('../assets/images/tutankhamun.png'),
+    image: require('../../assets/images/tutankhamun.png'),
     route: '/ArtifactDetailScreen',
   },
 ];
 
 const collections = [
-  { id: 1, image: require('../assets/images/exploreCollection1.png') },
-  { id: 2, image: require('../assets/images/exploreCollection2.png') },
-  { id: 3, image: require('../assets/images/exploreCollection3.png') },
+  { id: 1, image: require('../../assets/images/exploreCollection1.png') },
+  { id: 2, image: require('../../assets/images/exploreCollection2.png') },
+  { id: 3, image: require('../../assets/images/exploreCollection3.png') },
 ];
 
 // Icons
