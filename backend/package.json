@@ -4,7 +4,7 @@
   "description": "Revive Egypt - Museum-focused backend (Node.js, Express, MongoDB, Mongoose, JWT, RBAC)",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "cross-env NODE_OPTIONS=--dns-result-order=ipv4first ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "ts-node --transpile-only src/seed/run-seed.ts",
@@ -41,6 +41,7 @@
     "@types/jsonwebtoken": "^9.0.5",
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.10.0",
+    "cross-env": "^10.1.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.7.0"
   }
