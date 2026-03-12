@@ -26,7 +26,7 @@ const featuredArtifacts = [
   {
     id: 2,
     title: "Tutankhamum mask",
-    image: require("../../assets/images/tutankhamun.png"),
+    image: require("../../assets/images/Grand-Egyptian-Museum.png"),
     route: "/ArtifactDetailScreen",
   },
 ];

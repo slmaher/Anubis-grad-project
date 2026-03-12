@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import React from 'react';
+import { useRouter } from "expo-router";
+import React from "react";
 import {
   ImageBackground,
   SafeAreaView,
@@ -7,17 +7,17 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
 
 const menuItems = [
-  { label: 'Home',      icon: '🏠', route: '/' },
-  { label: 'Setting',   icon: '⚙️', route: '/SettingsScreen' },
-  { label: 'Profile',   icon: '👤', route: '/ProfileScreen' },
-  { label: 'Museums',   icon: '🏛️', route: '/Museums' },
-  { label: 'Events',    icon: '📅', route: '/Events' },
-  { label: 'Community', icon: '👥', route: '/Community' },
-  { label: 'Scan',      icon: '🔍', route: '/Scan' },
-  { label: 'Map',       icon: '📍', route: '/Map' },
+  { label: "Home", icon: "🏠", route: "/" },
+  { label: "Setting", icon: "⚙️", route: "/SettingsScreen" },
+  { label: "Profile", icon: "👤", route: "/ProfileScreen" },
+  { label: "Museums", icon: "🏛️", route: "/Museums" },
+  { label: "Events", icon: "📅", route: "/Events" },
+  { label: "Community", icon: "👥", route: "/Community" },
+  { label: "Scan", icon: "🔍", route: "/Scan" },
+  { label: "Map", icon: "📍", route: "/Map" },
 ];
 
 export default function MenuScreen() {
@@ -25,12 +25,11 @@ export default function MenuScreen() {
 
   return (
     <ImageBackground
-      source={require('../../assets/images/bg.png')}
+      source={require("../../assets/images/bg.png")}
       style={styles.background}
       resizeMode="cover"
     >
       <SafeAreaView style={styles.safeArea}>
-
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerSpacer} />
@@ -55,39 +54,38 @@ export default function MenuScreen() {
             </TouchableOpacity>
           ))}
         </View>
-
       </SafeAreaView>
     </ImageBackground>
   );
 }
 
-const DARK    = '#2C2010';
-const MUTED   = '#9A8C7A';
-const DIVIDER = 'rgba(180,160,130,0.3)';
+const DARK = "#2C2010";
+const MUTED = "#9A8C7A";
+const DIVIDER = "rgba(180,160,130,0.3)";
 
 const styles = StyleSheet.create({
-  background:   { flex: 1, width: '100%', height: '100%' },
-  safeArea:     { flex: 1 },
+  background: { flex: 1, width: "100%", height: "100%" },
+  safeArea: { flex: 1 },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 14,
   },
   headerSpacer: { width: 32 },
   headerTitle: {
     fontSize: 17,
-    fontWeight: '500',
-    color: '#B8965A',
+    fontWeight: "500",
+    color: "#B8965A",
     letterSpacing: 0.4,
   },
   menuList: {
     marginTop: 8,
   },
   menuRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 18,
     paddingHorizontal: 24,
     borderBottomWidth: 1,
@@ -97,15 +95,15 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 16,
   },
-  iconText:  { fontSize: 24 },
+  iconText: { fontSize: 24 },
   menuLabel: {
     flex: 1,
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
     color: DARK,
     letterSpacing: 0.2,
   },
