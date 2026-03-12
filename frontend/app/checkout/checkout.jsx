@@ -168,7 +168,7 @@ const CheckoutScreen = ({ onSuccess }) => {
 
 const AfterPaymentScreen = ({ onBack }) => (
   <ImageBackground
-    source={require("../assets/images/bg.png")}
+    source={require("../../assets/images/bg.png")}
     style={styles.root}
     resizeMode="cover"
   >
