@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
   ImageBackground,
   SafeAreaView,
@@ -8,59 +8,58 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
 
 const faqs = [
   {
     id: 1,
-    question: 'What services does TanahAir Offer?',
+    question: "What services does TanahAir Offer?",
     answer:
-      'Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.',
+      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
   },
   {
     id: 2,
     question:
-      'Why should I choose a Design studio like TanahAir over full-service agency?',
+      "Why should I choose a Design studio like TanahAir over full-service agency?",
     answer:
-      'Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.',
+      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
   },
   {
     id: 3,
     question:
-      'How does TanahAir create website content without knowing our Business plan?',
+      "How does TanahAir create website content without knowing our Business plan?",
     answer:
-      'Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.',
+      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
   },
   {
     id: 4,
-    question: 'What will be delivered? And When?',
+    question: "What will be delivered? And When?",
     answer:
-      'Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.',
+      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
   },
   {
     id: 5,
-    question: 'What often will results be reported?',
+    question: "What often will results be reported?",
     answer:
-      'Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.',
+      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
   },
   {
     id: 6,
-    question: 'At by pleasure of children be?',
+    question: "At by pleasure of children be?",
     answer:
-      'Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.',
+      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
   },
   {
     id: 7,
-    question: 'Amounted repeated as believed in confined?',
+    question: "Amounted repeated as believed in confined?",
     answer:
-      'Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.',
+      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
   },
   {
     id: 8,
-    question:
-      'In am do giving to afford parish settle easily garret?',
+    question: "In am do giving to afford parish settle easily garret?",
     answer:
-      'Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.',
+      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
   },
 ];
 
@@ -74,7 +73,7 @@ export default function FAQScreen() {
 
   return (
     <ImageBackground
-      source={require('../../assets/images/bg.png')}
+      source={require("../../assets/images/bg.png")}
       style={styles.background}
       resizeMode="cover"
     >
@@ -111,7 +110,6 @@ export default function FAQScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.itemHeader}>
-
                     {/* Plus / Minus icon */}
                     <View style={styles.iconWrap}>
                       {isOpen ? (
@@ -126,20 +124,14 @@ export default function FAQScreen() {
 
                     {/* Question */}
                     <Text
-                      style={[
-                        styles.question,
-                        isOpen && styles.questionOpen,
-                      ]}
+                      style={[styles.question, isOpen && styles.questionOpen]}
                     >
                       {faq.question}
                     </Text>
-
                   </View>
 
                   {/* Answer */}
-                  {isOpen && (
-                    <Text style={styles.answer}>{faq.answer}</Text>
-                  )}
+                  {isOpen && <Text style={styles.answer}>{faq.answer}</Text>}
                 </TouchableOpacity>
               );
             })}
@@ -152,19 +144,19 @@ export default function FAQScreen() {
   );
 }
 
-const DARK = '#1a1a1a';
-const MUTED = '#888';
-const DIVIDER = '#e8e8e8';
-const RED = '#E05A3A';
+const DARK = "#1a1a1a";
+const MUTED = "#888";
+const DIVIDER = "#e8e8e8";
+const RED = "#E05A3A";
 
 const styles = StyleSheet.create({
-  background: { flex: 1, width: '100%', height: '100%' },
+  background: { flex: 1, width: "100%", height: "100%" },
   safeArea: { flex: 1 },
 
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 24,
     paddingTop: 24,
     paddingBottom: 16,
@@ -174,7 +166,7 @@ const styles = StyleSheet.create({
 
   headerTitle: {
     fontSize: 36,
-    fontWeight: '800',
+    fontWeight: "800",
     color: DARK,
     letterSpacing: -0.5,
   },
@@ -182,13 +174,13 @@ const styles = StyleSheet.create({
   filterBtn: {
     width: 36,
     height: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   filterIcon: {
     gap: 4,
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
 
   filterLine: {
@@ -212,22 +204,22 @@ const styles = StyleSheet.create({
   },
 
   itemHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: 14,
   },
 
   iconWrap: {
     width: 20,
     height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 2,
-    position: 'relative',
+    position: "relative",
   },
 
   plusH: {
-    position: 'absolute',
+    position: "absolute",
     width: 14,
     height: 2,
     backgroundColor: DARK,
@@ -235,7 +227,7 @@ const styles = StyleSheet.create({
   },
 
   plusV: {
-    position: 'absolute',
+    position: "absolute",
     width: 2,
     height: 14,
     backgroundColor: DARK,
@@ -252,7 +244,7 @@ const styles = StyleSheet.create({
   question: {
     flex: 1,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     color: DARK,
     lineHeight: 20,
   },
