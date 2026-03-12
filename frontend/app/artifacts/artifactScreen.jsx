@@ -97,7 +97,7 @@ export default function ArtifactsScreen() {
 
   return (
     <ImageBackground
-      source={require("../assets/images/bg.png")}
+      source={require("../../assets/images/bg.png")}
       style={styles.background}
       resizeMode="cover"
     >
