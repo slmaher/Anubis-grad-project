@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import React from 'react';
+import { useRouter } from "expo-router";
+import React from "react";
 import {
   Dimensions,
   Image,
@@ -10,31 +10,31 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 const CARD_W = (width - 48 - 12) / 2;
 const COLLECTION_W = (width - 48 - 20) / 3;
 
 const featuredArtifacts = [
   {
     id: 1,
-    title: 'Anubis statue',
-    image: require('../../assets/images/Anubis-Statue.png'),
-    route: '/ArtifactDetailScreen',
+    title: "Anubis statue",
+    image: require("../../assets/images/Anubis-Statue.png"),
+    route: "/ArtifactDetailScreen",
   },
   {
     id: 2,
-    title: 'Tutankhamum mask',
-    image: require('../../assets/images/tutankhamun.png'),
-    route: '/ArtifactDetailScreen',
+    title: "Tutankhamum mask",
+    image: require("../../assets/images/tutankhamun.png"),
+    route: "/ArtifactDetailScreen",
   },
 ];
 
 const collections = [
-  { id: 1, image: require('../../assets/images/exploreCollection1.png') },
-  { id: 2, image: require('../../assets/images/exploreCollection2.png') },
-  { id: 3, image: require('../../assets/images/exploreCollection3.png') },
+  { id: 1, image: require("../../assets/images/exploreCollection1.png") },
+  { id: 2, image: require("../../assets/images/exploreCollection2.png") },
+  { id: 3, image: require("../../assets/images/exploreCollection3.png") },
 ];
 
 // Icons
@@ -85,11 +85,11 @@ const CommunityIcon = () => (
 );
 
 const tabs = [
-  { label: 'Home', Icon: HomeIcon, route: '/' },
-  { label: 'Explore', Icon: ExploreIcon, route: '/ArtifactsScreen' },
-  { label: 'Scan', Icon: ScanIcon, route: '/Scan' },
-  { label: 'Events', Icon: EventsIcon, route: '/EventsScreen' },
-  { label: 'Community', Icon: CommunityIcon, route: '/Community' },
+  { label: "Home", Icon: HomeIcon, route: "/" },
+  { label: "Explore", Icon: ExploreIcon, route: "/ArtifactsScreen" },
+  { label: "Scan", Icon: ScanIcon, route: "/Scan" },
+  { label: "Events", Icon: EventsIcon, route: "/EventsScreen" },
+  { label: "Community", Icon: CommunityIcon, route: "/Community" },
 ];
 
 export default function ArtifactsScreen() {
@@ -97,12 +97,11 @@ export default function ArtifactsScreen() {
 
   return (
     <ImageBackground
-      source={require('../assets/images/bg.png')}
+      source={require("../assets/images/bg.png")}
       style={styles.background}
       resizeMode="cover"
     >
       <SafeAreaView style={styles.safeArea}>
-
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -125,7 +124,6 @@ export default function ArtifactsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 100 }}
         >
-
           {/* Featured artifacts */}
           <ScrollView
             horizontal
@@ -184,7 +182,6 @@ export default function ArtifactsScreen() {
               </TouchableOpacity>
             ))}
           </ScrollView>
-
         </ScrollView>
 
         {/* Bottom Tab Bar */}
@@ -201,27 +198,26 @@ export default function ArtifactsScreen() {
             </TouchableOpacity>
           ))}
         </View>
-
       </SafeAreaView>
     </ImageBackground>
   );
 }
 
-const DARK = '#1a1a1a';
-const MUTED = '#666';
+const DARK = "#1a1a1a";
+const MUTED = "#666";
 
 /* ======================
    STYLES
    ====================== */
 
 const styles = StyleSheet.create({
-  background: { flex: 1, width: '100%', height: '100%' },
+  background: { flex: 1, width: "100%", height: "100%" },
   safeArea: { flex: 1 },
 
   header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 12,
@@ -231,7 +227,7 @@ const styles = StyleSheet.create({
 
   headerTitle: {
     fontSize: 22,
-    fontWeight: '700',
+    fontWeight: "700",
     color: DARK,
   },
 
@@ -242,9 +238,9 @@ const styles = StyleSheet.create({
   },
 
   headerIcons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   iconBtn: { padding: 6 },
@@ -261,25 +257,25 @@ const styles = StyleSheet.create({
     width: CARD_W,
     height: CARD_W * 1.4,
     borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: '#2a1e0e',
+    overflow: "hidden",
+    backgroundColor: "#2a1e0e",
   },
 
   featuredImg: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
+    width: "100%",
+    height: "100%",
+    position: "absolute",
   },
 
   featuredLabel: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 12,
     left: 12,
     right: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "rgba(0,0,0,0.45)",
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -287,8 +283,8 @@ const styles = StyleSheet.create({
 
   featuredLabelTxt: {
     fontSize: 11,
-    color: '#fff',
-    fontWeight: '500',
+    color: "#fff",
+    fontWeight: "500",
     flex: 1,
   },
 
@@ -296,21 +292,21 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(255,255,255,0.25)",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   featuredArrowTxt: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
     lineHeight: 20,
   },
 
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     marginTop: 20,
     marginBottom: 12,
@@ -318,7 +314,7 @@ const styles = StyleSheet.create({
 
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     color: DARK,
   },
 
@@ -336,24 +332,24 @@ const styles = StyleSheet.create({
     width: COLLECTION_W,
     height: COLLECTION_W * 1.3,
     borderRadius: 14,
-    overflow: 'hidden',
-    backgroundColor: '#2a1e0e',
+    overflow: "hidden",
+    backgroundColor: "#2a1e0e",
   },
 
   collectionImg: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
 
   tabBar: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255,252,248,0.97)',
+    flexDirection: "row",
+    backgroundColor: "rgba(255,252,248,0.97)",
     borderTopWidth: 1,
-    borderTopColor: 'rgba(200,180,150,0.25)',
+    borderTopColor: "rgba(200,180,150,0.25)",
     paddingBottom: 28,
     paddingTop: 12,
     paddingHorizontal: 8,
@@ -361,14 +357,14 @@ const styles = StyleSheet.create({
 
   tabItem: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: 4,
   },
 
   tabLabel: {
     fontSize: 10,
     color: MUTED,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });
