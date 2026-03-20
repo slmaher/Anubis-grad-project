@@ -14,7 +14,7 @@ export default function EventsScreen() {
 
   return (
     <ImageBackground
-      source={require("../../assets/images/bg.png")}
+      source={require("../../assets/images/events-bg.jpeg")}
       style={styles.background}
       resizeMode="cover"
     >
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
 
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(15, 8, 0, 0.55)",
+    backgroundColor: "rgba(15, 8, 0, 0.4)",
   },
 
   safeArea: {
@@ -119,9 +119,9 @@ const styles = StyleSheet.create({
   },
 
   subtitle: {
-    fontSize: 14,
-    color: "rgba(255,255,255,0.7)",
-    marginBottom: 32,
+    fontSize: 16,
+    color: "rgba(255, 255, 255, 0.92)",
+    marginBottom: 450,
     lineHeight: 20,
   },
 
