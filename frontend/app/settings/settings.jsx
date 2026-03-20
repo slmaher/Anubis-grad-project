@@ -24,6 +24,7 @@ const sections = [
     items: [
       { icon: "💳", label: "My Subscribtion", route: null },
       { icon: "❓", label: "Help & Support", route: null },
+      { icon: "➕", label: "FAQ", route: "/faq/FAQ-screens" },
       { icon: "ℹ️", label: "Terms and Policies", route: null },
     ],
   },
@@ -49,7 +50,7 @@ export default function SettingsScreen() {
 
   return (
     <ImageBackground
-      source={require("../../assets/images/bg.png")}
+      source={require("../../assets/images/beige-background.jpeg")}
       style={styles.background}
       resizeMode="cover"
     >

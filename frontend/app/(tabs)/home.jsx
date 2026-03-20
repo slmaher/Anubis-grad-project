@@ -3,12 +3,15 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import MenuScreen from "../menu/menuScreen";
 
 export default function Home() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [menuVisible, setMenuVisible] = useState(false);
 
   return (
+    <View style={{ flex: 1 }}>
     <ImageBackground
       source={require("../../assets/images/home-background.jpeg")}
       style={styles.backgroundImage}
@@ -17,7 +20,10 @@ export default function Home() {
       <View style={styles.container}>
         {/* Header with hamburger menu */}
         <View style={styles.topBar}>
-          <TouchableOpacity style={styles.menuButton}>
+          <TouchableOpacity
+          style={styles.menuButton}
+          onPress={() => setMenuVisible(true)}
+          >
             <Text style={styles.menuIcon}>☰</Text>
           </TouchableOpacity>
           
@@ -170,8 +176,13 @@ export default function Home() {
           </View>
         </ScrollView>
       </View>
-    </ImageBackground>
-  );
+       </ImageBackground>
+
+    {menuVisible && (
+      <MenuScreen onClose={() => setMenuVisible(false)} />
+    )}
+  </View>
+);
 }
 
 const styles = StyleSheet.create({

@@ -22,7 +22,7 @@ export default function ProfileScreen() {
 
   return (
     <ImageBackground
-      source={require("../../assets/images/bg.png")}
+      source={require("../../assets/images/beige-background.jpeg")}
       style={styles.background}
       resizeMode="cover"
     >
@@ -37,7 +37,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profile</Text>
           <TouchableOpacity
-            onPress={() => router.push("/SettingsScreen")}
+            onPress={() => router.push("/settings/settings")}
             style={styles.settingsBtn}
           >
             <Text style={styles.settingsIcon}>⚙️</Text>
