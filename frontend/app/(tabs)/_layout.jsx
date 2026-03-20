@@ -1,6 +1,7 @@
 import { Tabs } from "expo-router";
 import { View, TouchableOpacity, Text, StyleSheet, Animated, Dimensions } from "react-native";
 import { useEffect, useRef } from "react";
+import { useRouter } from "expo-router";
 import Feather from '@expo/vector-icons/Feather';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
@@ -11,6 +12,7 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 
 function CustomTabBar({ state, descriptors, navigation }) {
   const bubblePosition = useRef(new Animated.Value(0)).current;
+  const router = useRouter();
 
   const TAB_WIDTH = (SCREEN_WIDTH - 80) / 5; // dynamic width (left+right = 40+40)
 
@@ -103,10 +105,12 @@ if (hideTabBar) {
           if (options.href === null) return null;
 
           const onPress = () => {
-            if (!isFocused) {
-              navigation.navigate(route.name);
-            }
-          };
+            if (route.name === "events") {
+              router.push("/eventScreen/eventScreen"); // <- navigate to event screen
+              } else if (!isFocused) {
+                navigation.navigate(route.name);
+              }
+            };
 
           return (
             <TouchableOpacity

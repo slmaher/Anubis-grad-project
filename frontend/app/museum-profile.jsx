@@ -220,6 +220,15 @@ export default function MuseumProfile() {
                         museumName: museum.name,
                       },
                     });
+                  } else if (tab === "Artifacts") {
+                    // Navigate to Artifacts Screen
+                    router.push({
+                      pathname: "/artifacts",
+                      params: {
+                        museumId: museum.id,
+                        museumName: museum.name,
+                      },
+                    });
                   } else if (tab === "Nearby") {
                     router.push("/NearbyPlaces");
                   } else {
@@ -250,7 +259,7 @@ export default function MuseumProfile() {
               <Text style={styles.infoText}>{museum.capacity}</Text>
             </View>
             <View style={styles.infoCard}>
-              <AntDesign  name="clock-circle" size={20} color="#666" />
+              <MaterialCommunityIcons name="clock" size={20} color="#666" />
               <Text style={styles.infoText}>{museum.duration}</Text>
             </View>
           </View>

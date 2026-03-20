@@ -1,4 +1,5 @@
-import { useRouter } from 'expo-router';
+import { Image } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import {
   Dimensions,
@@ -10,32 +11,51 @@ import {
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
+
 const TABS = ['Facts', 'Highlights', 'Collections', 'Blogs'];
+
+const imageMap = {
+  anubis: require("../../assets/images/Anubis-Statue.png"),
+  tutankhamun: require("../../assets/images/Grand-Egyptian-Museum.png"),
+};
 
 export default function ArtifactDetailScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [activeTab, setActiveTab] = useState('Facts');
+
+  const imageKey = params.imageKey;
+  const artifactImage = imageMap[imageKey] || imageMap["anubis"];
+
+  // Get artifact data from params
+  const artifactTitle = params.title || "Anubis";
+  const artifactDescription =
+    params.description ||
+    "Exquisite handcrafted replicas of ancient Egyptian artifacts, meticulously made in Egypt by master artisans.";
 
   return (
     <View style={styles.root}>
-
       {/* Full-width hero image */}
       <View style={styles.hero}>
-        <View style={styles.heroImgPlaceholder}>
-          <Text style={styles.heroEmoji}>🗿</Text>
-        </View>
+        <Image
+        source={artifactImage}
+        style={{ width: '100%', height: '100%' }}
+        resizeMode="cover"
+        />
 
         {/* Back button */}
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => router.back()}
+        >
           <Text style={styles.backArrow}>‹</Text>
-          <Text style={styles.backLabel}>Anubis</Text>
+          <Text style={styles.backLabel}>{artifactTitle}</Text>
         </TouchableOpacity>
       </View>
 
       {/* Bottom sheet */}
       <View style={styles.sheet}>
         <ScrollView showsVerticalScrollIndicator={false}>
-
           {/* Tabs */}
           <View style={styles.tabs}>
             {TABS.map((tab) => (
@@ -53,41 +73,49 @@ export default function ArtifactDetailScreen() {
                   {tab}
                 </Text>
 
-                {activeTab === tab && <View style={styles.tabUnderline} />}
+                {activeTab === tab && (
+                  <View style={styles.tabUnderline} />
+                )}
               </TouchableOpacity>
             ))}
           </View>
 
           {/* Content */}
           <View style={styles.content}>
-            <Text style={styles.contentTitle}>Discover Anubis</Text>
+            <Text style={styles.contentTitle}>
+              Discover {artifactTitle}
+            </Text>
+
             <Text style={styles.contentBody}>
-              Exquisite handcrafted replicas of ancient Egyptian artifacts,
-              meticulously made in Egypt by master artisans. This piece is a
-              museum-quality treasure that brings the mystique of ancient Egypt
-              into your home or collection. Each artifact is carefully crafted
-              with attention to historical detail and authentic materials.
+              {artifactDescription}
+              {"\n\n"}
+              This piece is a museum-quality treasure that brings the mystique
+              of ancient Egypt into your home or collection. Each artifact is
+              carefully crafted with attention to historical detail and
+              authentic materials.
             </Text>
           </View>
 
           {/* CTA Button */}
           <View style={styles.ctaContainer}>
-            <TouchableOpacity style={styles.ctaBtn} activeOpacity={0.85}>
-              <Text style={styles.ctaTxt}>Take a virtual tour</Text>
+            <TouchableOpacity
+              style={styles.ctaBtn}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.ctaTxt}>
+                Take a virtual tour
+              </Text>
             </TouchableOpacity>
           </View>
 
           <View style={{ height: 40 }} />
         </ScrollView>
       </View>
-
     </View>
   );
 }
 
-/* =======================
-   STYLES (React Native CSS)
-   ======================= */
+/* ======================= STYLES (React Native CSS) ======================= */
 
 const styles = StyleSheet.create({
   root: {
