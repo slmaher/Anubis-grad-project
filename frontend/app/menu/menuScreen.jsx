@@ -7,12 +7,14 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Animated,     
+  PanResponder, 
 } from "react-native";
 
 const menuItems = [
   { label: "Home", icon: "🏠", route: "/" },
-  { label: "Setting", icon: "⚙️", route: "/SettingsScreen" },
-  { label: "Profile", icon: "👤", route: "/ProfileScreen" },
+  { label: "Setting", icon: "⚙️", route: "/settings/settings" },
+  { label: "Profile", icon: "👤", route: "/profile/profileScreen" },
   { label: "Museums", icon: "🏛️", route: "/Museums" },
   { label: "Events", icon: "📅", route: "/Events" },
   { label: "Community", icon: "👥", route: "/Community" },
@@ -20,31 +22,90 @@ const menuItems = [
   { label: "Map", icon: "📍", route: "/Map" },
 ];
 
-export default function MenuScreen() {
+export default function MenuScreen({ onClose }) {
   const router = useRouter();
 
-  return (
-    <ImageBackground
-      source={require("../../assets/images/bg.png")}
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <SafeAreaView style={styles.safeArea}>
-        {/* Header */}
+  const slideAnim = React.useRef(new Animated.Value(-300)).current; // hidden left initially
+
+React.useEffect(() => {
+  // slide in from left when screen opens
+  Animated.timing(slideAnim, {
+    toValue: 0,
+    duration: 300,
+    useNativeDriver: true,
+  }).start();
+}, []);
+
+const panResponder = React.useRef(
+  PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      // only horizontal swipes
+      return Math.abs(gestureState.dx) > 20;
+    },
+    onPanResponderMove: (evt, gestureState) => {
+      if (gestureState.dx < 0) { // moving left
+        slideAnim.setValue(Math.max(gestureState.dx, -300));
+      }
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      if (gestureState.dx < -100) {
+        // if swiped left enough, close
+        Animated.timing(slideAnim, {
+          toValue: -300,
+          duration: 200,
+          useNativeDriver: true,
+        }).start(() => onClose && onClose());
+      } else {
+        // if swipe too short, snap back
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+      }
+    },
+  })
+).current;
+
+return (
+  <View style={StyleSheet.absoluteFill}>
+    
+    {/* DARK OVERLAY */}
+    <TouchableOpacity
+      style={styles.overlay}
+      activeOpacity={1}
+      onPress={onClose}
+    />
+
+    {/* SLIDING MENU */}
+    <Animated.View
+  {...panResponder.panHandlers}
+  style={[
+    styles.background,
+    { transform: [{ translateX: slideAnim }] },
+  ]}
+>
+  <ImageBackground
+    source={require("../../assets/images/beige-background.jpeg")}
+    style={{ flex: 1 }}
+    resizeMode="cover"
+  >
+    <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <View style={styles.headerSpacer} />
           <Text style={styles.headerTitle}>Menu</Text>
           <View style={styles.headerSpacer} />
         </View>
 
-        {/* Menu Items */}
         <View style={styles.menuList}>
           {menuItems.map((item) => (
             <TouchableOpacity
               key={item.label}
               style={styles.menuRow}
-              onPress={() => router.push(item.route)}
-              activeOpacity={0.7}
+              onPress={() => {
+                onClose && onClose(); // close first
+                router.push(item.route); // then navigate
+              }}
             >
               <View style={styles.iconBox}>
                 <Text style={styles.iconText}>{item.icon}</Text>
@@ -55,8 +116,11 @@ export default function MenuScreen() {
           ))}
         </View>
       </SafeAreaView>
-    </ImageBackground>
-  );
+</ImageBackground>
+</Animated.View>
+
+  </View>
+);
 }
 
 const DARK = "#2C2010";
@@ -64,7 +128,16 @@ const MUTED = "#9A8C7A";
 const DIVIDER = "rgba(180,160,130,0.3)";
 
 const styles = StyleSheet.create({
-  background: { flex: 1, width: "100%", height: "100%" },
+  background: {
+  position: "absolute",
+  top: 0,
+  bottom: 0,
+  left: 0,
+  width: 350, // drawer width
+  backgroundColor: "transparent",
+  zIndex: 999,
+  elevation: 20,
+},
   safeArea: { flex: 1 },
   header: {
     flexDirection: "row",
@@ -112,4 +185,8 @@ const styles = StyleSheet.create({
     color: MUTED,
     lineHeight: 30,
   },
+  overlay: {
+  ...StyleSheet.absoluteFillObject,
+  backgroundColor: "rgba(0,0,0,0.3)",
+},
 });

@@ -13,53 +13,57 @@ import {
 const faqs = [
   {
     id: 1,
-    question: "What services does TanahAir Offer?",
+    question: "What can I do in this app?",
     answer:
-      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
+      "You can explore museums across Egypt, book tickets, discover artifacts, use the interactive map, and shop for souvenirs—all in one place.",
   },
   {
     id: 2,
-    question:
-      "Why should I choose a Design studio like TanahAir over full-service agency?",
+    question: "How do I book tickets for museums?",
     answer:
-      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
+      "Go to the Tickets section, choose your museum, select the date and time, then complete your booking. Your tickets will be saved in your profile.",
   },
   {
     id: 3,
-    question:
-      "How does TanahAir create website content without knowing our Business plan?",
+    question: "Can I save my favorite artifacts?",
     answer:
-      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
+      "Yes! You can save artifacts while exploring museums. They will appear in your profile under 'Saved Artifacts' for easy access later.",
   },
   {
     id: 4,
-    question: "What will be delivered? And When?",
+    question: "What is the AI chat feature used for?",
     answer:
-      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
+      "The AI assistant helps you learn about Egyptian history, artifacts, and museums. You can ask questions and get instant, informative answers.",
   },
   {
     id: 5,
-    question: "What often will results be reported?",
+    question: "How does the map feature work?",
     answer:
-      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
+      "The map shows museum locations across Egypt. You can use it to find nearby places, get directions, and explore cultural landmarks easily.",
   },
   {
     id: 6,
-    question: "At by pleasure of children be?",
+    question: "Can I purchase souvenirs through the app?",
     answer:
-      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
+      "Yes, the Souvenirs section allows you to browse and buy items inspired by Egyptian heritage. Orders and downloads are managed in your profile.",
   },
   {
     id: 7,
-    question: "Amounted repeated as believed in confined?",
+    question: "Do I need an account to use the app?",
     answer:
-      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
+      "You can explore some features without an account, but booking tickets, saving items, and accessing your profile require signing in.",
   },
   {
     id: 8,
-    question: "In am do giving to afford parish settle easily garret?",
+    question: "How can I contact support?",
     answer:
-      "Our asked sex point her she seems. New plenty she horses parish design you. Stuff sight equal of my woody. Him children bringing goodness suitable she entirely put far daughter.",
+      "You can go to the 'Help & Support' section in Settings to report issues or get assistance from our support team.",
+  },
+  {
+    id: 9,
+    question: "Is my personal data (secure)?",
+    answer:
+      "Yes, your data is securely stored and protected. We follow best practices to ensure your privacy and safety while using the app.",
   },
 ];
 
@@ -73,7 +77,7 @@ export default function FAQScreen() {
 
   return (
     <ImageBackground
-      source={require("../../assets/images/bg.png")}
+      source={require("../../assets/images/beige-background.jpeg")}
       style={styles.background}
       resizeMode="cover"
     >
@@ -243,7 +247,7 @@ const styles = StyleSheet.create({
 
   question: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "500",
     color: DARK,
     lineHeight: 20,
@@ -254,7 +258,7 @@ const styles = StyleSheet.create({
   },
 
   answer: {
-    fontSize: 13,
+    fontSize: 14,
     color: MUTED,
     lineHeight: 20,
     marginTop: 10,
