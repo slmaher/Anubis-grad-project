@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
   Dimensions,
@@ -20,14 +20,16 @@ const featuredArtifacts = [
   {
     id: 1,
     title: "Anubis statue",
+    description: "Ancient Egyptian god of mummification and the afterlife, depicted with a jackal head and human body. This exquisite replica captures the mysterious essence of one of Egypt's most iconic deities.",
     image: require("../../assets/images/Anubis-Statue.png"),
-    route: "/ArtifactDetailScreen",
+    imageKey: "anubis", // Key to identify the image
   },
   {
     id: 2,
-    title: "Tutankhamum mask",
+    title: "Tutankhamun mask",
+    description: "The legendary golden death mask of the young pharaoh Tutankhamun. This stunning piece represents one of the most famous treasures of ancient Egypt, crafted with incredible detail and historical accuracy.",
     image: require("../../assets/images/Grand-Egyptian-Museum.png"),
-    route: "/ArtifactDetailScreen",
+    imageKey: "tutankhamun", // Key to identify the image
   },
 ];
 
@@ -85,15 +87,29 @@ const CommunityIcon = () => (
 );
 
 const tabs = [
-  { label: "Home", Icon: HomeIcon, route: "/" },
-  { label: "Explore", Icon: ExploreIcon, route: "/ArtifactsScreen" },
-  { label: "Scan", Icon: ScanIcon, route: "/Scan" },
+  { label: "Home", Icon: HomeIcon, route: "/(tabs)/home" },
+  { label: "Explore", Icon: ExploreIcon, route: "/(tabs)/explore" },
+  { label: "Scan", Icon: ScanIcon, route: "/(tabs)/scan" },
   { label: "Events", Icon: EventsIcon, route: "/EventsScreen" },
-  { label: "Community", Icon: CommunityIcon, route: "/Community" },
+  { label: "Community", Icon: CommunityIcon, route: "/(tabs)/community" },
 ];
 
 export default function ArtifactsScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+
+  // Handle artifact card press - navigate to detail screen with data
+  const handleArtifactPress = (artifact) => {
+    router.push({
+      pathname: "/artifacts/artifactDetailsScreen",
+      params: {
+        id: artifact.id,
+        title: artifact.title,
+        description: artifact.description,
+        imageKey: artifact.imageKey, // Pass the image identifier
+      },
+    });
+  };
 
   return (
     <ImageBackground
@@ -104,6 +120,14 @@ export default function ArtifactsScreen() {
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
         <View style={styles.header}>
+          {/* Back Button */}
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backIcon}>←</Text>
+          </TouchableOpacity>
+
           <View style={styles.headerLeft}>
             <Text style={styles.headerTitle}>Artifact page</Text>
             <Text style={styles.headerSub}>View Art, Culture and History</Text>
@@ -134,7 +158,7 @@ export default function ArtifactsScreen() {
               <TouchableOpacity
                 key={item.id}
                 style={styles.featuredCard}
-                onPress={() => router.push(item.route)}
+                onPress={() => handleArtifactPress(item)}
                 activeOpacity={0.85}
               >
                 <Image
@@ -221,6 +245,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 12,
+  },
+
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+
+  backIcon: {
+    fontSize: 24,
+    color: DARK,
+    fontWeight: "bold",
   },
 
   headerLeft: { flex: 1 },
@@ -366,5 +406,120 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: MUTED,
     fontWeight: "500",
+  },
+});
+
+/* ======================
+   ICON STYLES
+   ====================== */
+
+const icon = StyleSheet.create({
+  wrap: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  
+  // Home icon
+  homeRoof: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 10,
+    borderRightWidth: 10,
+    borderBottomWidth: 8,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderBottomColor: MUTED,
+    position: "absolute",
+    top: 2,
+  },
+  homeDoor: {
+    width: 12,
+    height: 10,
+    backgroundColor: MUTED,
+    position: "absolute",
+    bottom: 2,
+  },
+  
+  // Explore icon
+  circle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: MUTED,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  compassNeedle: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderBottomWidth: 10,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderBottomColor: MUTED,
+  },
+  
+  // Scan icon
+  scanOuter: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: MUTED,
+    borderRadius: 4,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scanInner: {
+    width: 12,
+    height: 12,
+    borderWidth: 1.5,
+    borderColor: MUTED,
+    borderRadius: 2,
+  },
+  
+  // Events/Calendar icon
+  calBox: {
+    width: 18,
+    height: 18,
+    borderWidth: 2,
+    borderColor: MUTED,
+    borderRadius: 3,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  calTop: {
+    width: 12,
+    height: 2,
+    backgroundColor: MUTED,
+    position: "absolute",
+    top: 1,
+  },
+  calCheck: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: MUTED,
+    marginTop: 4,
+  },
+  
+  // Community icon
+  commRow: {
+    flexDirection: "row",
+    gap: 3,
+    marginBottom: 3,
+  },
+  commRow2: {
+    flexDirection: "row",
+    gap: 3,
+  },
+  commDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: MUTED,
   },
 });
