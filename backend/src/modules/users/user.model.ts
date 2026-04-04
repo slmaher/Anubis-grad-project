@@ -8,6 +8,7 @@ export interface IUser extends Document {
   role: UserRole;
   isActive: boolean;
   avatar?: string;
+  friends: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,7 +24,8 @@ const UserSchema = new Schema<IUser>(
       default: UserRole.Visitor
     },
     isActive: { type: Boolean, default: true },
-    avatar: { type: String }
+    avatar: { type: String },
+    friends: [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }]
   },
   {
     timestamps: true

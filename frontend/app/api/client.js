@@ -117,6 +117,33 @@ export const api = {
     });
   },
 
+  // Friends
+  sendFriendRequest(receiverId, token) {
+    return apiRequest("/api/friends/requests", {
+      method: "POST",
+      body: { receiverId },
+      token,
+    });
+  },
+  getIncomingFriendRequests(token) {
+    return apiRequest("/api/friends/requests/incoming", { token });
+  },
+  acceptFriendRequest(requestId, token) {
+    return apiRequest(`/api/friends/requests/${requestId}/accept`, {
+      method: "POST",
+      token,
+    });
+  },
+  rejectFriendRequest(requestId, token) {
+    return apiRequest(`/api/friends/requests/${requestId}/reject`, {
+      method: "POST",
+      token,
+    });
+  },
+  getFriends(token) {
+    return apiRequest("/api/friends", { token });
+  },
+
   // Users
   getUserProfile(id, token) {
     return apiRequest(`/api/users/profile/${id}`, { token });
