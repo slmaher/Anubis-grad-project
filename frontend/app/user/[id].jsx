@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import { api } from "../api/client";
 import { getAuthToken } from "../api/authStorage";
+import { addLocalNotification } from "../api/notificationsStorage";
 import * as ImagePicker from "expo-image-picker";
 
 export default function UserProfile() {
@@ -88,6 +89,12 @@ export default function UserProfile() {
   const handleSendFriendRequest = () => {
     // In a real app, this would call an API
     setFriendRequestSent(true);
+    addLocalNotification({
+      type: "friend_request",
+      title: "Friend request sent",
+      body: `You sent a friend request to ${profile?.name || "this user"}.`,
+      createdAt: new Date().toISOString(),
+    });
     Alert.alert("Success", `Friend request sent to ${profile?.name}!`);
   };
 
