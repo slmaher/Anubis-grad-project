@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import React from "react";
+import { getAuthUser } from "../api/authStorage";
 import {
   ImageBackground,
   SafeAreaView,
@@ -12,18 +13,33 @@ import {
 } from "react-native";
 
 const menuItems = [
-  { label: "Home", icon: "🏠", route: "/" },
+ 
   { label: "Setting", icon: "⚙️", route: "/settings/settings" },
-  { label: "Profile", icon: "👤", route: "/profile/profileScreen" },
+  { label: "Profile", icon: "👤" },
   { label: "Museums", icon: "🏛️", route: "/Museums" },
-  { label: "Events", icon: "📅", route: "/Events" },
   { label: "Community", icon: "👥", route: "/Community" },
-  { label: "Scan", icon: "🔍", route: "/Scan" },
   { label: "Map", icon: "📍", route: "/Map" },
 ];
 
 export default function MenuScreen({ onClose }) {
   const router = useRouter();
+
+  const handleMenuPress = async (item) => {
+    onClose && onClose();
+
+    if (item.label === "Profile") {
+      const user = await getAuthUser();
+      const userId = user?._id || user?.id;
+      if (userId) {
+        router.push({ pathname: "/user/[id]", params: { id: userId } });
+      }
+      return;
+    }
+
+    if (item.route) {
+      router.push(item.route);
+    }
+  };
 
   const slideAnim = React.useRef(new Animated.Value(-300)).current; // hidden left initially
 
@@ -102,10 +118,7 @@ return (
             <TouchableOpacity
               key={item.label}
               style={styles.menuRow}
-              onPress={() => {
-                onClose && onClose(); // close first
-                router.push(item.route); // then navigate
-              }}
+              onPress={() => handleMenuPress(item)}
             >
               <View style={styles.iconBox}>
                 <Text style={styles.iconText}>{item.icon}</Text>
