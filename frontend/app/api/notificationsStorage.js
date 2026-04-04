@@ -29,6 +29,30 @@ export async function addLocalNotification(notification) {
   }
 }
 
+export async function updateLocalNotification(notificationId, patch) {
+  try {
+    const current = await getLocalNotifications();
+    const next = current.map((item) =>
+      item.id === notificationId ? { ...item, ...patch } : item,
+    );
+    await AsyncStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(next));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function removeLocalNotification(notificationId) {
+  try {
+    const current = await getLocalNotifications();
+    const next = current.filter((item) => item.id !== notificationId);
+    await AsyncStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(next));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function clearLocalNotifications() {
   try {
     await AsyncStorage.removeItem(NOTIFICATIONS_KEY);

@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image,
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import Ionicons from '@expo/vector-icons/Ionicons';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MenuScreen from "../menu/menuScreen";
 
 export default function Home() {
@@ -67,11 +67,7 @@ export default function Home() {
               onPress={() => router.push("/(tabs)/explore")}
             >
               <View style={styles.navIconContainer}>
-                <Image
-                  source={require("../../assets/images/Museum-icon.png")}
-                  style={styles.navIconImage}
-                  resizeMode="contain"
-                />
+                <MaterialCommunityIcons name="bank-outline" size={34} color="#6B5B4F" />
               </View>
               <Text style={styles.navLabel}>Museums</Text>
             </TouchableOpacity>
@@ -82,11 +78,7 @@ export default function Home() {
               onPress={() => router.push("/marketplace")}
             >
               <View style={styles.navIconContainer}>
-                <Image
-                  source={require("../../assets/images/Souvenirs.png")}
-                  style={styles.navIconImage}
-                  resizeMode="contain"
-                />
+                <Ionicons name="bag-handle-outline" size={32} color="#6B5B4F" />
               </View>
               <Text style={styles.navLabel}>Souvenirs</Text>
             </TouchableOpacity>
@@ -97,11 +89,7 @@ export default function Home() {
               onPress={() => router.push("/tickets")}
             >
               <View style={styles.navIconContainer}>
-                <Image
-                  source={require("../../assets/images/Tickets.png")}
-                  style={styles.navIconImage}
-                  resizeMode="contain"
-                />
+                <MaterialCommunityIcons name="ticket-confirmation-outline" size={34} color="#6B5B4F" />
               </View>
               <Text style={styles.navLabel}>Tickets</Text>
             </TouchableOpacity>
@@ -112,7 +100,7 @@ export default function Home() {
               onPress={() => router.push("/map")}
             >
               <View style={styles.navIconContainer}>
-                <FontAwesome5 name="map-marked-alt" size={32} color="#8B7B6C" />
+                <Ionicons name="location-outline" size={34} color="#6B5B4F" />
               </View>
               <Text style={styles.navLabel}>Map</Text>
             </TouchableOpacity>

@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, Animated, PanResponder, ActivityIndicator } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { api } from "../api/client";
 import { getAuthToken } from "../api/authStorage";
@@ -118,13 +118,48 @@ export default function MessagesList() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const friends = [
+  const defaultFriends = [
     { id: 1, name: "Benjamin", image: require("../../assets/images/profile-benjamin.png") },
     { id: 2, name: "Farita", image: require("../../assets/images/profile-farita.png") },
     { id: 3, name: "Marie", image: require("../../assets/images/profile-marie.png") },
     { id: 4, name: "Claire", image: require("../../assets/images/profile-claire.png") },
     { id: 5, name: "Alex", image: require("../../assets/images/profile-alex.png") },
   ];
+  const [friends, setFriends] = useState(defaultFriends);
+
+  const loadAcceptedFriends = useCallback(async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        setFriends(defaultFriends);
+        return;
+      }
+
+      const response = await api.getFriends(token);
+      if (response?.success && Array.isArray(response.data)) {
+        const mapped = response.data.map((item) => ({
+          id: item.id || item._id,
+          name: item.name,
+          image: item.avatar
+            ? { uri: item.avatar }
+            : require("../../assets/images/profile-farita.png"),
+        }));
+
+        const merged = [...mapped, ...defaultFriends].filter(
+          (friend, index, arr) =>
+            index === arr.findIndex((entry) => String(entry.id) === String(friend.id)),
+        );
+
+        setFriends(merged);
+        return;
+      }
+
+      setFriends(defaultFriends);
+    } catch (error) {
+      console.error("Failed to load friends:", error);
+      setFriends(defaultFriends);
+    }
+  }, []);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -155,6 +190,12 @@ export default function MessagesList() {
   useEffect(() => {
     fetchConversations();
   }, [fetchConversations]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadAcceptedFriends();
+    }, [loadAcceptedFriends]),
+  );
 
   const handleNewMessage = useCallback((message) => {
     // Refresh conversations list when a new message arrives
