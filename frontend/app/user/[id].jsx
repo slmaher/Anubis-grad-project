@@ -1,9 +1,18 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, ImageBackground, Alert, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  ImageBackground,
+  Alert,
+  ScrollView,
+} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import { api } from "../api/client";
 import { getAuthToken } from "../api/authStorage";
-import { addLocalNotification } from "../api/notificationsStorage";
 import * as ImagePicker from "expo-image-picker";
 
 export default function UserProfile() {
@@ -33,7 +42,7 @@ export default function UserProfile() {
         if (response.success && response.data) {
           setProfile(response.data);
           setUserPosts(postsResponse.data || []);
-          
+
           if (meResponse.success && meResponse.data._id === response.data._id) {
             setIsCurrentUser(true);
           }
@@ -58,7 +67,7 @@ export default function UserProfile() {
   const handleChangePhoto = async () => {
     try {
       let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
+        mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.5,
@@ -69,10 +78,13 @@ export default function UserProfile() {
         setIsUpdatingPhoto(true);
         const token = await getAuthToken();
         const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-        
-        const response = await api.updateProfile({ avatar: base64Image }, token);
+
+        const response = await api.updateProfile(
+          { avatar: base64Image },
+          token,
+        );
         if (response.success) {
-          setProfile(prev => ({ ...prev, avatar: response.data.avatar }));
+          setProfile((prev) => ({ ...prev, avatar: response.data.avatar }));
           Alert.alert("Success", "Profile photo updated!");
         } else {
           Alert.alert("Error", "Failed to update photo.");
@@ -86,16 +98,25 @@ export default function UserProfile() {
     }
   };
 
-  const handleSendFriendRequest = () => {
-    // In a real app, this would call an API
-    setFriendRequestSent(true);
-    addLocalNotification({
-      type: "friend_request",
-      title: "Friend request sent",
-      body: `You sent a friend request to ${profile?.name || "this user"}.`,
-      createdAt: new Date().toISOString(),
-    });
-    Alert.alert("Success", `Friend request sent to ${profile?.name}!`);
+  const handleSendFriendRequest = async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        Alert.alert("Error", "You need to be logged in to send a friend request.");
+        return;
+      }
+
+      const response = await api.sendFriendRequest(profile?._id || id, token);
+      if (response.success) {
+        setFriendRequestSent(true);
+        Alert.alert("Success", `Friend request sent to ${profile?.name}!`);
+      } else {
+        Alert.alert("Error", response.message || "Failed to send friend request.");
+      }
+    } catch (error) {
+      console.error("Error sending friend request:", error);
+      Alert.alert("Error", error.message || "Failed to send friend request.");
+    }
   };
 
   const handleChat = () => {
@@ -106,7 +127,7 @@ export default function UserProfile() {
         contactId: profile._id || id,
         contactName: profile.name,
         contactAvatar: profile.avatar || "",
-      }
+      },
     });
   };
 
@@ -126,8 +147,8 @@ export default function UserProfile() {
     );
   }
 
-  const avatarSource = profile.avatar 
-    ? { uri: profile.avatar } 
+  const avatarSource = profile.avatar
+    ? { uri: profile.avatar }
     : require("../../assets/images/profile-farita.png"); // Default generic avatar
 
   return (
@@ -137,7 +158,10 @@ export default function UserProfile() {
       resizeMode="cover"
     >
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
@@ -149,8 +173,8 @@ export default function UserProfile() {
           <View style={styles.avatarContainer}>
             <Image source={avatarSource} style={styles.avatar} />
             {isCurrentUser && (
-              <TouchableOpacity 
-                style={styles.editBadge} 
+              <TouchableOpacity
+                style={styles.editBadge}
                 onPress={handleChangePhoto}
                 disabled={isUpdatingPhoto}
               >
@@ -178,8 +202,12 @@ export default function UserProfile() {
           </View>
 
           <View style={styles.actionButtons}>
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.primaryButton, friendRequestSent && styles.sentButton]} 
+            <TouchableOpacity
+              style={[
+                styles.actionButton,
+                styles.primaryButton,
+                friendRequestSent && styles.sentButton,
+              ]}
               onPress={handleSendFriendRequest}
               disabled={friendRequestSent}
             >
@@ -188,28 +216,34 @@ export default function UserProfile() {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.actionButton, styles.secondaryButton]} onPress={handleChat}>
-              <Text style={[styles.buttonText, styles.secondaryButtonText]}>Message</Text>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.secondaryButton]}
+              onPress={handleChat}
+            >
+              <Text style={[styles.buttonText, styles.secondaryButtonText]}>
+                Message
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
 
         <Text style={styles.sectionTitle}>User Posts</Text>
-        
+
         {userPosts.length === 0 ? (
-          <Text style={styles.noPostsText}>This user hasn't posted anything yet.</Text>
+          <Text style={styles.noPostsText}>
+            This user hasn't posted anything yet.
+          </Text>
         ) : (
           userPosts.map((post) => (
             <View key={post._id || post.id} style={styles.postCard}>
               <View style={styles.postHeader}>
-                <Image
-                  source={avatarSource}
-                  style={styles.postAvatar}
-                />
+                <Image source={avatarSource} style={styles.postAvatar} />
                 <View style={styles.postInfo}>
                   <Text style={styles.postAuthor}>{profile.name}</Text>
                   <Text style={styles.postTime}>
-                    {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : post.time || "Just now"}
+                    {post.createdAt
+                      ? new Date(post.createdAt).toLocaleDateString()
+                      : post.time || "Just now"}
                   </Text>
                 </View>
               </View>
@@ -304,7 +338,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255, 255, 255, 0.5)",
   },
   avatarContainer: {
-    position: 'relative',
+    position: "relative",
     marginBottom: 20,
   },
   avatar: {
@@ -319,27 +353,27 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
   },
   editBadge: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 5,
     right: 5,
-    backgroundColor: '#6B5B4F',
+    backgroundColor: "#6B5B4F",
     width: 32,
     height: 32,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: "#fff",
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
   },
   editIcon: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   name: {
     fontSize: 28,
@@ -432,8 +466,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   noPostsText: {
-    textAlign: 'center',
-    color: '#666',
+    textAlign: "center",
+    color: "#666",
     fontSize: 15,
     marginTop: 20,
   },

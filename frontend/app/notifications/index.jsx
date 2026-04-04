@@ -16,6 +16,7 @@ import { getAuthToken, getAuthUser } from "../api/authStorage";
 import {
   clearLocalNotifications,
   getLocalNotifications,
+  updateLocalNotification,
 } from "../api/notificationsStorage";
 
 const iconByType = {
@@ -70,6 +71,30 @@ export default function NotificationsScreen() {
 
       if (token) {
         try {
+          const friendRequestsRes = await api.getIncomingFriendRequests(token);
+          if (friendRequestsRes?.success && Array.isArray(friendRequestsRes.data)) {
+            friendRequestsRes.data.forEach((request) => {
+              nextItems.push({
+                id: request.id,
+                type: "friend_request",
+                title: "Friend request",
+                body: `${request.senderName || "Someone"} sent you a friend request.`,
+                createdAt: request.createdAt || new Date().toISOString(),
+                requestStatus: request.status,
+                requesterId: request.senderId,
+                requesterName: request.senderName,
+                requesterAvatar: request.senderAvatar || "",
+                source: "friends",
+              });
+            });
+          }
+        } catch {
+          // Ignore request list failures and keep local notifications visible.
+        }
+      }
+
+      if (token) {
+        try {
           const convRes = await api.getConversations(token);
           if (convRes?.success && Array.isArray(convRes.data)) {
             convRes.data
@@ -80,7 +105,8 @@ export default function NotificationsScreen() {
                   type: "message",
                   title: "New message",
                   body: `${conv.user?.name || "Someone"} sent ${conv.unreadCount} unread message(s).`,
-                  createdAt: conv.lastMessage?.createdAt || new Date().toISOString(),
+                  createdAt:
+                    conv.lastMessage?.createdAt || new Date().toISOString(),
                   source: "chat",
                 });
               });
@@ -106,7 +132,10 @@ export default function NotificationsScreen() {
                   type: "like",
                   title: "Post liked",
                   body: `Your post has ${likes} like(s).`,
-                  createdAt: post.updatedAt || post.createdAt || new Date().toISOString(),
+                  createdAt:
+                    post.updatedAt ||
+                    post.createdAt ||
+                    new Date().toISOString(),
                   source: "posts",
                 });
               }
@@ -117,7 +146,10 @@ export default function NotificationsScreen() {
                   type: "comment",
                   title: "New comment",
                   body: `Your post has ${comments} comment(s).`,
-                  createdAt: post.updatedAt || post.createdAt || new Date().toISOString(),
+                  createdAt:
+                    post.updatedAt ||
+                    post.createdAt ||
+                    new Date().toISOString(),
                   source: "posts",
                 });
               }
@@ -129,7 +161,9 @@ export default function NotificationsScreen() {
       }
 
       nextItems.sort(
-        (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime(),
+        (a, b) =>
+          new Date(b.createdAt || 0).getTime() -
+          new Date(a.createdAt || 0).getTime(),
       );
       setItems(nextItems);
     } finally {
@@ -149,6 +183,48 @@ export default function NotificationsScreen() {
     loadNotifications();
   };
 
+  const handleAcceptFriendRequest = async (item) => {
+    try {
+      const token = await getAuthToken();
+      if (!token) return;
+
+      const response = await api.acceptFriendRequest(item.id, token);
+      if (!response.success) {
+        Alert.alert("Error", response.message || "Could not accept this request.");
+        return;
+      }
+
+      await updateLocalNotification(item.id, {
+        requestStatus: "accepted",
+        body: `${item.requesterName || "This user"} is now in your friends list.`,
+      });
+      loadNotifications();
+    } catch (error) {
+      Alert.alert("Error", error.message || "Could not accept this request.");
+    }
+  };
+
+  const handleRejectFriendRequest = async (item) => {
+    try {
+      const token = await getAuthToken();
+      if (!token) return;
+
+      const response = await api.rejectFriendRequest(item.id, token);
+      if (!response.success) {
+        Alert.alert("Error", response.message || "Could not reject this request.");
+        return;
+      }
+
+      await updateLocalNotification(item.id, {
+        requestStatus: "rejected",
+        body: `You rejected ${item.requesterName || "this"} friend request.`,
+      });
+      loadNotifications();
+    } catch (error) {
+      Alert.alert("Error", error.message || "Could not reject this request.");
+    }
+  };
+
   return (
     <ImageBackground
       source={require("../../assets/images/beige-background.jpeg")}
@@ -157,7 +233,10 @@ export default function NotificationsScreen() {
     >
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backBtn}
+          >
             <Text style={styles.backArrow}>‹</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Notifications</Text>
@@ -182,13 +261,37 @@ export default function NotificationsScreen() {
             }
             renderItem={({ item }) => {
               const icon = iconByType[item.type] || iconByType.default;
+              const isPendingFriendRequest =
+                item.type === "friend_request" && item.requestStatus === "pending";
               return (
                 <View style={styles.card}>
                   <Text style={styles.cardIcon}>{icon}</Text>
                   <View style={styles.cardBody}>
-                    <Text style={styles.cardTitle}>{item.title || "Notification"}</Text>
-                    <Text style={styles.cardText}>{item.body || "You have a new update."}</Text>
-                    <Text style={styles.cardTime}>{formatTime(item.createdAt)}</Text>
+                    <Text style={styles.cardTitle}>
+                      {item.title || "Notification"}
+                    </Text>
+                    <Text style={styles.cardText}>
+                      {item.body || "You have a new update."}
+                    </Text>
+                    <Text style={styles.cardTime}>
+                      {formatTime(item.createdAt)}
+                    </Text>
+                    {isPendingFriendRequest && (
+                      <View style={styles.actionsRow}>
+                        <TouchableOpacity
+                          style={[styles.actionBtn, styles.acceptBtn]}
+                          onPress={() => handleAcceptFriendRequest(item)}
+                        >
+                          <Text style={styles.actionText}>Accept</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.actionBtn, styles.rejectBtn]}
+                          onPress={() => handleRejectFriendRequest(item)}
+                        >
+                          <Text style={styles.actionText}>Reject</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
                 </View>
               );
@@ -287,5 +390,26 @@ const styles = StyleSheet.create({
     marginTop: 5,
     color: MUTED,
     fontSize: 12,
+  },
+  actionsRow: {
+    flexDirection: "row",
+    marginTop: 8,
+    gap: 8,
+  },
+  actionBtn: {
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  acceptBtn: {
+    backgroundColor: "#7A9A6C",
+  },
+  rejectBtn: {
+    backgroundColor: "#B06B5C",
+  },
+  actionText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
   },
 });
