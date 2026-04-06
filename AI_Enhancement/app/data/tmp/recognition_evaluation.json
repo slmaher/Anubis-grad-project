@@ -1,6 +1,6 @@
 {
-  "total_images": 80,
-  "top1_accuracy": 0.975,
+  "total_images": 82,
+  "top1_accuracy": 0.975609756097561,
   "top3_accuracy": 1.0,
   "details": [
     {
@@ -14,7 +14,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3759
+      "confidence": 0.3761
     },
     {
       "image": "app/data/artifacts/images\\artifact_001\\16-2-tutankhamun-mask-front.jpg",
@@ -27,7 +27,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3897
+      "confidence": 0.3906
     },
     {
       "image": "app/data/artifacts/images\\artifact_001\\CairoEgMuseumTaaMaskMostlyPhotographed.jpg",
@@ -40,7 +40,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3876
+      "confidence": 0.389
     },
     {
       "image": "app/data/artifacts/images\\artifact_001\\image-asset.jpg",
@@ -53,7 +53,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3788
+      "confidence": 0.3809
     },
     {
       "image": "app/data/artifacts/images\\artifact_001\\pngtree-golden-mask-of-pharaoh-tutankhamun.png",
@@ -66,7 +66,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.38
+      "confidence": 0.3822
     },
     {
       "image": "app/data/artifacts/images\\artifact_001\\The-left-hand-side-view-of-Tutankhamuns-mask-Source-1.jpg",
@@ -79,7 +79,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3927
+      "confidence": 0.3936
     },
     {
       "image": "app/data/artifacts/images\\artifact_001\\tumblr.jpg",
@@ -92,7 +92,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.39
+      "confidence": 0.3913
     },
     {
       "image": "app/data/artifacts/images\\artifact_002\\410px-Khafre_statue.jpg",
@@ -326,7 +326,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3834
+      "confidence": 0.3839
     },
     {
       "image": "app/data/artifacts/images\\artifact_004\\animalcult01.jpg",
@@ -365,7 +365,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3828
+      "confidence": 0.3845
     },
     {
       "image": "app/data/artifacts/images\\artifact_004\\hn.jpg",
@@ -404,7 +404,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.4083
+      "confidence": 0.4072
     },
     {
       "image": "app/data/artifacts/images\\artifact_004\\rt.jpg",
@@ -417,7 +417,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3596
+      "confidence": 0.3614
     },
     {
       "image": "app/data/artifacts/images\\artifact_005\\3483354.jpg",
@@ -430,7 +430,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.4397
+      "confidence": 0.4375
     },
     {
       "image": "app/data/artifacts/images\\artifact_005\\4193667.jpg",
@@ -443,7 +443,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.4248
+      "confidence": 0.4225
     },
     {
       "image": "app/data/artifacts/images\\artifact_005\\81NvOCKNTRL._AC_UF894,1000_QL80_.jpg",
@@ -456,7 +456,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.4295
+      "confidence": 0.4323
     },
     {
       "image": "app/data/artifacts/images\\artifact_005\\gouden-troon-toetanchamon.webp",
@@ -469,7 +469,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.4532
+      "confidence": 0.4555
     },
     {
       "image": "app/data/artifacts/images\\artifact_005\\King Tut on Throne in Amarna Style.jpg",
@@ -482,7 +482,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3564
+      "confidence": 0.3506
     },
     {
       "image": "app/data/artifacts/images\\artifact_005\\king-tuts-golden-throne-chair-full-scale-replica.jpg",
@@ -495,7 +495,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.4656
+      "confidence": 0.4689
     },
     {
       "image": "app/data/artifacts/images\\artifact_005\\MA_I276009_TePapa_Tutankhamun-back-of-throne_preview.jpg",
@@ -508,7 +508,20 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3894
+      "confidence": 0.3846
+    },
+    {
+      "image": "app/data/artifacts/images\\artifact_005\\Tutankhamun Golden Throne.png",
+      "expected": "artifact_005",
+      "predicted_top1": "artifact_005",
+      "top3_ids": [
+        "artifact_005",
+        "artifact_002",
+        "artifact_007"
+      ],
+      "top1_correct": true,
+      "top3_correct": true,
+      "confidence": 0.4232
     },
     {
       "image": "app/data/artifacts/images\\artifact_006\\41774115851_baede85584_b.jpg",
@@ -534,7 +547,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.4233
+      "confidence": 0.4213
     },
     {
       "image": "app/data/artifacts/images\\artifact_006\\Canopic_jars_(casts).jpg",
@@ -586,7 +599,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.4136
+      "confidence": 0.4106
     },
     {
       "image": "app/data/artifacts/images\\artifact_006\\main-image.jpg",
@@ -607,12 +620,12 @@
       "predicted_top1": "artifact_006",
       "top3_ids": [
         "artifact_006",
-        "artifact_002",
-        "artifact_005"
+        "artifact_005",
+        "artifact_002"
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.4002
+      "confidence": 0.3987
     },
     {
       "image": "app/data/artifacts/images\\artifact_007\\161215173607-tutankhamun-death-mask.jpg",
@@ -625,7 +638,7 @@
       ],
       "top1_correct": false,
       "top3_correct": true,
-      "confidence": 0.3523
+      "confidence": 0.3547
     },
     {
       "image": "app/data/artifacts/images\\artifact_007\\190718092830-01-tutankhamun-sarcophagus-file.jpg",
@@ -638,7 +651,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3789
+      "confidence": 0.3791
     },
     {
       "image": "app/data/artifacts/images\\artifact_007\\32969185843_e2a230cda3_b.jpg",
@@ -651,7 +664,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.344
+      "confidence": 0.3402
     },
     {
       "image": "app/data/artifacts/images\\artifact_007\\4609.jpg",
@@ -664,7 +677,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.396
+      "confidence": 0.4007
     },
     {
       "image": "app/data/artifacts/images\\artifact_007\\6ed822932e343dd274ea8408096433b2.jpg",
@@ -677,7 +690,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3826
+      "confidence": 0.3801
     },
     {
       "image": "app/data/artifacts/images\\artifact_007\\Gold-Inlaid-Canopic-Coffinette-of-Tutankhamun.png",
@@ -690,7 +703,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3879
+      "confidence": 0.3818
     },
     {
       "image": "app/data/artifacts/images\\artifact_007\\kk.jpg",
@@ -703,7 +716,20 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3905
+      "confidence": 0.3991
+    },
+    {
+      "image": "app/data/artifacts/images\\artifact_007\\Tutankhamun Sarcophagus.jpg",
+      "expected": "artifact_007",
+      "predicted_top1": "artifact_007",
+      "top3_ids": [
+        "artifact_007",
+        "artifact_006",
+        "artifact_001"
+      ],
+      "top1_correct": true,
+      "top3_correct": true,
+      "confidence": 0.3904
     },
     {
       "image": "app/data/artifacts/images\\artifact_007\\Tutankhamun.png",
@@ -716,7 +742,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.375
+      "confidence": 0.3697
     },
     {
       "image": "app/data/artifacts/images\\artifact_008\\518iBSSMx1S._AC_UF894,1000_QL80_.jpg",
@@ -842,11 +868,11 @@
       "top3_ids": [
         "artifact_008",
         "artifact_001",
-        "artifact_002"
+        "artifact_007"
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.378
+      "confidence": 0.3777
     },
     {
       "image": "app/data/artifacts/images\\artifact_009\\40.523_view1_SL1.webp",
@@ -963,7 +989,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.422
+      "confidence": 0.4229
     },
     {
       "image": "app/data/artifacts/images\\artifact_010\\AEMP_Nofretete_Bueste_Mund.jpg",
@@ -989,7 +1015,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.4039
+      "confidence": 0.4054
     },
     {
       "image": "app/data/artifacts/images\\artifact_010\\csm_AEMP_Nofretete_Bueste_frontal_1f8d333776.jpg",
@@ -1002,7 +1028,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3872
+      "confidence": 0.3896
     },
     {
       "image": "app/data/artifacts/images\\artifact_010\\essay-v2-rtr3b8kx.webp",
@@ -1015,7 +1041,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3998
+      "confidence": 0.4017
     },
     {
       "image": "app/data/artifacts/images\\artifact_010\\jkl.jpg",
@@ -1036,12 +1062,12 @@
       "predicted_top1": "artifact_010",
       "top3_ids": [
         "artifact_010",
-        "artifact_007",
-        "artifact_001"
+        "artifact_001",
+        "artifact_007"
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3958
+      "confidence": 0.3976
     }
   ]
 }

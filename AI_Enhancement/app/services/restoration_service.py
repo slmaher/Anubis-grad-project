@@ -3,6 +3,7 @@ from typing import Dict, Tuple
 import cv2
 import numpy as np
 
+from app.services.enhancement_service import EnhancementService
 from app.services.image_utils import ensure_uint8, np_image_to_base64_jpeg
 
 
@@ -10,73 +11,90 @@ class RestorationService:
     def __init__(self) -> None:
         self.lama_available = False
         self.realesrgan_available = False
+        self.enhancement_service = EnhancementService()
 
-    def _classical_enhancement(self, image_bgr: np.ndarray) -> np.ndarray:
-        lab = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2LAB)
-        l, a, b = cv2.split(lab)
-
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-        l_corrected = clahe.apply(l)
-        color_corrected = cv2.merge((l_corrected, a, b))
-        color_corrected = cv2.cvtColor(color_corrected, cv2.COLOR_LAB2BGR)
-
-        denoised = cv2.fastNlMeansDenoisingColored(
-            color_corrected,
-            None,
-            h=3,
-            hColor=3,
-            templateWindowSize=7,
-            searchWindowSize=21,
-        )
-
-        gaussian = cv2.GaussianBlur(denoised, (0, 0), 2.0)
-        sharpened = cv2.addWeighted(denoised, 1.5, gaussian, -0.5, 0)
-
-        lab2 = cv2.cvtColor(sharpened, cv2.COLOR_BGR2LAB)
-        l2, a2, b2 = cv2.split(lab2)
-        clahe2 = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(8, 8))
-        l2_enhanced = clahe2.apply(l2)
-        final = cv2.merge((l2_enhanced, a2, b2))
-        final = cv2.cvtColor(final, cv2.COLOR_LAB2BGR)
-        return final
-
-    def _damage_mask(self, image_bgr: np.ndarray) -> Tuple[np.ndarray, float]:
+    def _build_damage_mask(self, image_bgr: np.ndarray) -> Tuple[np.ndarray, float]:
         gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
-
         blur = cv2.GaussianBlur(gray, (5, 5), 0)
-        blackhat_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (9, 9))
+
+        blackhat_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
         blackhat = cv2.morphologyEx(blur, cv2.MORPH_BLACKHAT, blackhat_kernel)
 
-        _, thresh = cv2.threshold(blackhat, 18, 255, cv2.THRESH_BINARY)
-        edge = cv2.Canny(gray, 50, 150)
+        _, mask = cv2.threshold(blackhat, 20, 255, cv2.THRESH_BINARY)
 
-        combined = cv2.bitwise_or(thresh, edge)
-        kernel = np.ones((3, 3), np.uint8)
-        combined = cv2.morphologyEx(combined, cv2.MORPH_OPEN, kernel, iterations=1)
-        combined = cv2.dilate(combined, kernel, iterations=1)
+        kernel_small = np.ones((3, 3), np.uint8)
+        kernel_medium = np.ones((5, 5), np.uint8)
 
-        damage_ratio = float(np.sum(combined > 0) / combined.size)
-        return combined, damage_ratio
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel_small, iterations=1)
+        mask = cv2.dilate(mask, kernel_small, iterations=1)
 
-    def _inpaint(self, image_bgr: np.ndarray, mask: np.ndarray) -> np.ndarray:
-        return cv2.inpaint(image_bgr, mask, inpaintRadius=3, flags=cv2.INPAINT_TELEA)
+        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
+        clean_mask = np.zeros_like(mask)
+
+        image_area = gray.shape[0] * gray.shape[1]
+        min_area = 10
+        max_area = int(image_area * 0.003)
+
+        for i in range(1, num_labels):
+            area = stats[i, cv2.CC_STAT_AREA]
+            if min_area <= area <= max_area:
+                clean_mask[labels == i] = 255
+
+        clean_mask = cv2.morphologyEx(clean_mask, cv2.MORPH_CLOSE, kernel_medium, iterations=1)
+
+        damage_ratio = float(np.sum(clean_mask > 0) / clean_mask.size)
+        return clean_mask, damage_ratio
+
+    def _adaptive_inpaint(self, image_bgr: np.ndarray, mask: np.ndarray, damage_ratio: float) -> np.ndarray:
+        if damage_ratio < 0.001:
+            radius = 2
+        elif damage_ratio < 0.01:
+            radius = 3
+        else:
+            radius = 4
+
+        return cv2.inpaint(image_bgr, mask, inpaintRadius=radius, flags=cv2.INPAINT_TELEA)
+
+    def _final_polish(self, image_bgr: np.ndarray) -> np.ndarray:
+        bilateral = cv2.bilateralFilter(image_bgr, d=5, sigmaColor=30, sigmaSpace=30)
+        blended = cv2.addWeighted(image_bgr, 0.85, bilateral, 0.15, 0)
+        return ensure_uint8(blended)
 
     def restore(self, image_bgr: np.ndarray, use_super_resolution: bool = False) -> Dict:
-        enhanced = self._classical_enhancement(image_bgr)
-        mask, damage_ratio = self._damage_mask(image_bgr)
+        enhanced = self.enhancement_service.enhance(image_bgr)
+        mask, damage_ratio = self._build_damage_mask(image_bgr)
 
-        if damage_ratio > 0.003:
-            restored = self._inpaint(enhanced, mask)
+        if damage_ratio > 0.0005:
+            restored = self._adaptive_inpaint(enhanced, mask, damage_ratio)
         else:
             restored = enhanced
 
-        restored = ensure_uint8(restored)
-
+        restored = self._final_polish(restored)
         result_base64 = np_image_to_base64_jpeg(restored)
+
         return {
             "message": "Restoration completed.",
             "used_lama": False,
             "used_super_resolution": False,
             "damage_ratio": round(damage_ratio, 6),
             "output_image_base64": result_base64,
+        }
+
+    def debug_restore(self, image_bgr: np.ndarray) -> Dict:
+        enhanced = self.enhancement_service.enhance(image_bgr)
+        mask, damage_ratio = self._build_damage_mask(image_bgr)
+
+        if damage_ratio > 0.0005:
+            restored = self._adaptive_inpaint(enhanced, mask, damage_ratio)
+        else:
+            restored = enhanced
+
+        restored = self._final_polish(restored)
+
+        return {
+            "original": ensure_uint8(image_bgr),
+            "enhanced": ensure_uint8(enhanced),
+            "mask": ensure_uint8(mask),
+            "restored": ensure_uint8(restored),
+            "damage_ratio": round(damage_ratio, 6),
         }
