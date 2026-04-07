@@ -42,6 +42,24 @@
     "events": "Events",
     "community": "Community"
   },
+  "community": {
+    "title": "Community",
+    "search_placeholder": "Search",
+    "recent_posts": "Recent posts",
+    "no_posts": "No posts yet. Be the first to post!",
+    "anonymous": "Anonymous",
+    "just_now": "Just now",
+    "create_post": "Create Post",
+    "whats_going_on": "What's going on?",
+    "add_photo": "Add Photo",
+    "post": "Post",
+    "tour_guide": "Tour Guide",
+    "chat": "Chat",
+    "volunteering": "Volunteering",
+    "you": "You",
+    "must_be_logged_in": "You must be logged in to post.",
+    "failed_create_post": "Failed to create post."
+  },
   "common": {
     "back": "Back",
     "back_arrow": "←",

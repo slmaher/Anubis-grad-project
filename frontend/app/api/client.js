@@ -101,7 +101,10 @@ export const api = {
     return apiRequest("/api/chat/conversations", { token });
   },
   getMessages(conversationWith, token) {
-    return apiRequest(`/api/chat/messages?conversationWith=${conversationWith}`, { token });
+    return apiRequest(
+      `/api/chat/messages?conversationWith=${conversationWith}`,
+      { token },
+    );
   },
   sendMessage(receiverId, content, token) {
     return apiRequest("/api/chat/messages", {
@@ -156,4 +159,3 @@ export const api = {
     });
   },
 };
-

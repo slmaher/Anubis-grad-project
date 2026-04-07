@@ -20,12 +20,15 @@ export async function addFriendToList(friend) {
     const exists = current.some((item) => item.id === friend.id);
     if (exists) return true;
 
-    const next = [{
-      id: friend.id,
-      name: friend.name || "Friend",
-      avatar: friend.avatar || "",
-      addedAt: new Date().toISOString(),
-    }, ...current].slice(0, 200);
+    const next = [
+      {
+        id: friend.id,
+        name: friend.name || "Friend",
+        avatar: friend.avatar || "",
+        addedAt: new Date().toISOString(),
+      },
+      ...current,
+    ].slice(0, 200);
 
     await AsyncStorage.setItem(FRIENDS_KEY, JSON.stringify(next));
     return true;

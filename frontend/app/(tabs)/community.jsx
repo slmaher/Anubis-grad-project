@@ -2,11 +2,13 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image,
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { getAuthToken } from "../api/authStorage";
 
 export default function Community() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [isPostModalVisible, setPostModalVisible] = useState(false);
   const [newPostContent, setNewPostContent] = useState("");
@@ -34,7 +36,7 @@ export default function Community() {
     try {
       const token = await getAuthToken();
       if (!token) {
-        alert("You must be logged in to post.");
+        alert(t("community.must_be_logged_in"));
         return;
       }
       
@@ -53,7 +55,7 @@ export default function Community() {
       fetchPosts(); // Refresh posts
     } catch (error) {
       console.error("Failed to create post:", error);
-      alert("Failed to create post. " + error.message);
+      alert(t("community.failed_create_post") + " " + error.message);
     }
   };
 
@@ -80,7 +82,7 @@ export default function Community() {
   };
 
   const stories = [
-    { id: 1, name: "You", image: require("../../assets/images/profile-you.png"), isUser: true },
+    { id: 1, name: t("community.you"), image: require("../../assets/images/profile-you.png"), isUser: true },
     { id: 2, name: "Benjamin", image: require("../../assets/images/profile-benjamin.png"), isUser: false },
     { id: 3, name: "Farita", image: require("../../assets/images/profile-farita.png"), isUser: false },
     { id: 4, name: "Marie", image: require("../../assets/images/profile-marie.png"), isUser: false },
@@ -102,7 +104,7 @@ export default function Community() {
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         
-        <Text style={styles.headerTitle}>Community</Text>
+        <Text style={styles.headerTitle}>{t("community.title")}</Text>
         
         <TouchableOpacity style={styles.helpButton}>
           <Image
@@ -120,7 +122,7 @@ export default function Community() {
           </TouchableOpacity>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search"
+            placeholder={t("community.search_placeholder")}
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholderTextColor="#999"
@@ -169,12 +171,12 @@ export default function Community() {
 
         {/* Recent Posts */}
         {/* Recent Posts */}
-        <Text style={styles.sectionTitle}>Recent posts</Text>
+        <Text style={styles.sectionTitle}>{t("community.recent_posts")}</Text>
 
         {isLoading ? (
           <ActivityIndicator size="large" color="#000" style={{ marginTop: 20 }} />
         ) : posts.length === 0 ? (
-          <Text style={{ textAlign: 'center', marginTop: 20, color: '#666' }}>No posts yet. Be the first to post!</Text>
+          <Text style={{ textAlign: 'center', marginTop: 20, color: '#666' }}>{t("community.no_posts")}</Text>
         ) : (
           posts.map((post) => (
             <View key={post._id || post.id} style={styles.postCard}>
@@ -185,10 +187,10 @@ export default function Community() {
                 />
                 <View style={styles.postInfo}>
                   <TouchableOpacity onPress={() => handleUserClick(post.user?._id || post.user?.id)}>
-                    <Text style={styles.postAuthor}>{post.user?.name || post.author || "Anonymous"}</Text>
+                    <Text style={styles.postAuthor}>{post.user?.name || post.author || t("community.anonymous")}</Text>
                   </TouchableOpacity>
                   <Text style={styles.postTime}>
-                    {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : post.time || "Just now"}
+                    {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : post.time || t("community.just_now")}
                   </Text>
                 </View>
               </View>
@@ -227,7 +229,7 @@ export default function Community() {
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Create Post</Text>
+              <Text style={styles.modalTitle}>{t("community.create_post")}</Text>
               <TouchableOpacity onPress={() => {
                 setPostModalVisible(false);
                 setSelectedImage(null);
@@ -238,7 +240,7 @@ export default function Community() {
             </View>
             <TextInput
               style={styles.postInput}
-              placeholder="What's going on?"
+              placeholder={t("community.whats_going_on")}
               multiline
               value={newPostContent}
               onChangeText={setNewPostContent}
@@ -261,7 +263,7 @@ export default function Community() {
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.attachButton} onPress={pickImage}>
                 <Text style={styles.attachIcon}>📷</Text>
-                <Text style={styles.attachText}>Add Photo</Text>
+                <Text style={styles.attachText}>{t("community.add_photo")}</Text>
               </TouchableOpacity>
             </View>
 
@@ -270,7 +272,7 @@ export default function Community() {
               disabled={!newPostContent.trim() && !selectedImage}
               onPress={handleCreatePost}
             >
-              <Text style={styles.postButtonText}>Post</Text>
+              <Text style={styles.postButtonText}>{t("community.post")}</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -295,7 +297,7 @@ export default function Community() {
               source={require("../../assets/images/tour-guide-icon.png")}
               style={styles.navIcon}
             />
-            <Text style={styles.navLabel}>Tour Guide</Text>
+            <Text style={styles.navLabel}>{t("community.tour_guide")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -306,7 +308,7 @@ export default function Community() {
               source={require("../../assets/images/chat-icon.png")}
               style={styles.navIcon}
             />
-            <Text style={styles.navLabel}>Chat</Text>
+            <Text style={styles.navLabel}>{t("community.chat")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -317,7 +319,7 @@ export default function Community() {
               source={require("../../assets/images/volunteering-icon.png")}
               style={styles.navIcon}
             />
-            <Text style={styles.navLabel}>Volunteering</Text>
+            <Text style={styles.navLabel}>{t("community.volunteering")}</Text>
           </TouchableOpacity>
         </View>
       </View>

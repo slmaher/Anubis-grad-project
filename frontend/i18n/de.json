@@ -42,6 +42,24 @@
     "events": "Veranstaltungen",
     "community": "Gemeinschaft"
   },
+  "community": {
+    "title": "Gemeinschaft",
+    "search_placeholder": "Suchen",
+    "recent_posts": "Neueste Beiträge",
+    "no_posts": "Noch keine Beiträge. Sei der Erste, der postet!",
+    "anonymous": "Anonym",
+    "just_now": "Gerade eben",
+    "create_post": "Beitrag erstellen",
+    "whats_going_on": "Was ist los?",
+    "add_photo": "Foto hinzufügen",
+    "post": "Posten",
+    "tour_guide": "Reiseführer",
+    "chat": "Chat",
+    "volunteering": "Freiwilligenarbeit",
+    "you": "Du",
+    "must_be_logged_in": "Du musst eingeloggt sein, um zu posten.",
+    "failed_create_post": "Beitrag konnte nicht erstellt werden."
+  },
   "common": {
     "back": "Zurück",
     "back_arrow": "←",

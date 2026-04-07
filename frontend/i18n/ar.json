@@ -42,6 +42,24 @@
     "events": "الفعاليات",
     "community": "المجتمع"
   },
+  "community": {
+    "title": "المجتمع",
+    "search_placeholder": "بحث",
+    "recent_posts": "أحدث المنشورات",
+    "no_posts": "لا توجد منشورات بعد. كن أول من ينشر!",
+    "anonymous": "مجهول",
+    "just_now": "الآن",
+    "create_post": "إنشاء منشور",
+    "whats_going_on": "ماذا يحدث؟",
+    "add_photo": "إضافة صورة",
+    "post": "نشر",
+    "tour_guide": "الدليل السياحي",
+    "chat": "الدردشة",
+    "volunteering": "التطوع",
+    "you": "أنت",
+    "must_be_logged_in": "يجب تسجيل الدخول للنشر.",
+    "failed_create_post": "فشل إنشاء المنشور."
+  },
   "common": {
     "back": "عودة",
     "back_arrow": "→",
