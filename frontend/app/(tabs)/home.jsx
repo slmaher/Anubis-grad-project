@@ -3,10 +3,12 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useTranslation } from "react-i18next";
 import MenuScreen from "../menu/menuScreen";
 
 export default function Home() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [menuVisible, setMenuVisible] = useState(false);
 
@@ -35,7 +37,7 @@ export default function Home() {
               />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Search"
+                placeholder={t("home.search")}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 placeholderTextColor="#999"
@@ -47,7 +49,7 @@ export default function Home() {
               onPress={() => router.push("/ai/chatbot")}
             >
               <Ionicons name="chatbubble-ellipses-outline" size={20} color="#8B7B6C" />
-              <Text style={styles.chatText}>Chat with{"\n"}AI?</Text>
+              <Text style={styles.chatText}>{t("home.chat_ai")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -57,7 +59,7 @@ export default function Home() {
           showsVerticalScrollIndicator={false}
         >
           {/* Title */}
-          <Text style={styles.title}>Explore Egypt</Text>
+          <Text style={styles.title}>{t("home.title")}</Text>
 
           {/* Navigation Cards Grid */}
           <View style={styles.cardsGrid}>
@@ -69,7 +71,7 @@ export default function Home() {
               <View style={styles.navIconContainer}>
                 <MaterialCommunityIcons name="bank-outline" size={34} color="#6B5B4F" />
               </View>
-              <Text style={styles.navLabel}>Museums</Text>
+              <Text style={styles.navLabel}>{t("home.museums")}</Text>
             </TouchableOpacity>
 
             {/* Souvenirs Card */}
@@ -80,7 +82,7 @@ export default function Home() {
               <View style={styles.navIconContainer}>
                 <Ionicons name="bag-handle-outline" size={32} color="#6B5B4F" />
               </View>
-              <Text style={styles.navLabel}>Souvenirs</Text>
+              <Text style={styles.navLabel}>{t("home.souvenirs")}</Text>
             </TouchableOpacity>
 
             {/* Tickets Card */}
@@ -91,7 +93,7 @@ export default function Home() {
               <View style={styles.navIconContainer}>
                 <MaterialCommunityIcons name="ticket-confirmation-outline" size={34} color="#6B5B4F" />
               </View>
-              <Text style={styles.navLabel}>Tickets</Text>
+              <Text style={styles.navLabel}>{t("home.tickets")}</Text>
             </TouchableOpacity>
 
             {/* Map Card */}
@@ -102,16 +104,16 @@ export default function Home() {
               <View style={styles.navIconContainer}>
                 <Ionicons name="location-outline" size={34} color="#6B5B4F" />
               </View>
-              <Text style={styles.navLabel}>Map</Text>
+              <Text style={styles.navLabel}>{t("home.map")}</Text>
             </TouchableOpacity>
           </View>
 
           {/* Featured Section */}
           <View style={styles.featuredSection}>
             <View style={styles.featuredHeader}>
-              <Text style={styles.featuredTitle}>Featured</Text>
+              <Text style={styles.featuredTitle}>{t("home.featured")}</Text>
               <TouchableOpacity onPress={() => router.push("/(tabs)/explore")}>
-                <Text style={styles.seeAll}>See all</Text>
+                <Text style={styles.seeAll}>{t("home.see_all")}</Text>
               </TouchableOpacity>
             </View>
 
@@ -126,7 +128,7 @@ export default function Home() {
                 style={styles.museumCard}
                 onPress={() => router.push({
                   pathname: "/museum-profile",
-                  params: { id: 1, name: "Grand Egyptian Museum" }
+                  params: { id: 1, name: t("home.grand_museum") }
                 })}
               >
                 <Image
@@ -136,7 +138,7 @@ export default function Home() {
                 />
                 <View style={styles.museumCardOverlay}>
                   <View style={styles.museumTitleBubble}>
-                    <Text style={styles.museumCardTitle}>Grand Egyptian{"\n"}Museum</Text>
+                    <Text style={styles.museumCardTitle}>{t("home.grand_museum")}</Text>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -146,7 +148,7 @@ export default function Home() {
                 style={styles.museumCard}
                 onPress={() => router.push({
                   pathname: "/museum-profile",
-                  params: { id: 2, name: "Egyptian Museum" }
+                  params: { id: 2, name: t("home.egyptian_museum") }
                 })}
               >
                 <Image
@@ -156,7 +158,7 @@ export default function Home() {
                 />
                 <View style={styles.museumCardOverlay}>
                   <View style={styles.museumTitleBubble}>
-                    <Text style={styles.museumCardTitle}>Egyptian{"\n"}Museum</Text>
+                    <Text style={styles.museumCardTitle}>{t("home.egyptian_museum")}</Text>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -242,6 +244,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 10,
     marginTop: 2,
+    maxWidth: 60,
   },
   scrollView: {
     flex: 1,
@@ -345,5 +348,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     lineHeight: 18,
+    textAlign: "center",
   },
 });

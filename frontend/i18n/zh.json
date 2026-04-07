@@ -1,0 +1,102 @@
+{
+  "home": {
+    "search": "搜索博物馆、文物...",
+    "chat_ai": "与人工智能聊天",
+    "title": "探索埃及的奇迹",
+    "museums": "博物馆",
+    "souvenirs": "纪念品",
+    "tickets": "门票",
+    "map": "地图",
+    "featured": "精选博物馆",
+    "see_all": "查看全部",
+    "grand_museum": "大埃及博物馆",
+    "egyptian_museum": "埃及博物馆"
+  },
+  "menu": {
+    "title": "菜单",
+    "setting": "设置",
+    "profile": "个人资料",
+    "notifications": "通知",
+    "friend_requests": "好友请求",
+    "messages": "消息",
+    "friends": "好友",
+    "museums": "博物馆",
+    "map": "地图",
+    "language": "语言",
+    "logout": "登出"
+  },
+  "explore": {
+    "title": "博物馆和遗址",
+    "search": "搜索",
+    "museums_section": "博物馆",
+    "filters": {
+      "all": "全部",
+      "popular": "热门",
+      "recommended": "推荐"
+    }
+  },
+  "tabs": {
+    "home": "首页",
+    "explore": "探索",
+    "scan": "扫描",
+    "events": "活动",
+    "community": "社区"
+  },
+  "common": {
+    "back": "返回",
+    "back_arrow": "←",
+    "skip": "跳过",
+    "get_started": "开始使用",
+    "next": "下一步",
+    "loading": "加载中..."
+  },
+  "onboarding": {
+    "one": {
+      "title": "以前所未有的方式探索博物馆",
+      "description": "步入历史，与阿努比斯一起探索文物、故事和隐藏的珍宝。"
+    },
+    "two": {
+      "title": "让文物重现生机",
+      "description": "使用 AR 扫描神秘的雕像、文物，揭示它们原始的美丽和历史。"
+    },
+    "three": {
+      "title": "探索与发现",
+      "description": "使用交互式地图浏览博物馆，寻找附近的咖啡馆和商店，并连接埃及点。"
+    }
+  },
+  "auth": {
+    "login": {
+      "welcome": "欢迎",
+      "sign_up": "注册",
+      "log_in": "登录",
+      "email": "电子邮件",
+      "password": "密码",
+      "forgot_password": "忘记密码？",
+      "button": "登录"
+    },
+    "register": {
+      "title": "探索\n埃及",
+      "subtitle": "以前所未有的方式\n欣赏埃及的机会",
+      "create_account": "创建新账户",
+      "already_have_account": "我已有账户",
+      "signup_with": "注册方式"
+    }
+  },
+  "favorites": {
+    "title": "收藏夹",
+    "empty_title": "暂无收藏",
+    "empty_text": "开始探索博物馆并将其添加到您的收藏夹中！",
+    "explore_button": "探索博物馆",
+    "museum_single": "博物馆",
+    "museum_plural": "博物馆"
+  },
+  "museum": {
+    "tabs": {
+      "overview": "概览",
+      "reviews": "评论",
+      "artifacts": "文物",
+      "nearby": "附近"
+    },
+    "book_ticket": "预订门票"
+  }
+}

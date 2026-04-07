@@ -1,7 +1,8 @@
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { clearAuthSession, getAuthUser, getAuthToken } from "../api/authStorage";
 import { getLocalNotifications } from "../api/notificationsStorage";
@@ -16,54 +17,84 @@ import {
   PanResponder,
 } from "react-native";
 
-const menuItems = [
-  {
-    label: "Setting",
-    iconLib: "material",
-    iconName: "cog-outline",
-    route: "/settings/settings",
-  },
-  { label: "Profile", iconLib: "ion", iconName: "person-outline" },
-  {
-    label: "Notifications",
-    iconLib: "ion",
-    iconName: "notifications-outline",
-    route: "/notifications",
-    countKey: "notifications",
-  },
-  {
-    label: "Friend Requests",
-    iconLib: "material",
-    iconName: "account-plus-outline",
-    route: "/notifications",
-    countKey: "friendRequests",
-  },
-  {
-    label: "Messages",
-    iconLib: "ion",
-    iconName: "chatbubble-ellipses-outline",
-    route: "/messagesList",
-    countKey: "messages",
-  },
-  {
-    label: "Friends",
-    iconLib: "material",
-    iconName: "account-group-outline",
-    route: "/messagesList",
-  },
-  {
-    label: "Museums",
-    iconLib: "material",
-    iconName: "bank-outline",
-    route: "/Museums",
-  },
- 
-  { label: "Map", iconLib: "ion", iconName: "location-outline", route: "/Map" },
-  { label: "Logout", iconLib: "ion", iconName: "log-out-outline" },
+const languages = [
+  { code: "en", label: "English" },
+  { code: "ar", label: "Arabic" },
+  { code: "de", label: "German" },
+  { code: "fr", label: "French" },
+  { code: "zh", label: "Chinese" },
 ];
 
 export default function MenuScreen({ onClose }) {
   const router = useRouter();
+  const { t, i18n } = useTranslation();
+  const [languageMenuVisible, setLanguageMenuVisible] = useState(false);
+
+  const menuItems = [
+    {
+      id: "setting",
+      label: t("menu.setting"),
+      iconLib: "material",
+      iconName: "cog-outline",
+      route: "/settings/settings",
+    },
+    { id: "profile", label: t("menu.profile"), iconLib: "ion", iconName: "person-outline" },
+    {
+      id: "notifications",
+      label: t("menu.notifications"),
+      iconLib: "ion",
+      iconName: "notifications-outline",
+      route: "/notifications",
+      countKey: "notifications",
+    },
+    {
+      id: "friend_requests",
+      label: t("menu.friend_requests"),
+      iconLib: "material",
+      iconName: "account-plus-outline",
+      route: "/notifications",
+      countKey: "friendRequests",
+    },
+    {
+      id: "messages",
+      label: t("menu.messages"),
+      iconLib: "ion",
+      iconName: "chatbubble-ellipses-outline",
+      route: "/messagesList",
+      countKey: "messages",
+    },
+    {
+      id: "friends",
+      label: t("menu.friends"),
+      iconLib: "material",
+      iconName: "account-group-outline",
+      route: "/messagesList",
+    },
+    {
+      id: "museums",
+      label: t("menu.museums"),
+      iconLib: "material",
+      iconName: "bank-outline",
+      route: "/Museums",
+    },
+
+    {
+      id: "map",
+      label: t("menu.map"),
+      iconLib: "ion",
+      iconName: "location-outline",
+      route: "/Map",
+    },
+    {
+      id: "language",
+      label: t("menu.language"),
+      iconLib: "ion",
+      iconName: "language-outline",
+      isLanguage: true,
+    },
+    { id: "logout", label: t("menu.logout"), iconLib: "ion", iconName: "log-out-outline" },
+  ];
+
   const [counts, setCounts] = React.useState({
     notifications: 0,
     friendRequests: 0,
@@ -107,7 +138,12 @@ export default function MenuScreen({ onClose }) {
   }, []);
 
   const handleMenuPress = async (item) => {
-    if (item.label === "Profile") {
+    if (item.isLanguage) {
+      setLanguageMenuVisible(!languageMenuVisible);
+      return;
+    }
+
+    if (item.id === "profile" || item.label === t("menu.profile")) {
       onClose && onClose();
       const user = await getAuthUser();
       const userId = user?._id || user?.id;
@@ -117,7 +153,7 @@ export default function MenuScreen({ onClose }) {
       return;
     }
 
-    if (item.label === "Logout") {
+    if (item.id === "logout" || item.label === t("menu.logout")) {
       await clearAuthSession();
       router.replace("/auth/login");
       onClose && onClose();
@@ -128,6 +164,11 @@ export default function MenuScreen({ onClose }) {
       onClose && onClose();
       router.push(item.route);
     }
+  };
+
+  const changeLanguage = (langCode) => {
+    i18n.changeLanguage(langCode);
+    setLanguageMenuVisible(false);
   };
 
   const slideAnim = React.useRef(new Animated.Value(-300)).current; // hidden left initially
@@ -197,40 +238,68 @@ export default function MenuScreen({ onClose }) {
           <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
               <View style={styles.headerSpacer} />
-              <Text style={styles.headerTitle}>Menu</Text>
+              <Text style={styles.headerTitle}>{t("menu.title")}</Text>
               <View style={styles.headerSpacer} />
             </View>
 
             <View style={styles.menuList}>
-              {menuItems.map((item) => (
-                <TouchableOpacity
-                  key={item.label}
-                  style={styles.menuRow}
-                  onPress={() => handleMenuPress(item)}
-                >
-                  <View style={styles.iconBox}>
-                    {item.iconLib === "material" ? (
-                      <MaterialCommunityIcons
-                        name={item.iconName}
-                        size={24}
-                        color={DARK}
-                      />
-                    ) : (
-                      <Ionicons name={item.iconName} size={22} color={DARK} />
-                    )}
-                  </View>
-                  <View style={styles.labelRow}>
-                    <Text style={styles.menuLabel}>{item.label}</Text>
-                    {item.countKey && counts[item.countKey] > 0 && (
-                      <View style={styles.badge}>
-                        <Text style={styles.badgeText}>
-                          {counts[item.countKey] > 99 ? "99+" : counts[item.countKey]}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                  <Text style={styles.chevron}>›</Text>
-                </TouchableOpacity>
+              {menuItems.map((item, index) => (
+                <React.Fragment key={item.id || item.label}>
+                  <TouchableOpacity
+                    style={styles.menuRow}
+                    onPress={() => handleMenuPress(item)}
+                  >
+                    <View style={styles.iconBox}>
+                      {item.iconLib === "material" ? (
+                        <MaterialCommunityIcons
+                          name={item.iconName}
+                          size={24}
+                          color={DARK}
+                        />
+                      ) : (
+                        <Ionicons name={item.iconName} size={22} color={DARK} />
+                      )}
+                    </View>
+                    <View style={styles.labelRow}>
+                      <Text style={styles.menuLabel}>{item.label}</Text>
+                      {item.countKey && counts[item.countKey] > 0 && (
+                        <View style={styles.badge}>
+                          <Text style={styles.badgeText}>
+                            {counts[item.countKey] > 99
+                              ? "99+"
+                              : counts[item.countKey]}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[styles.chevron, item.isLanguage && languageMenuVisible && { transform: [{ rotate: "90deg" }] }]}>
+                      ›
+                    </Text>
+                  </TouchableOpacity>
+                  {item.isLanguage && languageMenuVisible && (
+                    <View style={styles.languageDropdown}>
+                      {languages.map((lang) => (
+                        <TouchableOpacity
+                          key={lang.code}
+                          style={styles.languageOption}
+                          onPress={() => changeLanguage(lang.code)}
+                        >
+                          <Text
+                            style={[
+                              styles.languageText,
+                              i18n.language === lang.code && styles.activeLanguage,
+                            ]}
+                          >
+                            {lang.label}
+                          </Text>
+                          {i18n.language === lang.code && (
+                            <Ionicons name="checkmark" size={18} color="#B8965A" />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </React.Fragment>
               ))}
             </View>
           </SafeAreaView>
@@ -272,6 +341,27 @@ const styles = StyleSheet.create({
   },
   menuList: {
     marginTop: 8,
+  },
+  languageDropdown: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingLeft: 56,
+  },
+  languageOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    paddingRight: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(180,160,130,0.1)",
+  },
+  languageText: {
+    fontSize: 15,
+    color: DARK,
+  },
+  activeLanguage: {
+    color: "#B8965A",
+    fontWeight: "600",
   },
   menuRow: {
     flexDirection: "row",
