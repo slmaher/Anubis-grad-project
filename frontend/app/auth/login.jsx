@@ -3,11 +3,13 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { api } from "../api/client";
 import { saveAuthSession } from "../api/authStorage";
+import { useTranslation } from "react-i18next";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 export default function Login() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -54,7 +56,7 @@ export default function Login() {
 
       {/* Welcome Title - Outside overlay */}
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>Welcome</Text>
+        <Text style={styles.title}>{t("auth.login.welcome")}</Text>
       </View>
 
       {/* Dark Overlay - Only bottom half */}
@@ -71,11 +73,11 @@ export default function Login() {
                 style={styles.tab}
                 onPress={() => router.replace("/auth/signup")}
               >
-                <Text style={styles.tabText}>Sign Up</Text>
+                <Text style={styles.tabText}>{t("auth.login.sign_up")}</Text>
               </TouchableOpacity>
               
               <TouchableOpacity style={[styles.tab, styles.activeTab]}>
-                <Text style={[styles.tabText, styles.activeTabText]}>Log in</Text>
+                <Text style={[styles.tabText, styles.activeTabText]}>{t("auth.login.log_in")}</Text>
               </TouchableOpacity>
             </View>
 
@@ -85,7 +87,7 @@ export default function Login() {
                 style={styles.inputUnderline}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="E-mail"
+                placeholder={t("auth.login.email")}
                 placeholderTextColor="rgba(255, 255, 255, 0.8)"
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -99,7 +101,7 @@ export default function Login() {
                   style={styles.passwordInputUnderline}
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="Password"
+                  placeholder={t("auth.login.password")}
                   placeholderTextColor="rgba(255, 255, 255, 0.8)"
                   secureTextEntry={!showPassword}
                 />
@@ -118,7 +120,7 @@ export default function Login() {
 
             {/* Forgot Password */}
             <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+              <Text style={styles.forgotPasswordText}>{t("auth.login.forgot_password")}</Text>
             </TouchableOpacity>
 
             {/* Log in Button */}
@@ -130,7 +132,7 @@ export default function Login() {
               {loading ? (
                 <ActivityIndicator color="#333" />
               ) : (
-                <Text style={styles.loginButtonText}>Log in</Text>
+                <Text style={styles.loginButtonText}>{t("auth.login.button")}</Text>
               )}
             </TouchableOpacity>
 

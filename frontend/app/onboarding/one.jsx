@@ -1,8 +1,10 @@
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 export default function OnboardingOne() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
@@ -23,15 +25,15 @@ export default function OnboardingOne() {
           style={styles.skipButton}
           onPress={() => router.replace("/auth/register")}
         >
-          <Text style={styles.skipText}>Skip</Text>
+          <Text style={styles.skipText}>{t("common.skip")}</Text>
         </TouchableOpacity>
 
         {/* Bottom Content */}
         <View style={styles.bottomSection}>
           <View style={styles.textBackground}>
-            <Text style={styles.title}>Explore Museums Like Never Before</Text>
+            <Text style={styles.title}>{t("onboarding.one.title")}</Text>
             <Text style={styles.description}>
-              Step into history and discover artifacts, stories, and hidden treasures with Anubis.
+              {t("onboarding.one.description")}
             </Text>
 
             {/* Pagination Dots */}
@@ -46,7 +48,7 @@ export default function OnboardingOne() {
               style={styles.button}
               onPress={() => router.push("/onboarding/two")}
             >
-              <Text style={styles.buttonText}>Get Started</Text>
+              <Text style={styles.buttonText}>{t("common.get_started")}</Text>
             </TouchableOpacity>
           </View>
         </View>

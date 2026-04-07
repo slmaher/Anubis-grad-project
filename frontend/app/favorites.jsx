@@ -1,10 +1,12 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Favorites() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,9 +55,9 @@ export default function Favorites() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <Text style={styles.backIcon}>{t("common.back_arrow")}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Favorites</Text>
+        <Text style={styles.headerTitle}>{t("favorites.title")}</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -66,25 +68,25 @@ export default function Favorites() {
       >
         {loading ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Loading...</Text>
+            <Text style={styles.emptyText}>{t("common.loading")}</Text>
           </View>
         ) : favorites.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>🔖</Text>
-            <Text style={styles.emptyTitle}>No Favorites Yet</Text>
+            <Text style={styles.emptyTitle}>{t("favorites.empty_title")}</Text>
             <Text style={styles.emptyText}>
-              Start exploring museums and add them to your favorites!
+              {t("favorites.empty_text")}
             </Text>
             <TouchableOpacity 
               style={styles.exploreButton}
               onPress={() => router.push("/(tabs)/explore")}
             >
-              <Text style={styles.exploreButtonText}>Explore Museums</Text>
+              <Text style={styles.exploreButtonText}>{t("favorites.explore_button")}</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
-            <Text style={styles.count}>{favorites.length} {favorites.length === 1 ? 'Museum' : 'Museums'}</Text>
+            <Text style={styles.count}>{favorites.length} {favorites.length === 1 ? t("favorites.museum_single") : t("favorites.museum_plural")}</Text>
             
             {favorites.map((museum) => (
               <View key={museum.id} style={styles.favoriteCard}>
