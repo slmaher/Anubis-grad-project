@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:4000";
+const API_BASE_URL = "http://192.168.1.7:4000";
 
 async function apiRequest(path, options = {}) {
   const { method = "GET", body, token } = options;
