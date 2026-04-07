@@ -60,6 +60,15 @@
     "must_be_logged_in": "Vous devez être connecté pour publier.",
     "failed_create_post": "Échec de la création de la publication."
   },
+  "tour_guide": {
+    "title": "Guide touristique",
+    "search_placeholder": "Rechercher",
+    "available_guides": "Guides touristiques disponibles",
+    "available_now": "Disponible maintenant",
+    "verified": "Vérifié",
+    "expert": "Expert",
+    "book_now": "Réserver maintenant"
+  },
   "common": {
     "back": "Retour",
     "back_arrow": "←",
