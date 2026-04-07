@@ -53,7 +53,7 @@
     "whats_going_on": "ماذا يحدث؟",
     "add_photo": "إضافة صورة",
     "post": "نشر",
-    "tour_guide": "الدليل السياحي",
+    "tour_guide": "المرشد السياحي",
     "chat": "الدردشة",
     "volunteering": "التطوع",
     "you": "أنت",
@@ -61,13 +61,13 @@
     "failed_create_post": "فشل إنشاء المنشور."
   },
   "tour_guide": {
-    "title": "دليل الرحلات",
+    "title": "المرشدين السياحين",
     "search_placeholder": "بحث",
-    "available_guides": "الدلائل المتاحة",
+    "available_guides": "المرشدين المتاحين",
     "available_now": "متاح الآن",
     "verified": "متحقق منه",
     "expert": "خبير",
-    "book_now": "خخز الآن"
+    "book_now": "حجز الآن"
   },
   "common": {
     "back": "عودة",
