@@ -1,8 +1,10 @@
 import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 export default function Register() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleClose = () => {
     // Navigate back to the last onboarding screen
@@ -35,8 +37,8 @@ export default function Register() {
 
         {/* Content */}
         <View style={styles.content}>
-          <Text style={styles.title}>Explore{"\n"}Egypt</Text>
-          <Text style={styles.subtitle}>Your chance to view Egypt like{"\n"}never before</Text>
+          <Text style={styles.title}>{t("auth.register.title")}</Text>
+          <Text style={styles.subtitle}>{t("auth.register.subtitle")}</Text>
 
           {/* Gray Container Card */}
           <View style={styles.cardContainer}>
@@ -45,7 +47,7 @@ export default function Register() {
               style={styles.createButton}
               onPress={() => router.push("/auth/signup")}
             >
-              <Text style={styles.createButtonText}>Create new account</Text>
+              <Text style={styles.createButtonText}>{t("auth.register.create_account")}</Text>
             </TouchableOpacity>
 
             {/* Already Have Account */}
@@ -53,11 +55,11 @@ export default function Register() {
               style={styles.loginPrompt}
               onPress={() => router.push("/auth/login")}
             >
-              <Text style={styles.loginPromptText}>I already have an account</Text>
+              <Text style={styles.loginPromptText}>{t("auth.register.already_have_account")}</Text>
             </TouchableOpacity>
 
             {/* Sign up with */}
-            <Text style={styles.signupWith}>Sign up with</Text>
+            <Text style={styles.signupWith}>{t("auth.register.signup_with")}</Text>
 
             {/* Social Login Buttons */}
             <View style={styles.socialButtons}>

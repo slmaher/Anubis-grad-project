@@ -1,8 +1,10 @@
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 export default function OnboardingTwo() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
@@ -24,23 +26,23 @@ export default function OnboardingTwo() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Text style={styles.backText}>← Back</Text>
+            <Text style={styles.backText}>← {t("common.back")}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
             style={styles.skipButton}
             onPress={() => router.replace("/auth/register")}
           >
-            <Text style={styles.skipText}>Skip →</Text>
+            <Text style={styles.skipText}>{t("common.skip")} →</Text>
           </TouchableOpacity>
         </View>
 
         {/* Bottom Content */}
         <View style={styles.bottomSection}>
           <View style={styles.textBackground}>
-            <Text style={styles.title}>Bring Artifacts Back to Life</Text>
+            <Text style={styles.title}>{t("onboarding.two.title")}</Text>
             <Text style={styles.description}>
-              Use AR to scan mysterious statues, artifacts, revealing their original beauty and history.
+              {t("onboarding.two.description")}
             </Text>
 
             {/* Pagination Dots */}
@@ -55,7 +57,7 @@ export default function OnboardingTwo() {
               style={styles.button}
               onPress={() => router.push("/onboarding/three")}
             >
-              <Text style={styles.buttonText}>Next</Text>
+              <Text style={styles.buttonText}>{t("common.next")}</Text>
             </TouchableOpacity>
           </View>
         </View>
