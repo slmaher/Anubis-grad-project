@@ -42,6 +42,24 @@
     "events": "Événements",
     "community": "Communauté"
   },
+  "community": {
+    "title": "Communauté",
+    "search_placeholder": "Rechercher",
+    "recent_posts": "Publications récentes",
+    "no_posts": "Aucune publication pour le moment. Soyez le premier à publier !",
+    "anonymous": "Anonyme",
+    "just_now": "À l'instant",
+    "create_post": "Créer une publication",
+    "whats_going_on": "Quoi de neuf ?",
+    "add_photo": "Ajouter une photo",
+    "post": "Publier",
+    "tour_guide": "Guide touristique",
+    "chat": "Chat",
+    "volunteering": "Bénévolat",
+    "you": "Vous",
+    "must_be_logged_in": "Vous devez être connecté pour publier.",
+    "failed_create_post": "Échec de la création de la publication."
+  },
   "common": {
     "back": "Retour",
     "back_arrow": "←",

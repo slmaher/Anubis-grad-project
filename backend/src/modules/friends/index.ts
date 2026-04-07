@@ -1,1 +1,1 @@
-export { friendsRouter } from './friends.routes';
+export { friendsRouter } from "./friends.routes";

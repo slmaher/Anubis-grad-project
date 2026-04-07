@@ -102,7 +102,10 @@ export default function UserProfile() {
     try {
       const token = await getAuthToken();
       if (!token) {
-        Alert.alert("Error", "You need to be logged in to send a friend request.");
+        Alert.alert(
+          "Error",
+          "You need to be logged in to send a friend request.",
+        );
         return;
       }
 
@@ -111,7 +114,10 @@ export default function UserProfile() {
         setFriendRequestSent(true);
         Alert.alert("Success", `Friend request sent to ${profile?.name}!`);
       } else {
-        Alert.alert("Error", response.message || "Failed to send friend request.");
+        Alert.alert(
+          "Error",
+          response.message || "Failed to send friend request.",
+        );
       }
     } catch (error) {
       console.error("Error sending friend request:", error);

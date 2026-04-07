@@ -42,6 +42,24 @@
     "events": "活动",
     "community": "社区"
   },
+  "community": {
+    "title": "社区",
+    "search_placeholder": "搜索",
+    "recent_posts": "最新帖子",
+    "no_posts": "还没有帖子。成为第一个发帖的人吧！",
+    "anonymous": "匿名",
+    "just_now": "刚刚",
+    "create_post": "创建帖子",
+    "whats_going_on": "发生了什么？",
+    "add_photo": "添加照片",
+    "post": "发布",
+    "tour_guide": "导览",
+    "chat": "聊天",
+    "volunteering": "志愿服务",
+    "you": "你",
+    "must_be_logged_in": "你必须先登录才能发帖。",
+    "failed_create_post": "创建帖子失败。"
+  },
   "common": {
     "back": "返回",
     "back_arrow": "←",

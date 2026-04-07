@@ -1,4 +1,15 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, Animated, PanResponder, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  FlatList,
+  Animated,
+  PanResponder,
+  ActivityIndicator,
+} from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { api } from "../api/client";
@@ -38,7 +49,7 @@ const SwipeableMessageItem = ({ item, onPress, onDelete }) => {
           setIsSwiped(false);
         }
       },
-    })
+    }),
   ).current;
 
   const closeSwipe = () => {
@@ -62,13 +73,10 @@ const SwipeableMessageItem = ({ item, onPress, onDelete }) => {
     <View style={styles.messageItemContainer}>
       {/* Action Buttons (Behind) */}
       <View style={styles.swipeActions}>
-        <TouchableOpacity 
-          style={styles.swipeActionButton}
-          onPress={closeSwipe}
-        >
+        <TouchableOpacity style={styles.swipeActionButton} onPress={closeSwipe}>
           <Text style={styles.swipeActionIcon}>⋮</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.swipeActionButton}
           onPress={() => {
             closeSwipe();
@@ -84,19 +92,16 @@ const SwipeableMessageItem = ({ item, onPress, onDelete }) => {
 
       {/* Message Item (Swipeable) */}
       <Animated.View
-        style={[
-          styles.messageItemWrapper,
-          { transform: [{ translateX }] }
-        ]}
+        style={[styles.messageItemWrapper, { transform: [{ translateX }] }]}
         {...panResponder.panHandlers}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.messageItem}
           onPress={handlePress}
           activeOpacity={0.7}
         >
           <Image source={item.avatar} style={styles.messageAvatar} />
-          
+
           <View style={styles.messageContent}>
             <View style={styles.messageHeader}>
               <Text style={styles.messageName}>{item.name}</Text>
@@ -119,11 +124,31 @@ export default function MessagesList() {
   const [loading, setLoading] = useState(true);
 
   const defaultFriends = [
-    { id: 1, name: "Benjamin", image: require("../../assets/images/profile-benjamin.png") },
-    { id: 2, name: "Farita", image: require("../../assets/images/profile-farita.png") },
-    { id: 3, name: "Marie", image: require("../../assets/images/profile-marie.png") },
-    { id: 4, name: "Claire", image: require("../../assets/images/profile-claire.png") },
-    { id: 5, name: "Alex", image: require("../../assets/images/profile-alex.png") },
+    {
+      id: 1,
+      name: "Benjamin",
+      image: require("../../assets/images/profile-benjamin.png"),
+    },
+    {
+      id: 2,
+      name: "Farita",
+      image: require("../../assets/images/profile-farita.png"),
+    },
+    {
+      id: 3,
+      name: "Marie",
+      image: require("../../assets/images/profile-marie.png"),
+    },
+    {
+      id: 4,
+      name: "Claire",
+      image: require("../../assets/images/profile-claire.png"),
+    },
+    {
+      id: 5,
+      name: "Alex",
+      image: require("../../assets/images/profile-alex.png"),
+    },
   ];
   const [friends, setFriends] = useState(defaultFriends);
 
@@ -147,7 +172,8 @@ export default function MessagesList() {
 
         const merged = [...mapped, ...defaultFriends].filter(
           (friend, index, arr) =>
-            index === arr.findIndex((entry) => String(entry.id) === String(friend.id)),
+            index ===
+            arr.findIndex((entry) => String(entry.id) === String(friend.id)),
         );
 
         setFriends(merged);
@@ -173,7 +199,10 @@ export default function MessagesList() {
           name: conv.user.name,
           message: conv.lastMessage?.content || "No messages yet",
           time: conv.lastMessage
-            ? new Date(conv.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            ? new Date(conv.lastMessage.createdAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
             : "",
           avatar: require("../../assets/images/profile-farita.png"), // Default for now
           unread: conv.unreadCount > 0,
@@ -197,15 +226,18 @@ export default function MessagesList() {
     }, [loadAcceptedFriends]),
   );
 
-  const handleNewMessage = useCallback((message) => {
-    // Refresh conversations list when a new message arrives
-    fetchConversations();
-  }, [fetchConversations]);
+  const handleNewMessage = useCallback(
+    (message) => {
+      // Refresh conversations list when a new message arrives
+      fetchConversations();
+    },
+    [fetchConversations],
+  );
 
   useChatSocket(handleNewMessage);
 
   const handleDelete = (id) => {
-    setConversations(conversations.filter(msg => msg.id !== id));
+    setConversations(conversations.filter((msg) => msg.id !== id));
   };
 
   const handleChatPress = (contact) => {
@@ -215,7 +247,7 @@ export default function MessagesList() {
         contactId: contact.id,
         contactName: contact.name,
         contactAvatar: contact.avatar,
-      }
+      },
     });
   };
 
@@ -232,7 +264,7 @@ export default function MessagesList() {
       {/* Header Section */}
       <View style={styles.header}>
         {/* Back Button */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.push("/(tabs)/community")}
         >
@@ -240,7 +272,7 @@ export default function MessagesList() {
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Chat with{"\n"}friends</Text>
-        
+
         {/* Friends Avatars */}
         <View style={styles.friendsSection}>
           <TouchableOpacity style={styles.searchButton}>
@@ -249,9 +281,9 @@ export default function MessagesList() {
               style={styles.searchIcon}
             />
           </TouchableOpacity>
-          
-          <ScrollView 
-            horizontal 
+
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.friendsScroll}
           >
@@ -265,30 +297,36 @@ export default function MessagesList() {
 
         {/* Tabs */}
         <View style={styles.tabsContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.tab}
             onPress={() => setActiveTab("Messages")}
           >
             <View style={styles.tabContent}>
-              <Text style={[
-                styles.tabText, 
-                activeTab === "Messages" && styles.activeTabText
-              ]}>
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "Messages" && styles.activeTabText,
+                ]}
+              >
                 Messages
               </Text>
-              {activeTab === "Messages" && <View style={styles.unreadIndicator} />}
+              {activeTab === "Messages" && (
+                <View style={styles.unreadIndicator} />
+              )}
             </View>
-            {activeTab === "Messages" && <View style={styles.activeTabIndicator} />}
+            {activeTab === "Messages" && (
+              <View style={styles.activeTabIndicator} />
+            )}
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.tab}
             onPress={() => setActiveTab("Calls")}
           >
             <Text style={styles.tabText}>Calls</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.tab}
             onPress={() => setActiveTab("Groups")}
           >
@@ -297,7 +335,7 @@ export default function MessagesList() {
 
           <TouchableOpacity style={styles.tab}>
             <View style={styles.createBadge}>
-                <Text style={styles.createButtonText}>CREATE</Text>
+              <Text style={styles.createButtonText}>CREATE</Text>
             </View>
           </TouchableOpacity>
         </View>

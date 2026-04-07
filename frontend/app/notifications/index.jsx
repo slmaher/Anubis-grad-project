@@ -72,7 +72,10 @@ export default function NotificationsScreen() {
       if (token) {
         try {
           const friendRequestsRes = await api.getIncomingFriendRequests(token);
-          if (friendRequestsRes?.success && Array.isArray(friendRequestsRes.data)) {
+          if (
+            friendRequestsRes?.success &&
+            Array.isArray(friendRequestsRes.data)
+          ) {
             friendRequestsRes.data.forEach((request) => {
               nextItems.push({
                 id: request.id,
@@ -190,7 +193,10 @@ export default function NotificationsScreen() {
 
       const response = await api.acceptFriendRequest(item.id, token);
       if (!response.success) {
-        Alert.alert("Error", response.message || "Could not accept this request.");
+        Alert.alert(
+          "Error",
+          response.message || "Could not accept this request.",
+        );
         return;
       }
 
@@ -211,7 +217,10 @@ export default function NotificationsScreen() {
 
       const response = await api.rejectFriendRequest(item.id, token);
       if (!response.success) {
-        Alert.alert("Error", response.message || "Could not reject this request.");
+        Alert.alert(
+          "Error",
+          response.message || "Could not reject this request.",
+        );
         return;
       }
 
@@ -262,7 +271,8 @@ export default function NotificationsScreen() {
             renderItem={({ item }) => {
               const icon = iconByType[item.type] || iconByType.default;
               const isPendingFriendRequest =
-                item.type === "friend_request" && item.requestStatus === "pending";
+                item.type === "friend_request" &&
+                item.requestStatus === "pending";
               return (
                 <View style={styles.card}>
                   <Text style={styles.cardIcon}>{icon}</Text>

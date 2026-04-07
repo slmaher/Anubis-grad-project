@@ -8,13 +8,13 @@ import { clearAuthSession, getAuthUser, getAuthToken } from "../api/authStorage"
 import { getLocalNotifications } from "../api/notificationsStorage";
 import {
   ImageBackground,
+  ScrollView,
   SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
   Animated,
-  PanResponder,
 } from "react-native";
 
 const languages = [
@@ -184,38 +184,6 @@ export default function MenuScreen({ onClose }) {
     loadCounts();
   }, []);
 
-  const panResponder = React.useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (evt, gestureState) => {
-        // only horizontal swipes
-        return Math.abs(gestureState.dx) > 20;
-      },
-      onPanResponderMove: (evt, gestureState) => {
-        if (gestureState.dx < 0) {
-          // moving left
-          slideAnim.setValue(Math.max(gestureState.dx, -300));
-        }
-      },
-      onPanResponderRelease: (evt, gestureState) => {
-        if (gestureState.dx < -100) {
-          // if swiped left enough, close
-          Animated.timing(slideAnim, {
-            toValue: -300,
-            duration: 200,
-            useNativeDriver: true,
-          }).start(() => onClose && onClose());
-        } else {
-          // if swipe too short, snap back
-          Animated.timing(slideAnim, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    }),
-  ).current;
-
   return (
     <View style={StyleSheet.absoluteFill}>
       {/* DARK OVERLAY */}
@@ -227,7 +195,6 @@ export default function MenuScreen({ onClose }) {
 
       {/* SLIDING MENU */}
       <Animated.View
-        {...panResponder.panHandlers}
         style={[styles.background, { transform: [{ translateX: slideAnim }] }]}
       >
         <ImageBackground
@@ -242,7 +209,11 @@ export default function MenuScreen({ onClose }) {
               <View style={styles.headerSpacer} />
             </View>
 
-            <View style={styles.menuList}>
+            <ScrollView
+              style={styles.menuList}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.menuListContent}
+            >
               {menuItems.map((item, index) => (
                 <React.Fragment key={item.id || item.label}>
                   <TouchableOpacity
@@ -301,7 +272,7 @@ export default function MenuScreen({ onClose }) {
                   )}
                 </React.Fragment>
               ))}
-            </View>
+            </ScrollView>
           </SafeAreaView>
         </ImageBackground>
       </Animated.View>
@@ -341,6 +312,10 @@ const styles = StyleSheet.create({
   },
   menuList: {
     marginTop: 8,
+    flex: 1,
+  },
+  menuListContent: {
+    paddingBottom: 24,
   },
   languageDropdown: {
     backgroundColor: "rgba(255, 255, 255, 0.2)",
