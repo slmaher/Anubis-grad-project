@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 import { View, TouchableOpacity, Text, StyleSheet, Animated, Dimensions } from "react-native";
 import { useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import Feather from '@expo/vector-icons/Feather';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
@@ -13,6 +14,7 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 function CustomTabBar({ state, descriptors, navigation }) {
   const bubblePosition = useRef(new Animated.Value(0)).current;
   const router = useRouter();
+  const { t } = useTranslation();
 
   const TAB_WIDTH = (SCREEN_WIDTH - 80) / 5; // dynamic width (left+right = 40+40)
 
@@ -46,11 +48,11 @@ function CustomTabBar({ state, descriptors, navigation }) {
 
   const getLabel = (routeName) => {
     switch (routeName) {
-      case 'home': return 'Home';
-      case 'explore': return 'Explore';
-      case 'scan': return 'Scan';
-      case 'events': return 'Events';
-      case 'community': return 'Community';
+      case 'home': return t("tabs.home");
+      case 'explore': return t("tabs.explore");
+      case 'scan': return t("tabs.scan");
+      case 'events': return t("tabs.events");
+      case 'community': return t("tabs.community");
       default: return '';
     }
   };

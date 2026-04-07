@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image, ImageBackground, ActivityIndicator } from "react-native";
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 
 // Different local image for each museum (when remote fails or is missing)
@@ -50,6 +51,7 @@ function getLocalImageForMuseum(museum) {
 
 export default function Explore() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
   const [museums, setMuseums] = useState([]);
@@ -127,7 +129,7 @@ export default function Explore() {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Museums and Sites</Text>
+          <Text style={styles.headerTitle}>{t("explore.title")}</Text>
         </View>
 
         <ScrollView 
@@ -152,7 +154,7 @@ export default function Explore() {
               <Text style={styles.searchIcon}>≡</Text>
               <TextInput
                 style={styles.searchInput}
-                placeholder="Search"
+                placeholder={t("explore.search")}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 placeholderTextColor="#999"
@@ -183,7 +185,7 @@ export default function Explore() {
                     activeFilter === filter && styles.filterTextActive,
                   ]}
                 >
-                  {filter}
+                  {t(`explore.filters.${filter.toLowerCase()}`)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -193,7 +195,7 @@ export default function Explore() {
             <>
               {/* Recent Search */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Museums</Text>
+                <Text style={styles.sectionTitle}>{t("explore.museums_section")}</Text>
                 
                 <View style={styles.recentSearchGrid}>
                   {filteredMuseums.slice(0, 2).map((museum) => (

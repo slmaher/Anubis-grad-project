@@ -1,8 +1,10 @@
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 export default function OnboardingThree() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
@@ -24,16 +26,16 @@ export default function OnboardingThree() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Text style={styles.backText}>← Back</Text>
+            <Text style={styles.backText}>← {t("common.back")}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Bottom Content */}
         <View style={styles.bottomSection}>
           <View style={styles.textBackground}>
-            <Text style={styles.title}>Explore and Discover</Text>
+            <Text style={styles.title}>{t("onboarding.three.title")}</Text>
             <Text style={styles.description}>
-              Navigate museums with interactive maps, find nearby cafés and shops, and connect with Egyptian points.
+              {t("onboarding.three.description")}
             </Text>
 
             {/* Pagination Dots */}
@@ -48,7 +50,7 @@ export default function OnboardingThree() {
               style={styles.button}
               onPress={() => router.replace("/auth/register")}
             >
-              <Text style={styles.buttonText}>Next</Text>
+              <Text style={styles.buttonText}>{t("common.next")}</Text>
             </TouchableOpacity>
           </View>
         </View>

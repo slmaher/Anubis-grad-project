@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, Dimensions, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import * as Sharing from 'expo-sharing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
@@ -55,6 +56,7 @@ function getLocalImageForMuseum(name) {
 
 export default function MuseumProfile() {
   const router = useRouter();
+  const { t } = useTranslation();
   const params = useLocalSearchParams();
   const [activeTab, setActiveTab] = useState("Overview");
   const [isFavorite, setIsFavorite] = useState(false);
@@ -162,7 +164,7 @@ export default function MuseumProfile() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Text style={styles.backIcon}>←</Text>
+            <Text style={styles.backIcon}>{t("common.back_arrow")}</Text>
           </TouchableOpacity>
 
           {/* Share Button */}
@@ -237,7 +239,7 @@ export default function MuseumProfile() {
                 }}
               >
                 <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
-                  {tab}
+                  {t(`museum.tabs.${tab.toLowerCase()}`)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -276,7 +278,7 @@ export default function MuseumProfile() {
         {/* Book Ticket Button */}
         <View style={styles.bookButtonContainer}>
           <TouchableOpacity style={styles.bookButton}>
-            <Text style={styles.bookButtonText}>Book Ticket</Text>
+            <Text style={styles.bookButtonText}>{t("museum.book_ticket")}</Text>
           </TouchableOpacity>
         </View>
       </View>

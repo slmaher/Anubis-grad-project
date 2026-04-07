@@ -1,0 +1,102 @@
+{
+  "home": {
+    "search": "Rechercher des musées, des artefacts...",
+    "chat_ai": "CHAT AVEC L'IA",
+    "title": "Explorez les merveilles de l'Égypte",
+    "museums": "Musées",
+    "souvenirs": "Souvenirs",
+    "tickets": "Billets",
+    "map": "Carte",
+    "featured": "Musées en vedette",
+    "see_all": "Voir tout",
+    "grand_museum": "Grand Musée égyptien",
+    "egyptian_museum": "Musée égyptien"
+  },
+  "menu": {
+    "title": "Menu",
+    "setting": "Paramètres",
+    "profile": "Profil",
+    "notifications": "Notifications",
+    "friend_requests": "Demandes d'amis",
+    "messages": "Messages",
+    "friends": "Amis",
+    "museums": "Musées",
+    "map": "Carte",
+    "language": "Langue",
+    "logout": "Déconnexion"
+  },
+  "explore": {
+    "title": "Musées et sites",
+    "search": "Recherche",
+    "museums_section": "Musées",
+    "filters": {
+      "all": "Tout",
+      "popular": "Populaire",
+      "recommended": "Recommandé"
+    }
+  },
+  "tabs": {
+    "home": "Accueil",
+    "explore": "Explorer",
+    "scan": "Scan",
+    "events": "Événements",
+    "community": "Communauté"
+  },
+  "common": {
+    "back": "Retour",
+    "back_arrow": "←",
+    "skip": "Passer",
+    "get_started": "Commencer",
+    "next": "Suivant",
+    "loading": "Chargement..."
+  },
+  "onboarding": {
+    "one": {
+      "title": "Explorez les musées comme jamais auparavant",
+      "description": "Plongez dans l'histoire et découvrez des artefacts, des histoires et des trésors cachés avec Anubis."
+    },
+    "two": {
+      "title": "Redonner vie aux artefacts",
+      "description": "Utilisez la RA pour scanner des statues et des artefacts mystérieux, révélant leur beauté et leur histoire originales."
+    },
+    "three": {
+      "title": "Explorer et découvrir",
+      "description": "Naviguez dans les musées avec des cartes interactives, trouvez des cafés et des boutiques à proximité, et connectez-vous avec des points égyptiens."
+    }
+  },
+  "auth": {
+    "login": {
+      "welcome": "Bienvenue",
+      "sign_up": "S'inscrire",
+      "log_in": "Se connecter",
+      "email": "E-mail",
+      "password": "Mot de passe",
+      "forgot_password": "Mot de passe oublié ?",
+      "button": "Se connecter"
+    },
+    "register": {
+      "title": "Explorez\nl'Égypte",
+      "subtitle": "Votre chance de voir l'Égypte comme\njamais auparavant",
+      "create_account": "Créer un nouveau compte",
+      "already_have_account": "J'ai déjà un compte",
+      "signup_with": "S'inscrire avec"
+    }
+  },
+  "favorites": {
+    "title": "Favoris",
+    "empty_title": "Pas encore de favoris",
+    "empty_text": "Commencez à explorer les musées et ajoutez-les à vos favoris !",
+    "explore_button": "Explorer les musées",
+    "museum_single": "Musée",
+    "museum_plural": "Musées"
+  },
+  "museum": {
+    "tabs": {
+      "overview": "Aperçu",
+      "reviews": "Avis",
+      "artifacts": "Artefacts",
+      "nearby": "À proximité"
+    },
+    "book_ticket": "Réserver un billet"
+  }
+}

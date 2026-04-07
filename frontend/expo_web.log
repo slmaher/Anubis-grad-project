@@ -1,0 +1,11 @@
+
+> anubis_app@1.0.0 web
+> expo start --web
+
+Starting project at /app/frontend
+› Port 8081 is running this app in another window
+  /app/frontend (pid 28016)
+Input is required, but 'npx expo' is in non-interactive mode.
+Required input:
+> Use port 8082 instead?
+› Skipping dev server
