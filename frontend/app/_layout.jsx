@@ -22,12 +22,12 @@ function RootLayoutNav() {
   }, [i18nInstance.language]);
 
   return (
-    <Stack 
-      screenOptions={{ 
+    <Stack
+      screenOptions={{
         headerShown: false,
-        animation: 'fade',
+        animation: "fade",
         animationDuration: 300,
-      }} 
+      }}
     />
   );
 }
