@@ -60,6 +60,15 @@
     "must_be_logged_in": "你必须先登录才能发帖。",
     "failed_create_post": "创建帖子失败。"
   },
+  "tour_guide": {
+    "title": "导游",
+    "search_placeholder": "搜索",
+    "available_guides": "可用的导游",
+    "available_now": "现在可用",
+    "verified": "已验证",
+    "expert": "专家",
+    "book_now": "正式下单"
+  },
   "common": {
     "back": "返回",
     "back_arrow": "←",

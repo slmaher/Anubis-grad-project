@@ -60,6 +60,15 @@
     "must_be_logged_in": "Du musst eingeloggt sein, um zu posten.",
     "failed_create_post": "Beitrag konnte nicht erstellt werden."
   },
+  "tour_guide": {
+    "title": "Reiseführen",
+    "search_placeholder": "Suchen",
+    "available_guides": "Verfügbare Reiseführen",
+    "available_now": "Jetzt verfügbar",
+    "verified": "Bestätigt",
+    "expert": "Experte",
+    "book_now": "Jetzt buchen"
+  },
   "common": {
     "back": "Zurück",
     "back_arrow": "←",

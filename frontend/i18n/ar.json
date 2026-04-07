@@ -60,6 +60,15 @@
     "must_be_logged_in": "يجب تسجيل الدخول للنشر.",
     "failed_create_post": "فشل إنشاء المنشور."
   },
+  "tour_guide": {
+    "title": "دليل الرحلات",
+    "search_placeholder": "بحث",
+    "available_guides": "الدلائل المتاحة",
+    "available_now": "متاح الآن",
+    "verified": "متحقق منه",
+    "expert": "خبير",
+    "book_now": "خخز الآن"
+  },
   "common": {
     "back": "عودة",
     "back_arrow": "→",

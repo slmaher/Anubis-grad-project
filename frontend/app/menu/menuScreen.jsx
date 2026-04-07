@@ -4,7 +4,11 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
-import { clearAuthSession, getAuthUser, getAuthToken } from "../api/authStorage";
+import {
+  clearAuthSession,
+  getAuthUser,
+  getAuthToken,
+} from "../api/authStorage";
 import { getLocalNotifications } from "../api/notificationsStorage";
 import {
   ImageBackground,
@@ -38,7 +42,12 @@ export default function MenuScreen({ onClose }) {
       iconName: "cog-outline",
       route: "/settings/settings",
     },
-    { id: "profile", label: t("menu.profile"), iconLib: "ion", iconName: "person-outline" },
+    {
+      id: "profile",
+      label: t("menu.profile"),
+      iconLib: "ion",
+      iconName: "person-outline",
+    },
     {
       id: "notifications",
       label: t("menu.notifications"),
@@ -92,7 +101,12 @@ export default function MenuScreen({ onClose }) {
       iconName: "language-outline",
       isLanguage: true,
     },
-    { id: "logout", label: t("menu.logout"), iconLib: "ion", iconName: "log-out-outline" },
+    {
+      id: "logout",
+      label: t("menu.logout"),
+      iconLib: "ion",
+      iconName: "log-out-outline",
+    },
   ];
 
   const [counts, setCounts] = React.useState({
@@ -119,7 +133,10 @@ export default function MenuScreen({ onClose }) {
           friendRequests = requestsResponse.data.length;
         }
 
-        if (conversationsResponse?.success && Array.isArray(conversationsResponse.data)) {
+        if (
+          conversationsResponse?.success &&
+          Array.isArray(conversationsResponse.data)
+        ) {
           messages = conversationsResponse.data.reduce(
             (sum, conversation) => sum + (conversation.unreadCount || 0),
             0,
@@ -243,7 +260,15 @@ export default function MenuScreen({ onClose }) {
                         </View>
                       )}
                     </View>
-                    <Text style={[styles.chevron, item.isLanguage && languageMenuVisible && { transform: [{ rotate: "90deg" }] }]}>
+                    <Text
+                      style={[
+                        styles.chevron,
+                        item.isLanguage &&
+                          languageMenuVisible && {
+                            transform: [{ rotate: "90deg" }],
+                          },
+                      ]}
+                    >
                       ›
                     </Text>
                   </TouchableOpacity>
@@ -258,13 +283,18 @@ export default function MenuScreen({ onClose }) {
                           <Text
                             style={[
                               styles.languageText,
-                              i18n.language === lang.code && styles.activeLanguage,
+                              i18n.language === lang.code &&
+                                styles.activeLanguage,
                             ]}
                           >
                             {lang.label}
                           </Text>
                           {i18n.language === lang.code && (
-                            <Ionicons name="checkmark" size={18} color="#B8965A" />
+                            <Ionicons
+                              name="checkmark"
+                              size={18}
+                              color="#B8965A"
+                            />
                           )}
                         </TouchableOpacity>
                       ))}

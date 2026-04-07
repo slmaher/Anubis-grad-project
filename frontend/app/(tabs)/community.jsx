@@ -1,4 +1,17 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, ImageBackground, Modal, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Image,
+  ImageBackground,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
@@ -39,15 +52,15 @@ export default function Community() {
         alert(t("community.must_be_logged_in"));
         return;
       }
-      
+
       let base64Image = selectedImage;
-      if (selectedImage && !selectedImage.startsWith('data:')) {
-         // Optionally, handling base64, but assuming the image is processed properly
+      if (selectedImage && !selectedImage.startsWith("data:")) {
+        // Optionally, handling base64, but assuming the image is processed properly
       }
 
       await api.createPost(
         { content: newPostContent, image: base64Image },
-        token
+        token,
       );
       setPostModalVisible(false);
       setNewPostContent("");
@@ -66,7 +79,7 @@ export default function Community() {
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ["images"],
       allowsEditing: true,
       quality: 0.5,
       base64: true,
@@ -82,11 +95,36 @@ export default function Community() {
   };
 
   const stories = [
-    { id: 1, name: t("community.you"), image: require("../../assets/images/profile-you.png"), isUser: true },
-    { id: 2, name: "Benjamin", image: require("../../assets/images/profile-benjamin.png"), isUser: false },
-    { id: 3, name: "Farita", image: require("../../assets/images/profile-farita.png"), isUser: false },
-    { id: 4, name: "Marie", image: require("../../assets/images/profile-marie.png"), isUser: false },
-    { id: 5, name: "Claire", image: require("../../assets/images/profile-claire.png"), isUser: false },
+    {
+      id: 1,
+      name: t("community.you"),
+      image: require("../../assets/images/profile-you.png"),
+      isUser: true,
+    },
+    {
+      id: 2,
+      name: "Benjamin",
+      image: require("../../assets/images/profile-benjamin.png"),
+      isUser: false,
+    },
+    {
+      id: 3,
+      name: "Farita",
+      image: require("../../assets/images/profile-farita.png"),
+      isUser: false,
+    },
+    {
+      id: 4,
+      name: "Marie",
+      image: require("../../assets/images/profile-marie.png"),
+      isUser: false,
+    },
+    {
+      id: 5,
+      name: "Claire",
+      image: require("../../assets/images/profile-claire.png"),
+      isUser: false,
+    },
   ];
 
   return (
@@ -97,15 +135,15 @@ export default function Community() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.push("/(tabs)/home")}
         >
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        
+
         <Text style={styles.headerTitle}>{t("community.title")}</Text>
-        
+
         <TouchableOpacity style={styles.helpButton}>
           <Image
             source={require("../../assets/images/question-icon.png")}
@@ -136,28 +174,27 @@ export default function Community() {
         </View>
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {/* Stories/Avatars Row */}
-        <ScrollView 
-          horizontal 
+        <ScrollView
+          horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.storiesContainer}
           contentContainerStyle={styles.storiesContent}
         >
           {stories.map((story) => (
             <TouchableOpacity key={story.id} style={styles.storyItem}>
-              <View style={[
-                styles.storyAvatar, 
-                story.isUser && styles.storyAvatarUser
-              ]}>
-                <Image
-                  source={story.image}
-                  style={styles.avatarImage}
-                />
+              <View
+                style={[
+                  styles.storyAvatar,
+                  story.isUser && styles.storyAvatarUser,
+                ]}
+              >
+                <Image source={story.image} style={styles.avatarImage} />
                 {story.isUser && (
                   <View style={styles.plusIconContainer}>
                     <Text style={styles.plusIcon}>+</Text>
@@ -174,23 +211,43 @@ export default function Community() {
         <Text style={styles.sectionTitle}>{t("community.recent_posts")}</Text>
 
         {isLoading ? (
-          <ActivityIndicator size="large" color="#000" style={{ marginTop: 20 }} />
+          <ActivityIndicator
+            size="large"
+            color="#000"
+            style={{ marginTop: 20 }}
+          />
         ) : posts.length === 0 ? (
-          <Text style={{ textAlign: 'center', marginTop: 20, color: '#666' }}>{t("community.no_posts")}</Text>
+          <Text style={{ textAlign: "center", marginTop: 20, color: "#666" }}>
+            {t("community.no_posts")}
+          </Text>
         ) : (
           posts.map((post) => (
             <View key={post._id || post.id} style={styles.postCard}>
               <View style={styles.postHeader}>
                 <Image
-                  source={(post.user && post.user.avatar) ? { uri: post.user.avatar } : require("../../assets/images/profile-you.png")}
+                  source={
+                    post.user && post.user.avatar
+                      ? { uri: post.user.avatar }
+                      : require("../../assets/images/profile-you.png")
+                  }
                   style={styles.postAvatar}
                 />
                 <View style={styles.postInfo}>
-                  <TouchableOpacity onPress={() => handleUserClick(post.user?._id || post.user?.id)}>
-                    <Text style={styles.postAuthor}>{post.user?.name || post.author || t("community.anonymous")}</Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      handleUserClick(post.user?._id || post.user?.id)
+                    }
+                  >
+                    <Text style={styles.postAuthor}>
+                      {post.user?.name ||
+                        post.author ||
+                        t("community.anonymous")}
+                    </Text>
                   </TouchableOpacity>
                   <Text style={styles.postTime}>
-                    {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : post.time || t("community.just_now")}
+                    {post.createdAt
+                      ? new Date(post.createdAt).toLocaleDateString()
+                      : post.time || t("community.just_now")}
                   </Text>
                 </View>
               </View>
@@ -223,18 +280,22 @@ export default function Community() {
         visible={isPostModalVisible}
         onRequestClose={() => setPostModalVisible(false)}
       >
-        <KeyboardAvoidingView 
+        <KeyboardAvoidingView
           style={styles.modalOverlay}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{t("community.create_post")}</Text>
-              <TouchableOpacity onPress={() => {
-                setPostModalVisible(false);
-                setSelectedImage(null);
-                setNewPostContent("");
-              }}>
+              <Text style={styles.modalTitle}>
+                {t("community.create_post")}
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setPostModalVisible(false);
+                  setSelectedImage(null);
+                  setNewPostContent("");
+                }}
+              >
                 <Text style={styles.closeModalText}>✕</Text>
               </TouchableOpacity>
             </View>
@@ -247,11 +308,14 @@ export default function Community() {
               placeholderTextColor="#999"
               autoFocus={true}
             />
-            
+
             {selectedImage && (
               <View style={styles.imagePreviewContainer}>
-                <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
-                <TouchableOpacity 
+                <Image
+                  source={{ uri: selectedImage }}
+                  style={styles.imagePreview}
+                />
+                <TouchableOpacity
                   style={styles.removeImageButton}
                   onPress={() => setSelectedImage(null)}
                 >
@@ -263,12 +327,19 @@ export default function Community() {
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.attachButton} onPress={pickImage}>
                 <Text style={styles.attachIcon}>📷</Text>
-                <Text style={styles.attachText}>{t("community.add_photo")}</Text>
+                <Text style={styles.attachText}>
+                  {t("community.add_photo")}
+                </Text>
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity 
-              style={[styles.postButton, (!newPostContent.trim() && !selectedImage) && styles.postButtonDisabled]}
+            <TouchableOpacity
+              style={[
+                styles.postButton,
+                !newPostContent.trim() &&
+                  !selectedImage &&
+                  styles.postButtonDisabled,
+              ]}
               disabled={!newPostContent.trim() && !selectedImage}
               onPress={handleCreatePost}
             >
@@ -279,7 +350,7 @@ export default function Community() {
       </Modal>
 
       {/* Floating Action Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.fab}
         onPress={() => setPostModalVisible(true)}
       >
@@ -289,7 +360,7 @@ export default function Community() {
       {/* Floating Bottom Navigation Bar with Glass Effect */}
       <View style={styles.bottomNavContainer}>
         <View style={styles.bottomNav}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.navItem}
             onPress={() => router.push("/tour-guide")}
           >
@@ -300,7 +371,7 @@ export default function Community() {
             <Text style={styles.navLabel}>{t("community.tour_guide")}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.navItem}
             onPress={() => router.push("/messagesList")}
           >
@@ -311,7 +382,7 @@ export default function Community() {
             <Text style={styles.navLabel}>{t("community.chat")}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.navItem}
             onPress={() => router.push("/volunteering")}
           >

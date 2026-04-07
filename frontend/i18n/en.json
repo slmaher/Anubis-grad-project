@@ -60,6 +60,15 @@
     "must_be_logged_in": "You must be logged in to post.",
     "failed_create_post": "Failed to create post."
   },
+  "tour_guide": {
+    "title": "Tour guide",
+    "search_placeholder": "Search",
+    "available_guides": "Available tour guides",
+    "available_now": "Available Now",
+    "verified": "Verified",
+    "expert": "Expert",
+    "book_now": "Book now"
+  },
   "common": {
     "back": "Back",
     "back_arrow": "←",
