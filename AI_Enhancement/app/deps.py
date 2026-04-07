@@ -5,7 +5,7 @@ from app.services.hieroglyph_service import HieroglyphService
 from app.services.metadata_service import MetadataService
 from app.services.recognition_service import RecognitionService
 from app.services.restoration_service import RestorationService
-
+from app.services.reconstruction_service import ReconstructionService
 
 @lru_cache
 def get_metadata_service() -> MetadataService:
@@ -30,3 +30,7 @@ def get_audio_service() -> AudioService:
 @lru_cache
 def get_hieroglyph_service() -> HieroglyphService:
     return HieroglyphService()
+
+@lru_cache
+def get_reconstruction_service() -> ReconstructionService:
+    return ReconstructionService(get_metadata_service())
