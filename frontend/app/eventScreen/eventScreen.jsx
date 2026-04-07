@@ -59,7 +59,11 @@ export default function EventsScreen() {
           </View>
 
           {/* Find nearest event button */}
-          <TouchableOpacity style={styles.findBtn} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.findBtn}
+            activeOpacity={0.85}
+            onPress={() => router.push("/events/eventsList")}
+          >
             <Text style={styles.findBtnIcon}>📍</Text>
             <Text style={styles.findBtnTxt}>Find nearest event</Text>
           </TouchableOpacity>
