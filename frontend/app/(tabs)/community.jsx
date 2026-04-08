@@ -146,7 +146,11 @@ export default function Community() {
         <Text style={styles.headerTitle}>{t("community.title")}</Text>
 
         <TouchableOpacity style={styles.helpButton}>
-          <MaterialCommunityIcons name="help-circle-outline" size={24} color="#2C2010" />
+          <MaterialCommunityIcons
+            name="help-circle-outline"
+            size={24}
+            color="#2C2010"
+          />
         </TouchableOpacity>
       </View>
 
@@ -154,8 +158,7 @@ export default function Community() {
       <View style={styles.searchWrapper}>
         <View style={styles.searchContainer}>
           <TouchableOpacity style={styles.menuIcon}>
-            <MaterialCommunityIcons name="menu" size={18}
-              color="#666" />
+            <MaterialCommunityIcons name="menu" size={18} color="#666" />
           </TouchableOpacity>
           <TextInput
             style={styles.searchInput}
@@ -193,7 +196,11 @@ export default function Community() {
                 <Image source={story.image} style={styles.avatarImage} />
                 {story.isUser && (
                   <View style={styles.plusIconContainer}>
-                    <MaterialCommunityIcons name="plus" size={14} color="#fff" />
+                    <MaterialCommunityIcons
+                      name="plus"
+                      size={14}
+                      color="#fff"
+                    />
                   </View>
                 )}
               </View>
@@ -256,15 +263,27 @@ export default function Community() {
               <View style={styles.postActions}>
                 <TouchableOpacity style={styles.actionButton}>
                   <View style={styles.actionRow}>
-                    <MaterialCommunityIcons name="heart-outline" size={18} color="#666" />
+                    <MaterialCommunityIcons
+                      name="heart-outline"
+                      size={18}
+                      color="#666"
+                    />
                     <Text style={styles.actionCount}>{post.likes || 0}</Text>
                   </View>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}>
-                  <MaterialCommunityIcons name="comment-outline" size={18} color="#666" />
+                  <MaterialCommunityIcons
+                    name="comment-outline"
+                    size={18}
+                    color="#666"
+                  />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}>
-                  <MaterialCommunityIcons name="share-outline" size={18} color="#666" />
+                  <MaterialCommunityIcons
+                    name="share-outline"
+                    size={18}
+                    color="#666"
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -325,7 +344,12 @@ export default function Community() {
 
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.attachButton} onPress={pickImage}>
-                <MaterialCommunityIcons name="camera-outline" size={18} color="#333" style={styles.attachIcon} />
+                <MaterialCommunityIcons
+                  name="camera-outline"
+                  size={18}
+                  color="#333"
+                  style={styles.attachIcon}
+                />
                 <Text style={styles.attachText}>
                   {t("community.add_photo")}
                 </Text>
@@ -363,7 +387,11 @@ export default function Community() {
             style={styles.navItem}
             onPress={() => router.push("/tour-guide")}
           >
-            <MaterialCommunityIcons name="map-marker-account-outline" size={30} color="#2C2010" />
+            <MaterialCommunityIcons
+              name="map-marker-account-outline"
+              size={30}
+              color="#2C2010"
+            />
             <Text style={styles.navLabel}>{t("community.tour_guide")}</Text>
           </TouchableOpacity>
 
@@ -371,7 +399,11 @@ export default function Community() {
             style={styles.navItem}
             onPress={() => router.push("/messagesList")}
           >
-            <MaterialCommunityIcons name="message-text-outline" size={30} color="#2C2010" />
+            <MaterialCommunityIcons
+              name="message-text-outline"
+              size={30}
+              color="#2C2010"
+            />
             <Text style={styles.navLabel}>{t("community.chat")}</Text>
           </TouchableOpacity>
 
@@ -379,7 +411,11 @@ export default function Community() {
             style={styles.navItem}
             onPress={() => router.push("/volunteering")}
           >
-            <MaterialCommunityIcons name="hand-heart-outline" size={30} color="#2C2010" />
+            <MaterialCommunityIcons
+              name="hand-heart-outline"
+              size={30}
+              color="#2C2010"
+            />
             <Text style={styles.navLabel}>{t("community.volunteering")}</Text>
           </TouchableOpacity>
         </View>

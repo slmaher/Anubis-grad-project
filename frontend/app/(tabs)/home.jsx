@@ -22,14 +22,14 @@ export default function Home() {
       <View style={styles.container}>
         {/* Header with hamburger menu */}
         <View style={styles.topBar}>
-          <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => setMenuVisible(true)}
-          >
-            <Text style={styles.menuIcon}>☰</Text>
-          </TouchableOpacity>
-          
           <View style={styles.searchContainer}>
+            <TouchableOpacity
+              style={styles.menuButton}
+              onPress={() => setMenuVisible(true)}
+            >
+              <Text style={styles.menuIcon}>☰</Text>
+            </TouchableOpacity>
+
             <View style={styles.searchBar}>
               <Image
                 source={require("../../assets/images/search-icon.png")}
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   },
   topBar: {
     backgroundColor: "transparent",
-    paddingTop: 20,
+    paddingTop: 24,
     paddingHorizontal: 15,
     paddingBottom: 15,
   },
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     justifyContent: "center",
-    marginBottom: 10,
+    alignItems: "center",
   },
   menuIcon: {
     fontSize: 24,
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
   },
   searchBar: {
     flex: 1,
@@ -212,30 +212,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(255, 255, 255, 0.5)",
     borderRadius: 25,
-    paddingHorizontal: 15,
+    paddingHorizontal: 10,
     paddingVertical: 10,
     gap: 8,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.6)",
   },
   searchIconImage: {
-    width: 18,
-    height: 18,
+    width: 15,
+    height: 15,
     tintColor: "#666",
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     color: "#000",
   },
   chatButton: {
     backgroundColor: "transparent",
     borderRadius: 18,
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     paddingVertical: 4,
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 70,
+    minWidth: 62,
   },
   chatText: {
     color: "#2C2010",
@@ -243,31 +243,31 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
     lineHeight: 10,
-    marginTop: 2,
+    marginTop: 1,
     maxWidth: 60,
   },
   scrollView: {
     flex: 1,
   },
   title: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#2C2010",
     paddingHorizontal: 15,
-    paddingTop: 20,
+    paddingTop: 0,
     paddingBottom: 15,
   },
   cardsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: 30,
+    paddingHorizontal: 20,
     gap: 12,
     marginBottom: 20,
   },
   navCard: {
     width: "48%",
     backgroundColor: "rgba(255, 255, 255, 0.4)",
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 20,
     alignItems: "center",
     justifyContent: "center",
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   navLabel: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#6B5B4F",
+    color: "#2C2010",
   },
   featuredSection: {
     paddingHorizontal: 15,
@@ -300,11 +300,11 @@ const styles = StyleSheet.create({
   featuredTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#8B7B6C",
+    color: "#2C2010",
   },
   seeAll: {
-    fontSize: 13,
-    color: "#8B7B6C",
+    fontSize: 12,
+    color: "#2C2010",
     fontWeight: "600",
   },
   museumCardsContainer: {
@@ -313,8 +313,8 @@ const styles = StyleSheet.create({
   },
   museumCard: {
     width: 220,
-    height: 280,
-    borderRadius: 49,
+    height: 160,
+    borderRadius: 20,
     overflow: "hidden",
     backgroundColor: "#fff",
     shadowColor: "#000",
@@ -337,11 +337,11 @@ const styles = StyleSheet.create({
     right: 35,
   },
   museumTitleBubble: {
-    backgroundColor: "rgba(158, 157, 157, 0.5)",
+    backgroundColor: "rgba(158, 157, 157, 0.44)",
     borderRadius: 30,
     padding: 12,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.6)",
+    borderColor: "rgba(229, 224, 224, 0.09)",
   },
   museumCardTitle: {
     color: "#ffffff",
