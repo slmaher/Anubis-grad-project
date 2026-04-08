@@ -18,54 +18,70 @@ import { useTranslation } from "react-i18next";
 export default function Marketplace() {
   const router = useRouter();
   const { t } = useTranslation();
-  const [activeCategory, setActiveCategory] = useState("Jewelry");
+  const [activeCategory, setActiveCategory] = useState("jewelry");
   const [cart, setCart] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const categories = ["Jewelry", "Artifact", "Books"];
+  const categories = [
+    {
+      id: "jewelry",
+      labelKey: "marketplace.categories.jewelry",
+      icon: "ring",
+    },
+    {
+      id: "artifact",
+      labelKey: "marketplace.categories.artifact",
+      icon: "amphora",
+    },
+    {
+      id: "books",
+      labelKey: "marketplace.categories.books",
+      icon: "book-open-page-variant-outline",
+    },
+  ];
 
   const products = [
     {
       id: 1,
-      name: "Egyptian keychain",
+      nameKey: "marketplace.products.egyptian_keychain",
       price: 100,
       image: require("../../assets/images/souvenir-1.jpeg"),
-      category: "Jewelry",
+      category: "jewelry",
     },
     {
       id: 2,
-      name: "Cleopatra Pharaoh Keychain Souvenir",
+      nameKey: "marketplace.products.cleopatra_keychain",
       price: 150,
       image: require("../../assets/images/souvenir-2.jpeg"),
-      category: "Jewelry",
+      category: "jewelry",
     },
     {
       id: 3,
-      name: "Egyptian pottery sherds",
+      nameKey: "marketplace.products.egyptian_pottery",
       price: 300,
       image: require("../../assets/images/souvenir-3.jpeg"),
-      category: "Artifact",
+      category: "artifact",
     },
     {
       id: 4,
-      name: "Egyptian hand mirror",
+      nameKey: "marketplace.products.egyptian_hand_mirror",
       price: 400,
       image: require("../../assets/images/souvenir-4.jpeg"),
-      category: "Artifact",
+      category: "artifact",
     },
     {
       id: 5,
-      name: "Pharaonic 3D Pyramid Keychain",
+      nameKey: "marketplace.products.pharaonic_pyramid_keychain",
       price: 120,
       image: require("../../assets/images/souvenir-5.jpg"),
-      category: "Jewelry",
+      category: "jewelry",
     },
     {
       id: 6,
-      name: "Pharaonic keychain",
+      nameKey: "marketplace.products.pharaonic_keychain",
       price: 110,
       image: require("../../assets/images/souvenir-6.jpg"),
-      category: "Jewelry",
+      category: "jewelry",
     },
   ];
 
@@ -74,45 +90,45 @@ export default function Marketplace() {
   };
 
   const addToCart = (product) => {
-    const existingItem = cart.find(item => item.id === product.id);
+    const existingItem = cart.find((item) => item.id === product.id);
     if (existingItem) {
-      setCart(cart.map(item => 
-        item.id === product.id 
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      ));
+      setCart(
+        cart.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item,
+        ),
+      );
     } else {
       setCart([...cart, { ...product, quantity: 1 }]);
     }
   };
 
   const updateQuantity = (productId, delta) => {
-    setCart(cart.map(item => {
-      if (item.id === productId) {
-        const newQuantity = item.quantity + delta;
-        return newQuantity > 0 ? { ...item, quantity: newQuantity } : null;
-      }
-      return item;
-    }).filter(Boolean));
+    setCart(
+      cart
+        .map((item) => {
+          if (item.id === productId) {
+            const newQuantity = item.quantity + delta;
+            return newQuantity > 0 ? { ...item, quantity: newQuantity } : null;
+          }
+          return item;
+        })
+        .filter(Boolean),
+    );
   };
 
   const getProductQuantity = (productId) => {
-    const item = cart.find(item => item.id === productId);
+    const item = cart.find((item) => item.id === productId);
     return item ? item.quantity : 0;
-  };
-
-  const getCategoryIcon = (category) => {
-    if (category === "Jewelry") return "ring";
-    if (category === "Artifact") return "amphora";
-    if (category === "Books") return "book-open-page-variant-outline";
-    return "shape-outline";
   };
 
   const filteredProducts = products.filter((product) => {
     const matchesCategory = product.category === activeCategory;
+    const translatedName = t(product.nameKey);
     const matchesSearch =
       !searchQuery.trim() ||
-      product.name.toLowerCase().includes(searchQuery.trim().toLowerCase());
+      translatedName.toLowerCase().includes(searchQuery.trim().toLowerCase());
 
     return matchesCategory && matchesSearch;
   });
@@ -123,7 +139,11 @@ export default function Marketplace() {
       style={styles.mainContainer}
       resizeMode="cover"
     >
-      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
+      <StatusBar
+        barStyle="dark-content"
+        translucent
+        backgroundColor="transparent"
+      />
 
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
@@ -139,7 +159,9 @@ export default function Marketplace() {
               />
             </TouchableOpacity>
 
-            <Text style={styles.headerTitle}>{t("marketplace.title", "Souvenir Marketplace")}</Text>
+            <Text style={styles.headerTitle}>
+              {t("marketplace.title", "Souvenir Marketplace")}
+            </Text>
 
             <TouchableOpacity
               style={styles.cartButton}
@@ -168,7 +190,10 @@ export default function Marketplace() {
             <TextInput
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder={t("marketplace.search_placeholder", "Search souvenirs")}
+              placeholder={t(
+                "marketplace.search_placeholder",
+                "Search souvenirs",
+              )}
               placeholderTextColor="#888"
               style={styles.searchInput}
             />
@@ -183,25 +208,25 @@ export default function Marketplace() {
           <View style={styles.categoriesContainer}>
             {categories.map((category) => (
               <TouchableOpacity
-                key={category}
+                key={category.id}
                 style={[
                   styles.categoryButton,
-                  activeCategory === category && styles.categoryButtonActive,
+                  activeCategory === category.id && styles.categoryButtonActive,
                 ]}
-                onPress={() => setActiveCategory(category)}
+                onPress={() => setActiveCategory(category.id)}
               >
                 <MaterialCommunityIcons
-                  name={getCategoryIcon(category)}
+                  name={category.icon}
                   size={14}
-                  color={activeCategory === category ? "#6B5B4F" : "#8B7B6C"}
+                  color={activeCategory === category.id ? "#6B5B4F" : "#8B7B6C"}
                 />
                 <Text
                   style={[
                     styles.categoryText,
-                    activeCategory === category && styles.categoryTextActive,
+                    activeCategory === category.id && styles.categoryTextActive,
                   ]}
                 >
-                  {category}
+                  {t(category.labelKey)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -229,7 +254,7 @@ export default function Marketplace() {
 
                     <View style={styles.productBottomSection}>
                       <Text style={styles.productName} numberOfLines={2}>
-                        {product.name}
+                        {t(product.nameKey)}
                       </Text>
 
                       <View style={styles.productFooter}>
@@ -239,7 +264,9 @@ export default function Marketplace() {
                             size={12}
                             color="#6B5B4F"
                           />
-                          <Text style={styles.productPrice}>{product.price} LE</Text>
+                          <Text style={styles.productPrice}>
+                            {product.price} LE
+                          </Text>
                         </View>
 
                         {quantity === 0 ? (
