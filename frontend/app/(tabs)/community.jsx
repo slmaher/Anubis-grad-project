@@ -16,6 +16,7 @@ import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { useTranslation } from "react-i18next";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { api } from "../api/client";
 import { getAuthToken } from "../api/authStorage";
 
@@ -139,16 +140,13 @@ export default function Community() {
           style={styles.backButton}
           onPress={() => router.push("/(tabs)/home")}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <MaterialCommunityIcons name="chevron-left" size={28} color="#000" />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>{t("community.title")}</Text>
 
         <TouchableOpacity style={styles.helpButton}>
-          <Image
-            source={require("../../assets/images/question-icon.png")}
-            style={styles.questionIcon}
-          />
+          <MaterialCommunityIcons name="help-circle-outline" size={24} color="#2C2010" />
         </TouchableOpacity>
       </View>
 
@@ -156,7 +154,8 @@ export default function Community() {
       <View style={styles.searchWrapper}>
         <View style={styles.searchContainer}>
           <TouchableOpacity style={styles.menuIcon}>
-            <Text style={styles.menuIconText}>☰</Text>
+            <MaterialCommunityIcons name="menu" size={18}
+              color="#666" />
           </TouchableOpacity>
           <TextInput
             style={styles.searchInput}
@@ -166,10 +165,7 @@ export default function Community() {
             placeholderTextColor="#999"
           />
           <TouchableOpacity style={styles.searchIconButton}>
-            <Image
-              source={require("../../assets/images/search-icon.png")}
-              style={styles.searchIcon}
-            />
+            <MaterialCommunityIcons name="magnify" size={18} color="#666" />
           </TouchableOpacity>
         </View>
       </View>
@@ -197,7 +193,7 @@ export default function Community() {
                 <Image source={story.image} style={styles.avatarImage} />
                 {story.isUser && (
                   <View style={styles.plusIconContainer}>
-                    <Text style={styles.plusIcon}>+</Text>
+                    <MaterialCommunityIcons name="plus" size={14} color="#fff" />
                   </View>
                 )}
               </View>
@@ -259,13 +255,16 @@ export default function Community() {
 
               <View style={styles.postActions}>
                 <TouchableOpacity style={styles.actionButton}>
-                  <Text style={styles.actionIcon}>♡ {post.likes || 0}</Text>
+                  <View style={styles.actionRow}>
+                    <MaterialCommunityIcons name="heart-outline" size={18} color="#666" />
+                    <Text style={styles.actionCount}>{post.likes || 0}</Text>
+                  </View>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}>
-                  <Text style={styles.actionIcon}>💬</Text>
+                  <MaterialCommunityIcons name="comment-outline" size={18} color="#666" />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}>
-                  <Text style={styles.actionIcon}>↗</Text>
+                  <MaterialCommunityIcons name="share-outline" size={18} color="#666" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -326,7 +325,7 @@ export default function Community() {
 
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.attachButton} onPress={pickImage}>
-                <Text style={styles.attachIcon}>📷</Text>
+                <MaterialCommunityIcons name="camera-outline" size={18} color="#333" style={styles.attachIcon} />
                 <Text style={styles.attachText}>
                   {t("community.add_photo")}
                 </Text>
@@ -354,7 +353,7 @@ export default function Community() {
         style={styles.fab}
         onPress={() => setPostModalVisible(true)}
       >
-        <Text style={styles.fabIcon}>+</Text>
+        <MaterialCommunityIcons name="plus" size={30} color="#fff" />
       </TouchableOpacity>
 
       {/* Floating Bottom Navigation Bar with Glass Effect */}
@@ -364,10 +363,7 @@ export default function Community() {
             style={styles.navItem}
             onPress={() => router.push("/tour-guide")}
           >
-            <Image
-              source={require("../../assets/images/tour-guide-icon.png")}
-              style={styles.navIcon}
-            />
+            <MaterialCommunityIcons name="map-marker-account-outline" size={30} color="#2C2010" />
             <Text style={styles.navLabel}>{t("community.tour_guide")}</Text>
           </TouchableOpacity>
 
@@ -375,10 +371,7 @@ export default function Community() {
             style={styles.navItem}
             onPress={() => router.push("/messagesList")}
           >
-            <Image
-              source={require("../../assets/images/chat-icon.png")}
-              style={styles.navIcon}
-            />
+            <MaterialCommunityIcons name="message-text-outline" size={30} color="#2C2010" />
             <Text style={styles.navLabel}>{t("community.chat")}</Text>
           </TouchableOpacity>
 
@@ -386,10 +379,7 @@ export default function Community() {
             style={styles.navItem}
             onPress={() => router.push("/volunteering")}
           >
-            <Image
-              source={require("../../assets/images/volunteering-icon.png")}
-              style={styles.navIcon}
-            />
+            <MaterialCommunityIcons name="hand-heart-outline" size={30} color="#2C2010" />
             <Text style={styles.navLabel}>{t("community.volunteering")}</Text>
           </TouchableOpacity>
         </View>
@@ -407,9 +397,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 50,
+    paddingTop: 20,
     paddingHorizontal: 20,
-    paddingBottom: 15,
+    paddingBottom: 10,
     backgroundColor: "transparent",
   },
   backButton: {
@@ -418,24 +408,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  backIcon: {
-    fontSize: 28,
-    color: "#000",
-  },
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#8B7B6C",
+    color: "#2C2010",
   },
   helpButton: {
     width: 40,
     height: 40,
     justifyContent: "center",
     alignItems: "center",
-  },
-  questionIcon: {
-    width: 24,
-    height: 24,
   },
   searchWrapper: {
     paddingHorizontal: 20,
@@ -446,7 +428,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderRadius: 25,
-    paddingHorizontal: 15,
+    paddingHorizontal: 10,
     paddingVertical: 10,
     shadowColor: "#000",
     shadowOffset: {
@@ -461,10 +443,8 @@ const styles = StyleSheet.create({
   },
   menuIcon: {
     marginRight: 10,
-  },
-  menuIconText: {
-    fontSize: 18,
-    color: "#666",
+    justifyContent: "center",
+    alignItems: "center",
   },
   searchInput: {
     flex: 1,
@@ -472,14 +452,11 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   searchIconButton: {
+    justifyContent: "center",
+    alignItems: "center",
     marginLeft: 10,
-    width: 20,
-    height: 20,
-  },
-  searchIcon: {
-    width: 20,
-    height: 20,
-    tintColor: "#666",
+    width: 24,
+    height: 24,
   },
   scrollView: {
     flex: 1,
@@ -528,20 +505,15 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
   },
-  plusIcon: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
-  },
   storyName: {
     fontSize: 12,
     color: "#000",
     fontWeight: "500",
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#917466",
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#2C2010",
     paddingHorizontal: 20,
     marginBottom: 15,
   },
@@ -555,7 +527,7 @@ const styles = StyleSheet.create({
   postHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 8,
   },
   postAvatar: {
     width: 40,
@@ -592,21 +564,26 @@ const styles = StyleSheet.create({
   postActions: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    gap: 15,
+    gap: 10,
   },
   actionButton: {
     padding: 5,
   },
-  actionIcon: {
-    fontSize: 18,
+  actionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  actionCount: {
     color: "#666",
+    fontSize: 12,
   },
   fab: {
     position: "absolute",
-    bottom: 105,
+    bottom: 85,
     right: 20,
-    width: 56,
-    height: 56,
+    width: 40,
+    height: 40,
     borderRadius: 28,
     backgroundColor: "#000",
     justifyContent: "center",
@@ -621,11 +598,6 @@ const styles = StyleSheet.create({
     elevation: 8,
     zIndex: 10,
   },
-  fabIcon: {
-    fontSize: 32,
-    color: "#fff",
-    fontWeight: "300",
-  },
   bottomNavContainer: {
     position: "absolute",
     bottom: 15,
@@ -638,8 +610,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
     borderWidth: 2,
     borderColor: "rgba(255, 255, 255, 0.9)",
     shadowColor: "#000",
@@ -655,14 +627,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 5,
   },
-  navIcon: {
-    width: 26,
-    height: 26,
-  },
   navLabel: {
-    fontSize: 10,
-    color: "#666",
-    fontWeight: "500",
+    fontSize: 11,
+    color: "#444141",
+    fontWeight: "600",
   },
   modalOverlay: {
     flex: 1,
@@ -762,7 +730,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   attachIcon: {
-    fontSize: 18,
     marginRight: 5,
   },
   attachText: {
