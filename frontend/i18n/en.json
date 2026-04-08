@@ -69,6 +69,30 @@
     "expert": "Expert",
     "book_now": "Book now"
   },
+  "ai_chat": {
+    "title": "Ask our AI anything",
+    "label_me": "ME",
+    "label_ai": "OUR AI",
+    "suggestions_title": "Suggestions on what to ask Our AI",
+    "suggestion_1": "What can I ask you to do?",
+    "suggestion_2": "Where is the nearest museum to me?",
+    "input_placeholder": "Ask me anything",
+    "responses": {
+      "capabilities": "Great question! You can ask for my help with the following:\n\n1. Anything to do with museums in Egypt e.g. Where is the Grand Egyptian Museum?\n\n2. Information about tickets, prices, and opening hours\n\n3. Directions and locations of museums\n\n4. Recommendations for museums to visit\n\n5. Information about Egyptian artifacts and history",
+      "nearest_museum": "The nearest museum to you is the Egyptian Museum in Tahrir Square, Cairo. It's approximately 1.5 km away.\n\nLocation: El-Tahrir Square\nHours: 9 AM - 7 PM\nTicket: 150 LE\n\nWould you like directions or more information about this museum?",
+      "grand_egyptian": "The Grand Egyptian Museum (GEM) is located on the Cairo-Alexandria Desert Road, near the Giza Pyramids.\n\nOpening Hours: 9 AM - 5 PM\nTicket Price: 200 LE\n\nIt's the largest archaeological museum in the world dedicated to Egyptian civilization, featuring over 100,000 artifacts including the complete Tutankhamun collection!",
+      "egyptian": "The Egyptian Museum is located in Tahrir Square, Cairo.\n\nOpening Hours: 9 AM - 7 PM\nTicket Price: 150 LE\n\nIt houses an extensive collection of ancient Egyptian antiquities with over 120,000 items. Don't miss the Royal Mummy Room!",
+      "islamic_art": "The Museum of Islamic Art is located on Port Said Street, Cairo.\n\nOpening Hours: 9 AM - 5 PM\nTicket Price: 100 LE\n\nIt's one of the world's greatest museums with rare Islamic artifacts spanning 1,400 years from various Islamic civilizations.",
+      "tickets": "Here are the ticket prices for major museums:\n\nGrand Egyptian Museum: 200 LE\nEgyptian Museum: 150 LE\nMuseum of Islamic Art: 100 LE\nCoptic Museum: 120 LE\n\nYou can book tickets directly through our app! Would you like me to help you with that?",
+      "hours": "Museum Opening Hours:\n\nGrand Egyptian Museum: 9 AM - 5 PM\nEgyptian Museum: 9 AM - 7 PM\nMuseum of Islamic Art: 9 AM - 5 PM\nCoptic Museum: 9 AM - 4 PM\n\nMost museums are closed on public holidays. Would you like to book a visit?",
+      "recommendations": "Based on visitor reviews, I recommend:\n\n#1: Grand Egyptian Museum - Perfect for first-time visitors!\n#2: Egyptian Museum - Rich history and iconic artifacts\n#3: Museum of Islamic Art - Beautiful architecture\n\nWhat interests you most: Ancient Egypt, Islamic culture, or both?",
+      "souvenirs": "Our app has a Souvenir Marketplace where you can browse and purchase authentic Egyptian souvenirs:\n\nKeychains and jewelry\nPottery and artifact replicas\nTraditional crafts\n\nYou can access it from the home screen. Would you like me to show you popular items?",
+      "map": "You can view all museum locations on our interactive map!\n\nTap the 'Map' button on the home screen to:\n- See all museums near you\n- Get directions\n- View museum details\n\nWould you like specific directions to any museum?",
+      "greeting": "Hello! Welcome to Anubis - your guide to Egyptian museums and culture!\n\nI'm here to help you discover amazing museums, book tickets, find souvenirs, and answer any questions about Egyptian history.\n\nWhat would you like to explore today?",
+      "thanks": "You're very welcome! Feel free to ask me anything else about museums, tickets, or Egyptian culture. Happy exploring!",
+      "default": "I'm here to help you with information about Egyptian museums, tickets, locations, and more!\n\nYou can ask me about:\n- Museum locations and hours\n- Ticket prices\n- Recommendations\n- Directions\n- Souvenirs\n\nWhat would you like to know?"
+    }
+  },
   "common": {
     "back": "Back",
     "back_arrow": "←",

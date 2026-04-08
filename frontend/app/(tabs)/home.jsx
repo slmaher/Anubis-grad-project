@@ -1,8 +1,17 @@
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image, ImageBackground } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  ImageBackground,
+} from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
-import Ionicons from '@expo/vector-icons/Ionicons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTranslation } from "react-i18next";
 import MenuScreen from "../menu/menuScreen";
 
@@ -14,165 +23,189 @@ export default function Home() {
 
   return (
     <View style={{ flex: 1 }}>
-    <ImageBackground
-      source={require("../../assets/images/home-background.jpeg")}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
-      <View style={styles.container}>
-        {/* Header with hamburger menu */}
-        <View style={styles.topBar}>
-          <View style={styles.searchContainer}>
-            <TouchableOpacity
-              style={styles.menuButton}
-              onPress={() => setMenuVisible(true)}
-            >
-              <Text style={styles.menuIcon}>☰</Text>
-            </TouchableOpacity>
+      <ImageBackground
+        source={require("../../assets/images/home-background.jpeg")}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <View style={styles.container}>
+          {/* Header with hamburger menu */}
+          <View style={styles.topBar}>
+            <View style={styles.searchContainer}>
+              <TouchableOpacity
+                style={styles.menuButton}
+                onPress={() => setMenuVisible(true)}
+              >
+                <Text style={styles.menuIcon}>☰</Text>
+              </TouchableOpacity>
 
-            <View style={styles.searchBar}>
-              <Image
-                source={require("../../assets/images/search-icon.png")}
-                style={styles.searchIconImage}
-              />
-              <TextInput
-                style={styles.searchInput}
-                placeholder={t("home.search")}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                placeholderTextColor="#999"
-              />
+              <View style={styles.searchBar}>
+                <Image
+                  source={require("../../assets/images/search-icon.png")}
+                  style={styles.searchIconImage}
+                />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder={t("home.search")}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholderTextColor="#999"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={styles.chatButton}
+                onPress={() => router.push("/ai/chatbot")}
+              >
+                <Ionicons
+                  name="chatbubble-ellipses-outline"
+                  size={20}
+                  color="#8B7B6C"
+                />
+                <Text style={styles.chatText}>{t("home.chat_ai")}</Text>
+              </TouchableOpacity>
             </View>
-            
-            <TouchableOpacity 
-              style={styles.chatButton}
-              onPress={() => router.push("/ai/chatbot")}
-            >
-              <Ionicons name="chatbubble-ellipses-outline" size={20} color="#8B7B6C" />
-              <Text style={styles.chatText}>{t("home.chat_ai")}</Text>
-            </TouchableOpacity>
           </View>
+
+          <ScrollView
+            style={styles.scrollView}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Title */}
+            <Text style={styles.title}>{t("home.title")}</Text>
+
+            {/* Navigation Cards Grid */}
+            <View style={styles.cardsGrid}>
+              {/* Museums Card */}
+              <TouchableOpacity
+                style={styles.navCard}
+                onPress={() => router.push("/(tabs)/explore")}
+              >
+                <View style={styles.navIconContainer}>
+                  <MaterialCommunityIcons
+                    name="bank-outline"
+                    size={34}
+                    color="#6B5B4F"
+                  />
+                </View>
+                <Text style={styles.navLabel}>{t("home.museums")}</Text>
+              </TouchableOpacity>
+
+              {/* Souvenirs Card */}
+              <TouchableOpacity
+                style={styles.navCard}
+                onPress={() => router.push("/marketplace")}
+              >
+                <View style={styles.navIconContainer}>
+                  <Ionicons
+                    name="bag-handle-outline"
+                    size={32}
+                    color="#6B5B4F"
+                  />
+                </View>
+                <Text style={styles.navLabel}>{t("home.souvenirs")}</Text>
+              </TouchableOpacity>
+
+              {/* Tickets Card */}
+              <TouchableOpacity
+                style={styles.navCard}
+                onPress={() => router.push("/tickets")}
+              >
+                <View style={styles.navIconContainer}>
+                  <MaterialCommunityIcons
+                    name="ticket-confirmation-outline"
+                    size={34}
+                    color="#6B5B4F"
+                  />
+                </View>
+                <Text style={styles.navLabel}>{t("home.tickets")}</Text>
+              </TouchableOpacity>
+
+              {/* Map Card */}
+              <TouchableOpacity
+                style={styles.navCard}
+                onPress={() => router.push("/map")}
+              >
+                <View style={styles.navIconContainer}>
+                  <Ionicons name="location-outline" size={34} color="#6B5B4F" />
+                </View>
+                <Text style={styles.navLabel}>{t("home.map")}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Featured Section */}
+            <View style={styles.featuredSection}>
+              <View style={styles.featuredHeader}>
+                <Text style={styles.featuredTitle}>{t("home.featured")}</Text>
+                <TouchableOpacity
+                  onPress={() => router.push("/(tabs)/explore")}
+                >
+                  <Text style={styles.seeAll}>{t("home.see_all")}</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Featured Museum Cards */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.museumCardsContainer}
+              >
+                {/* Grand Egyptian Museum Card */}
+                <TouchableOpacity
+                  style={styles.museumCard}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/museum-profile",
+                      params: { id: 1, name: t("home.grand_museum") },
+                    })
+                  }
+                >
+                  <Image
+                    source={require("../../assets/images/grand-museum.png")}
+                    style={styles.museumImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.museumCardOverlay}>
+                    <View style={styles.museumTitleBubble}>
+                      <Text style={styles.museumCardTitle}>
+                        {t("home.grand_museum")}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Egyptian Museum Card */}
+                <TouchableOpacity
+                  style={styles.museumCard}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/museum-profile",
+                      params: { id: 2, name: t("home.egyptian_museum") },
+                    })
+                  }
+                >
+                  <Image
+                    source={require("../../assets/images/egyptian-museum.png")}
+                    style={styles.museumImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.museumCardOverlay}>
+                    <View style={styles.museumTitleBubble}>
+                      <Text style={styles.museumCardTitle}>
+                        {t("home.egyptian_museum")}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </ScrollView>
         </View>
+      </ImageBackground>
 
-        <ScrollView 
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Title */}
-          <Text style={styles.title}>{t("home.title")}</Text>
-
-          {/* Navigation Cards Grid */}
-          <View style={styles.cardsGrid}>
-            {/* Museums Card */}
-            <TouchableOpacity 
-              style={styles.navCard}
-              onPress={() => router.push("/(tabs)/explore")}
-            >
-              <View style={styles.navIconContainer}>
-                <MaterialCommunityIcons name="bank-outline" size={34} color="#6B5B4F" />
-              </View>
-              <Text style={styles.navLabel}>{t("home.museums")}</Text>
-            </TouchableOpacity>
-
-            {/* Souvenirs Card */}
-            <TouchableOpacity 
-              style={styles.navCard}
-              onPress={() => router.push("/marketplace")}
-            >
-              <View style={styles.navIconContainer}>
-                <Ionicons name="bag-handle-outline" size={32} color="#6B5B4F" />
-              </View>
-              <Text style={styles.navLabel}>{t("home.souvenirs")}</Text>
-            </TouchableOpacity>
-
-            {/* Tickets Card */}
-            <TouchableOpacity 
-              style={styles.navCard}
-              onPress={() => router.push("/tickets")}
-            >
-              <View style={styles.navIconContainer}>
-                <MaterialCommunityIcons name="ticket-confirmation-outline" size={34} color="#6B5B4F" />
-              </View>
-              <Text style={styles.navLabel}>{t("home.tickets")}</Text>
-            </TouchableOpacity>
-
-            {/* Map Card */}
-            <TouchableOpacity 
-              style={styles.navCard}
-              onPress={() => router.push("/map")}
-            >
-              <View style={styles.navIconContainer}>
-                <Ionicons name="location-outline" size={34} color="#6B5B4F" />
-              </View>
-              <Text style={styles.navLabel}>{t("home.map")}</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Featured Section */}
-          <View style={styles.featuredSection}>
-            <View style={styles.featuredHeader}>
-              <Text style={styles.featuredTitle}>{t("home.featured")}</Text>
-              <TouchableOpacity onPress={() => router.push("/(tabs)/explore")}>
-                <Text style={styles.seeAll}>{t("home.see_all")}</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Featured Museum Cards */}
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.museumCardsContainer}
-            >
-              {/* Grand Egyptian Museum Card */}
-              <TouchableOpacity 
-                style={styles.museumCard}
-                onPress={() => router.push({
-                  pathname: "/museum-profile",
-                  params: { id: 1, name: t("home.grand_museum") }
-                })}
-              >
-                <Image
-                  source={require("../../assets/images/grand-museum.png")}
-                  style={styles.museumImage}
-                  resizeMode="cover"
-                />
-                <View style={styles.museumCardOverlay}>
-                  <View style={styles.museumTitleBubble}>
-                    <Text style={styles.museumCardTitle}>{t("home.grand_museum")}</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-
-              {/* Egyptian Museum Card */}
-              <TouchableOpacity 
-                style={styles.museumCard}
-                onPress={() => router.push({
-                  pathname: "/museum-profile",
-                  params: { id: 2, name: t("home.egyptian_museum") }
-                })}
-              >
-                <Image
-                  source={require("../../assets/images/egyptian-museum.png")}
-                  style={styles.museumImage}
-                  resizeMode="cover"
-                />
-                <View style={styles.museumCardOverlay}>
-                  <View style={styles.museumTitleBubble}>
-                    <Text style={styles.museumCardTitle}>{t("home.egyptian_museum")}</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </ScrollView>
-      </View>
-       </ImageBackground>
-
-    {menuVisible && (
-      <MenuScreen onClose={() => setMenuVisible(false)} />
-    )}
-  </View>
-);
+      {menuVisible && <MenuScreen onClose={() => setMenuVisible(false)} />}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
