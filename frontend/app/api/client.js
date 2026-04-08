@@ -95,6 +95,19 @@ export const api = {
       token,
     });
   },
+  togglePostLike(postId, token) {
+    return apiRequest(`/api/posts/${postId}/like`, {
+      method: "POST",
+      token,
+    });
+  },
+  addPostComment(postId, content, token) {
+    return apiRequest(`/api/posts/${postId}/comments`, {
+      method: "POST",
+      body: { content },
+      token,
+    });
+  },
 
   // Chat
   getConversations(token) {

@@ -77,6 +77,7 @@
     "suggestion_1": "What can I ask you to do?",
     "suggestion_2": "Where is the nearest museum to me?",
     "input_placeholder": "Ask me anything",
+    "error_message": "Something went wrong. Please check that Ollama is running and try again.",
     "responses": {
       "capabilities": "Great question! You can ask for my help with the following:\n\n1. Anything to do with museums in Egypt e.g. Where is the Grand Egyptian Museum?\n\n2. Information about tickets, prices, and opening hours\n\n3. Directions and locations of museums\n\n4. Recommendations for museums to visit\n\n5. Information about Egyptian artifacts and history",
       "nearest_museum": "The nearest museum to you is the Egyptian Museum in Tahrir Square, Cairo. It's approximately 1.5 km away.\n\nLocation: El-Tahrir Square\nHours: 9 AM - 7 PM\nTicket: 150 LE\n\nWould you like directions or more information about this museum?",

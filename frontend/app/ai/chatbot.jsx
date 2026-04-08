@@ -1,95 +1,97 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, ImageBackground, KeyboardAvoidingView, Platform } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  TextInput,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import i18n from "../../i18n/i18n";
 
+// ─── Ollama config ─────────────────────────────────────────────────────────────
+const OLLAMA_URL = "http://localhost:11434/api/chat";
+const MODEL = "llama3.1:8b";
+
+// Language → system-message instruction
+const LANGUAGE_INSTRUCTIONS = {
+  ar: "Always respond in Arabic (العربية). If the user writes in any other language, still reply in Arabic.",
+  en: "Always respond in English.",
+  fr: "Always respond in French (Français). If the user writes in any other language, still reply in French.",
+  de: "Always respond in German (Deutsch). If the user writes in any other language, still reply in German.",
+  zh: "Always respond in Simplified Chinese (简体中文). If the user writes in any other language, still reply in Chinese.",
+};
+
+function buildSystemMessage(langCode) {
+  const instruction =
+    LANGUAGE_INSTRUCTIONS[langCode] || LANGUAGE_INSTRUCTIONS["en"];
+  return {
+    role: "system",
+    content: `You are Anubis, a friendly and knowledgeable AI assistant for an Egyptian museum tour app.
+You help visitors with museum information, exhibits, tickets, directions, opening hours, events, and Egyptian culture/history.
+Be concise, helpful, and engaging. ${instruction}`,
+  };
+}
+
+async function callOllama(chatHistory, langCode) {
+  const systemMessage = buildSystemMessage(langCode);
+
+  const ollamaMessages = [
+    systemMessage,
+    ...chatHistory.map((msg) => ({
+      role: msg.sender === "user" ? "user" : "assistant",
+      content: msg.text,
+    })),
+  ];
+
+  const response = await fetch(OLLAMA_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: ollamaMessages,
+      stream: false,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ollama API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.message?.content ?? "";
+}
+
+// ─── Component ─────────────────────────────────────────────────────────────────
 export default function AIChatbot() {
   const router = useRouter();
   const { t } = useTranslation();
+
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
   const scrollViewRef = useRef(null);
 
-  const suggestions = [
-    t("ai_chat.suggestion_1"),
-    t("ai_chat.suggestion_2"),
-  ];
+  const suggestions = [t("ai_chat.suggestion_1"), t("ai_chat.suggestion_2")];
 
-  const getAIResponse = (userMessage) => {
-    const lowerMessage = userMessage.toLowerCase();
+  // Auto-scroll when messages or loading state changes
+  useEffect(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  }, [messages, isLoading]);
 
-    // What can I ask you to do?
-    if (lowerMessage.includes("what can i ask") || lowerMessage.includes("what can you do")) {
-      return t("ai_chat.responses.capabilities");
-    }
+  const handleSendMessage = async (text = inputText) => {
+    if (!text.trim() || isLoading) return;
 
-    // Nearest museum
-    if (lowerMessage.includes("nearest museum") || lowerMessage.includes("closest museum")) {
-      return t("ai_chat.responses.nearest_museum");
-    }
-
-    // Grand Egyptian Museum
-    if (lowerMessage.includes("grand egyptian museum") || lowerMessage.includes("gem")) {
-      return t("ai_chat.responses.grand_egyptian");
-    }
-
-    // Egyptian Museum
-    if (lowerMessage.includes("egyptian museum") && !lowerMessage.includes("grand")) {
-      return t("ai_chat.responses.egyptian");
-    }
-
-    // Museum of Islamic Art
-    if (lowerMessage.includes("islamic art") || lowerMessage.includes("islamic museum")) {
-      return t("ai_chat.responses.islamic_art");
-    }
-
-    // Tickets
-    if (lowerMessage.includes("ticket") || lowerMessage.includes("price")) {
-      return t("ai_chat.responses.tickets");
-    }
-
-    // Opening hours
-    if (lowerMessage.includes("hours") || lowerMessage.includes("open") || lowerMessage.includes("close")) {
-      return t("ai_chat.responses.hours");
-    }
-
-    // Recommendations
-    if (lowerMessage.includes("recommend") || lowerMessage.includes("should i visit") || lowerMessage.includes("best museum")) {
-      return t("ai_chat.responses.recommendations");
-    }
-
-    // Souvenirs
-    if (lowerMessage.includes("souvenir") || lowerMessage.includes("shop") || lowerMessage.includes("buy")) {
-      return t("ai_chat.responses.souvenirs");
-    }
-
-    // Map/Directions
-    if (lowerMessage.includes("map") || lowerMessage.includes("direction") || lowerMessage.includes("how to get")) {
-      return t("ai_chat.responses.map");
-    }
-
-    // Greeting
-    if (lowerMessage.includes("hello") || lowerMessage.includes("hi") || lowerMessage.includes("hey")) {
-      return t("ai_chat.responses.greeting");
-    }
-
-    // Thanks
-    if (lowerMessage.includes("thank") || lowerMessage.includes("thanks")) {
-      return t("ai_chat.responses.thanks");
-    }
-
-    // Default response
-    return t("ai_chat.responses.default");
-  };
-
-  const handleSendMessage = (text = inputText) => {
-    if (!text.trim()) return;
-
-    // Hide suggestions after first message
     setShowSuggestions(false);
 
-    // Add user message
     const userMessage = {
       id: Date.now(),
       text: text.trim(),
@@ -97,28 +99,47 @@ export default function AIChatbot() {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const updatedHistory = [...messages, userMessage];
+    setMessages(updatedHistory);
     setInputText("");
+    setIsLoading(true);
 
-    // Simulate AI thinking and response
-    setTimeout(() => {
-      const aiResponse = {
-        id: Date.now() + 1,
-        text: getAIResponse(text.trim()),
-        sender: "ai",
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, aiResponse]);
-    }, 800);
+    try {
+      // Detect active language (strip region suffix, e.g. "ar-EG" → "ar")
+      const currentLang = (i18n.language || "en").split("-")[0];
+      const aiText = await callOllama(updatedHistory, currentLang);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          text: aiText,
+          sender: "ai",
+          timestamp: new Date(),
+        },
+      ]);
+    } catch (error) {
+      console.error("Ollama error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          text:
+            t("ai_chat.error_message") ||
+            "Something went wrong. Please try again.",
+          sender: "ai",
+          isError: true,
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSuggestionPress = (suggestion) => {
     handleSendMessage(suggestion);
   };
-
-  useEffect(() => {
-    scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
 
   return (
     <ImageBackground
@@ -126,14 +147,14 @@ export default function AIChatbot() {
       style={styles.backgroundImage}
       resizeMode="cover"
     >
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
           >
@@ -141,7 +162,7 @@ export default function AIChatbot() {
           </TouchableOpacity>
         </View>
 
-        {/* AI Icon and Title */}
+        {/* AI Icon and Title (only before first message) */}
         {messages.length === 0 && (
           <View style={styles.titleSection}>
             <Image
@@ -158,37 +179,69 @@ export default function AIChatbot() {
           style={styles.messagesContainer}
           contentContainerStyle={styles.messagesContent}
           showsVerticalScrollIndicator={false}
-          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+          onContentSizeChange={() =>
+            scrollViewRef.current?.scrollToEnd({ animated: true })
+          }
         >
           {messages.map((message) => (
             <View
               key={message.id}
               style={[
                 styles.messageWrapper,
-                message.sender === "user" ? styles.userMessageWrapper : styles.aiMessageWrapper
+                message.sender === "user"
+                  ? styles.userMessageWrapper
+                  : styles.aiMessageWrapper,
               ]}
             >
               <View style={styles.messageLabelContainer}>
                 <Text style={styles.messageLabel}>
-                  {message.sender === "user" ? t("ai_chat.label_me") : t("ai_chat.label_ai")}
+                  {message.sender === "user"
+                    ? t("ai_chat.label_me")
+                    : t("ai_chat.label_ai")}
                 </Text>
               </View>
               <View
                 style={[
                   styles.messageBubble,
-                  message.sender === "user" ? styles.userBubble : styles.aiBubble
+                  message.sender === "user"
+                    ? styles.userBubble
+                    : styles.aiBubble,
+                  message.isError && styles.errorBubble,
                 ]}
               >
-                <Text style={styles.messageText}>{message.text}</Text>
+                <Text
+                  style={[
+                    styles.messageText,
+                    message.isError && styles.errorText,
+                  ]}
+                >
+                  {message.text}
+                </Text>
               </View>
             </View>
           ))}
+
+          {/* Typing indicator */}
+          {isLoading && (
+            <View style={[styles.messageWrapper, styles.aiMessageWrapper]}>
+              <View style={styles.messageLabelContainer}>
+                <Text style={styles.messageLabel}>
+                  {t("ai_chat.label_ai")}
+                </Text>
+              </View>
+              <View style={[styles.messageBubble, styles.aiBubble]}>
+                <Text style={styles.typingDots}>● ● ●</Text>
+              </View>
+            </View>
+          )}
         </ScrollView>
 
         {/* Suggestions */}
         {showSuggestions && messages.length === 0 && (
           <View style={styles.suggestionsSection}>
-            <Text style={styles.suggestionsTitle}>{t("ai_chat.suggestions_title")}</Text>
+            <Text style={styles.suggestionsTitle}>
+              {t("ai_chat.suggestions_title")}
+            </Text>
             <View style={styles.suggestionsContainer}>
               {suggestions.map((suggestion, index) => (
                 <TouchableOpacity
@@ -214,14 +267,22 @@ export default function AIChatbot() {
               placeholderTextColor="rgba(0, 0, 0, 0.4)"
               multiline
               maxLength={500}
+              editable={!isLoading}
             />
-            <TouchableOpacity 
-              style={styles.sendButton}
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                isLoading && styles.sendButtonDisabled,
+              ]}
               onPress={() => handleSendMessage()}
+              disabled={isLoading}
             >
               <Image
                 source={require("../../assets/images/send-icon2.png")}
-                style={styles.sendIcon}
+                style={[
+                  styles.sendIcon,
+                  isLoading && styles.sendIconDisabled,
+                ]}
               />
             </TouchableOpacity>
           </View>
@@ -302,10 +363,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
@@ -318,10 +376,21 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.7)",
     borderTopLeftRadius: 4,
   },
+  errorBubble: {
+    backgroundColor: "rgba(255, 220, 220, 0.85)",
+  },
   messageText: {
     fontSize: 14,
     color: "#333",
     lineHeight: 20,
+  },
+  errorText: {
+    color: "#c0392b",
+  },
+  typingDots: {
+    fontSize: 12,
+    color: "#8B7B6C",
+    letterSpacing: 4,
   },
   suggestionsSection: {
     paddingHorizontal: 20,
@@ -343,10 +412,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
@@ -370,10 +436,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 12,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 5,
@@ -390,9 +453,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  sendButtonDisabled: {
+    opacity: 0.4,
+  },
   sendIcon: {
     width: 24,
     height: 24,
     tintColor: "#8B7B6C",
+  },
+  sendIconDisabled: {
+    tintColor: "#aaa",
   },
 });
