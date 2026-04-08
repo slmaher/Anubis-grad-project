@@ -1,11 +1,26 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  ImageBackground,
+  SafeAreaView,
+  StatusBar,
+  TextInput,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useTranslation } from "react-i18next";
 
 export default function Marketplace() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState("Jewelry");
   const [cart, setCart] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const categories = ["Jewelry", "Artifact", "Books"];
 
@@ -86,32 +101,54 @@ export default function Marketplace() {
     return item ? item.quantity : 0;
   };
 
+  const getCategoryIcon = (category) => {
+    if (category === "Jewelry") return "ring";
+    if (category === "Artifact") return "amphora";
+    if (category === "Books") return "book-open-page-variant-outline";
+    return "shape-outline";
+  };
+
+  const filteredProducts = products.filter((product) => {
+    const matchesCategory = product.category === activeCategory;
+    const matchesSearch =
+      !searchQuery.trim() ||
+      product.name.toLowerCase().includes(searchQuery.trim().toLowerCase());
+
+    return matchesCategory && matchesSearch;
+  });
+
   return (
-    <View style={styles.mainContainer}>
-      <ImageBackground
-        source={require("../../assets/images/community-background.png")}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
+    <ImageBackground
+      source={require("../../assets/images/beige-background.jpeg")}
+      style={styles.mainContainer}
+      resizeMode="cover"
+    >
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
+
+      <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
-          {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.backButton}
               onPress={() => router.back()}
             >
-              <Text style={styles.backIcon}>←</Text>
+              <MaterialCommunityIcons
+                name="chevron-left"
+                size={28}
+                color="#2C2010"
+              />
             </TouchableOpacity>
-            
-            <Text style={styles.headerTitle}>Souvenir Marketplace</Text>
-            
-            <TouchableOpacity 
+
+            <Text style={styles.headerTitle}>{t("marketplace.title", "Souvenir Marketplace")}</Text>
+
+            <TouchableOpacity
               style={styles.cartButton}
               onPress={() => router.push("/marketplace/cart")}
             >
-              <Image
-                source={require("../../assets/images/shopping-cart.png")}
-                style={styles.cartIcon}
+              <MaterialCommunityIcons
+                name="cart-outline"
+                size={23}
+                color="#2C2010"
               />
               {getCartCount() > 0 && (
                 <View style={styles.cartBadge}>
@@ -121,121 +158,172 @@ export default function Marketplace() {
             </TouchableOpacity>
           </View>
 
-          {/* Categories */}
+          <View style={styles.searchBar}>
+            <MaterialCommunityIcons
+              name="menu"
+              size={18}
+              color="#666"
+              style={styles.searchIconLeft}
+            />
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder={t("marketplace.search_placeholder", "Search souvenirs")}
+              placeholderTextColor="#888"
+              style={styles.searchInput}
+            />
+            <MaterialCommunityIcons
+              name="magnify"
+              size={18}
+              color="#666"
+              style={styles.searchIconRight}
+            />
+          </View>
+
           <View style={styles.categoriesContainer}>
             {categories.map((category) => (
               <TouchableOpacity
                 key={category}
                 style={[
                   styles.categoryButton,
-                  activeCategory === category && styles.categoryButtonActive
+                  activeCategory === category && styles.categoryButtonActive,
                 ]}
                 onPress={() => setActiveCategory(category)}
               >
-                <Text style={[
-                  styles.categoryText,
-                  activeCategory === category && styles.categoryTextActive
-                ]}>
+                <MaterialCommunityIcons
+                  name={getCategoryIcon(category)}
+                  size={14}
+                  color={activeCategory === category ? "#6B5B4F" : "#8B7B6C"}
+                />
+                <Text
+                  style={[
+                    styles.categoryText,
+                    activeCategory === category && styles.categoryTextActive,
+                  ]}
+                >
                   {category}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          {/* Products Grid */}
-          <ScrollView 
+          <Text style={styles.sectionTitle}>
+            {t("marketplace.available_items", "Available items")}
+          </Text>
+
+          <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.productsGrid}>
-              {products.map((product) => {
+              {filteredProducts.map((product) => {
                 const quantity = getProductQuantity(product.id);
                 return (
                   <View key={product.id} style={styles.productCard}>
-                    <ImageBackground
+                    <Image
                       source={product.image}
-                      style={styles.productImageBackground}
-                      imageStyle={styles.productImageStyle}
+                      style={styles.productImage}
                       resizeMode="cover"
-                    >
-                      {/* Product Info at Bottom */}
-                      <View style={styles.productBottomSection}>
-                        {/* Product Name */}
-                        <View style={styles.productNameContainer}>
-                          <Text style={styles.productName} numberOfLines={2}>
-                            {product.name}
-                          </Text>
+                    />
+
+                    <View style={styles.productBottomSection}>
+                      <Text style={styles.productName} numberOfLines={2}>
+                        {product.name}
+                      </Text>
+
+                      <View style={styles.productFooter}>
+                        <View style={styles.priceTag}>
+                          <MaterialCommunityIcons
+                            name="cash-multiple"
+                            size={12}
+                            color="#6B5B4F"
+                          />
+                          <Text style={styles.productPrice}>{product.price} LE</Text>
                         </View>
 
-                        {/* Price and Cart Controls */}
-                        <View style={styles.productFooter}>
-                          <View style={styles.priceContainer}>
-                            <Text style={styles.productPrice}>{product.price} LE</Text>
-                          </View>
-                          
-                          {quantity === 0 ? (
-                            <TouchableOpacity 
-                              style={styles.addToCartButton}
-                              onPress={() => addToCart(product)}
+                        {quantity === 0 ? (
+                          <TouchableOpacity
+                            style={styles.addToCartButton}
+                            onPress={() => addToCart(product)}
+                          >
+                            <MaterialCommunityIcons
+                              name="cart-plus"
+                              size={16}
+                              color="#fff"
+                            />
+                          </TouchableOpacity>
+                        ) : (
+                          <View style={styles.quantityControls}>
+                            <TouchableOpacity
+                              style={styles.quantityButton}
+                              onPress={() => updateQuantity(product.id, -1)}
                             >
-                              <Text style={styles.addToCartIcon}>⊕</Text>
+                              <MaterialCommunityIcons
+                                name="minus"
+                                size={14}
+                                color="#fff"
+                              />
                             </TouchableOpacity>
-                          ) : (
-                            <View style={styles.quantityControls}>
-                              <TouchableOpacity 
-                                style={styles.quantityButton}
-                                onPress={() => updateQuantity(product.id, -1)}
-                              >
-                                <Text style={styles.quantityButtonText}>−</Text>
-                              </TouchableOpacity>
-                              
-                              <Text style={styles.quantityText}>{quantity}</Text>
-                              
-                              <TouchableOpacity 
-                                style={styles.quantityButton}
-                                onPress={() => updateQuantity(product.id, 1)}
-                              >
-                                <Text style={styles.quantityButtonText}>+</Text>
-                              </TouchableOpacity>
-                            </View>
-                          )}
-                        </View>
+
+                            <Text style={styles.quantityText}>{quantity}</Text>
+
+                            <TouchableOpacity
+                              style={styles.quantityButton}
+                              onPress={() => updateQuantity(product.id, 1)}
+                            >
+                              <MaterialCommunityIcons
+                                name="plus"
+                                size={14}
+                                color="#fff"
+                              />
+                            </TouchableOpacity>
+                          </View>
+                        )}
                       </View>
-                    </ImageBackground>
+                    </View>
                   </View>
                 );
               })}
             </View>
+
+            {filteredProducts.length === 0 && (
+              <View style={styles.emptyState}>
+                <MaterialCommunityIcons
+                  name="package-variant-closed-remove"
+                  size={28}
+                  color="#8B7B6C"
+                />
+                <Text style={styles.emptyText}>
+                  {t("marketplace.no_items", "No items found")}
+                </Text>
+              </View>
+            )}
           </ScrollView>
         </View>
-      </ImageBackground>
-    </View>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: "#E8DDD0",
+    backgroundColor: "#EDE6DF",
   },
-  backgroundImage: {
+  safeArea: {
     flex: 1,
-    width: "100%",
-    height: "100%",
   },
   container: {
     flex: 1,
-    backgroundColor: "transparent",
+    paddingHorizontal: 18,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 55,
-    paddingHorizontal: 20,
-    paddingBottom: 15,
-    backgroundColor: "transparent",
+    marginTop: 10,
+    marginBottom: 18,
   },
   backButton: {
     width: 40,
@@ -243,14 +331,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  backIcon: {
-    fontSize: 26,
-    color: "#000",
-  },
   headerTitle: {
-    fontSize: 19,
+    fontSize: 18,
     fontWeight: "600",
-    color: "#8B7B6C",
+    color: "#2C2010",
+    letterSpacing: 0.4,
   },
   cartButton: {
     width: 40,
@@ -259,53 +344,72 @@ const styles = StyleSheet.create({
     alignItems: "center",
     position: "relative",
   },
-  cartIcon: {
-    width: 30,
-    height: 30,
-    tintColor: "#8B7B6C",
-  },
   cartBadge: {
     position: "absolute",
-    top: 5,
-    right: 5,
-    backgroundColor: "#D4AF37",
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
+    top: 4,
+    right: 3,
+    backgroundColor: "#D9A441",
+    borderRadius: 9,
+    minWidth: 17,
+    height: 17,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 4,
+    paddingHorizontal: 3,
   },
   cartBadgeText: {
     fontSize: 10,
     fontWeight: "700",
     color: "#fff",
   },
-  categoriesContainer: {
+  searchBar: {
     flexDirection: "row",
-    paddingHorizontal: 20,
-    gap: 12,
-    marginBottom: 20,
-  },
-  categoryButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.7)",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 25,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginBottom: 18,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    elevation: 3,
+  },
+  searchIconLeft: {
+    marginRight: 10,
+  },
+  searchIconRight: {
+    marginLeft: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: "#000",
+  },
+  categoriesContainer: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 14,
+  },
+  categoryButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    borderRadius: 18,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.7)",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
     elevation: 2,
   },
   categoryButtonActive: {
-    backgroundColor: "rgba(212, 175, 55, 0.35)",
-    borderColor: "rgba(212, 175, 55, 0.6)",
+    backgroundColor: "rgba(212, 175, 55, 0.22)",
+    borderColor: "rgba(180, 140, 70, 0.5)",
   },
   categoryText: {
     fontSize: 13,
@@ -316,113 +420,87 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#6B5B4F",
   },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#8B7B6C",
+    marginBottom: 12,
+    marginTop: 2,
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 30,
+    paddingBottom: 24,
   },
   productsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 15,
+    gap: 12,
     justifyContent: "space-between",
   },
   productCard: {
     width: "48%",
-    height: 280,
-    borderRadius: 18,
-    overflow: "hidden",
+    backgroundColor: "#F9F7F4",
+    borderRadius: 16,
+    padding: 10,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  productImageBackground: {
+  productImage: {
     width: "100%",
-    height: "100%",
-    justifyContent: "flex-end",
-  },
-  productImageStyle: {
-    borderRadius: 18,
+    height: 155,
+    borderRadius: 12,
+    marginBottom: 10,
   },
   productBottomSection: {
-    paddingHorizontal: 10,
-    paddingBottom: 10,
-    gap: 6,
-  },
-  productNameContainer: {
-    backgroundColor: "rgba(57, 57, 57, 0.4)",
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    alignSelf: "flex-start",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.5)",
+    gap: 8,
   },
   productName: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
-    color: "#ffffff",
-    lineHeight: 14,
-    textAlign: "left",
+    color: "#2C2010",
+    lineHeight: 16,
+    minHeight: 32,
   },
   productFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  priceContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.4)",
-    borderRadius: 10,
+  priceTag: {
+    backgroundColor: "#ECE5DE",
+    borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.5)",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   productPrice: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#333",
+    color: "#5A4A3C",
   },
   addToCartButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "rgba(255, 255, 255, 0.4)",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#8B7B6C",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.5)",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  addToCartIcon: {
-    fontSize: 18,
-    color: "#666",
-    fontWeight: "400",
   },
   quantityControls: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.4)",
+    backgroundColor: "#ECE5DE",
     borderRadius: 12,
     paddingHorizontal: 6,
     paddingVertical: 3,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.5)",
   },
   quantityButton: {
     width: 22,
@@ -443,5 +521,15 @@ const styles = StyleSheet.create({
     color: "#333",
     minWidth: 14,
     textAlign: "center",
+  },
+  emptyState: {
+    marginTop: 24,
+    alignItems: "center",
+    gap: 8,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: "#8B7B6C",
+    fontWeight: "500",
   },
 });
