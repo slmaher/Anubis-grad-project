@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   },
   topBar: {
     backgroundColor: "transparent",
-    paddingTop: 50,
+    paddingTop: 20,
     paddingHorizontal: 15,
     paddingBottom: 15,
   },
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     minWidth: 70,
   },
   chatText: {
-    color: "#8B7B6C",
+    color: "#2C2010",
     fontSize: 8,
     fontWeight: "600",
     textAlign: "center",
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: "bold",
-    color: "#8B7B6C",
+    color: "#2C2010",
     paddingHorizontal: 15,
     paddingTop: 20,
     paddingBottom: 15,
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   navCard: {
     width: "48%",
     backgroundColor: "rgba(255, 255, 255, 0.4)",
-    borderRadius: 20,
+    borderRadius: 8,
     padding: 20,
     alignItems: "center",
     justifyContent: "center",
