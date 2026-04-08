@@ -1,105 +1,86 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, ImageBackground, KeyboardAvoidingView, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function AIChatbot() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(true);
   const scrollViewRef = useRef(null);
 
   const suggestions = [
-    "What can I ask you to do?",
-    "Where is the nearest museum to me?",
+    t("ai_chat.suggestion_1"),
+    t("ai_chat.suggestion_2"),
   ];
-
-  const museumData = {
-    "Grand Egyptian Museum": {
-      location: "Cairo - Alexandria Desert Rd",
-      hours: "9 AM - 5 PM",
-      price: "200 LE",
-      description: "The largest archaeological museum in the world dedicated to Egyptian civilization"
-    },
-    "Egyptian Museum": {
-      location: "Cairo - El-Tahrir Square",
-      hours: "9 AM - 7 PM",
-      price: "150 LE",
-      description: "Home to an extensive collection of ancient Egyptian antiquities"
-    },
-    "Museum of Islamic Art": {
-      location: "Cairo - Port Said Street",
-      hours: "9 AM - 5 PM",
-      price: "100 LE",
-      description: "One of the greatest museums in the world with rare Islamic artifacts"
-    }
-  };
 
   const getAIResponse = (userMessage) => {
     const lowerMessage = userMessage.toLowerCase();
 
     // What can I ask you to do?
     if (lowerMessage.includes("what can i ask") || lowerMessage.includes("what can you do")) {
-      return "Great question! You can ask for my help with the following:\n\n1. Anything to do with museums in Egypt e.g. Where is the Grand Egyptian Museum?\n\n2. Information about tickets, prices, and opening hours\n\n3. Directions and locations of museums\n\n4. Recommendations for museums to visit\n\n5. Information about Egyptian artifacts and history";
+      return t("ai_chat.responses.capabilities");
     }
 
     // Nearest museum
     if (lowerMessage.includes("nearest museum") || lowerMessage.includes("closest museum")) {
-      return "The nearest museum to you is the Egyptian Museum in Tahrir Square, Cairo. It's approximately 1.5 km away.\n\n📍 Location: El-Tahrir Square\n⏰ Hours: 9 AM - 7 PM\n💰 Ticket: 150 LE\n\nWould you like directions or more information about this museum?";
+      return t("ai_chat.responses.nearest_museum");
     }
 
     // Grand Egyptian Museum
     if (lowerMessage.includes("grand egyptian museum") || lowerMessage.includes("gem")) {
-      return `The Grand Egyptian Museum (GEM) is located on the Cairo-Alexandria Desert Road, near the Giza Pyramids.\n\n⏰ Opening Hours: 9 AM - 5 PM\n💰 Ticket Price: 200 LE\n\nIt's the largest archaeological museum in the world dedicated to Egyptian civilization, featuring over 100,000 artifacts including the complete Tutankhamun collection!`;
+      return t("ai_chat.responses.grand_egyptian");
     }
 
     // Egyptian Museum
     if (lowerMessage.includes("egyptian museum") && !lowerMessage.includes("grand")) {
-      return `The Egyptian Museum is located in Tahrir Square, Cairo.\n\n⏰ Opening Hours: 9 AM - 7 PM\n💰 Ticket Price: 150 LE\n\nIt houses an extensive collection of ancient Egyptian antiquities with over 120,000 items. Don't miss the Royal Mummy Room!`;
+      return t("ai_chat.responses.egyptian");
     }
 
     // Museum of Islamic Art
     if (lowerMessage.includes("islamic art") || lowerMessage.includes("islamic museum")) {
-      return `The Museum of Islamic Art is located on Port Said Street, Cairo.\n\n⏰ Opening Hours: 9 AM - 5 PM\n💰 Ticket Price: 100 LE\n\nIt's one of the world's greatest museums with rare Islamic artifacts spanning 1,400 years from various Islamic civilizations.`;
+      return t("ai_chat.responses.islamic_art");
     }
 
     // Tickets
     if (lowerMessage.includes("ticket") || lowerMessage.includes("price")) {
-      return "Here are the ticket prices for major museums:\n\n🎫 Grand Egyptian Museum: 200 LE\n🎫 Egyptian Museum: 150 LE\n🎫 Museum of Islamic Art: 100 LE\n🎫 Coptic Museum: 120 LE\n\nYou can book tickets directly through our app! Would you like me to help you with that?";
+      return t("ai_chat.responses.tickets");
     }
 
     // Opening hours
     if (lowerMessage.includes("hours") || lowerMessage.includes("open") || lowerMessage.includes("close")) {
-      return "Museum Opening Hours:\n\n🕐 Grand Egyptian Museum: 9 AM - 5 PM\n🕐 Egyptian Museum: 9 AM - 7 PM\n🕐 Museum of Islamic Art: 9 AM - 5 PM\n🕐 Coptic Museum: 9 AM - 4 PM\n\nMost museums are closed on public holidays. Would you like to book a visit?";
+      return t("ai_chat.responses.hours");
     }
 
     // Recommendations
     if (lowerMessage.includes("recommend") || lowerMessage.includes("should i visit") || lowerMessage.includes("best museum")) {
-      return "Based on visitor reviews, I recommend:\n\n⭐ #1: Grand Egyptian Museum - Perfect for first-time visitors!\n⭐ #2: Egyptian Museum - Rich history & iconic artifacts\n⭐ #3: Museum of Islamic Art - Beautiful architecture\n\nWhat interests you most: Ancient Egypt, Islamic culture, or both?";
+      return t("ai_chat.responses.recommendations");
     }
 
     // Souvenirs
     if (lowerMessage.includes("souvenir") || lowerMessage.includes("shop") || lowerMessage.includes("buy")) {
-      return "Our app has a Souvenir Marketplace where you can browse and purchase authentic Egyptian souvenirs:\n\n🎁 Keychains & jewelry\n🏺 Pottery & artifacts replicas\n📿 Traditional crafts\n\nYou can access it from the home screen. Would you like me to show you popular items?";
+      return t("ai_chat.responses.souvenirs");
     }
 
     // Map/Directions
     if (lowerMessage.includes("map") || lowerMessage.includes("direction") || lowerMessage.includes("how to get")) {
-      return "You can view all museum locations on our interactive map! \n\n🗺️ Tap the 'Map' button on the home screen to:\n- See all museums near you\n- Get directions\n- View museum details\n\nWould you like specific directions to any museum?";
+      return t("ai_chat.responses.map");
     }
 
     // Greeting
     if (lowerMessage.includes("hello") || lowerMessage.includes("hi") || lowerMessage.includes("hey")) {
-      return "Hello! 👋 Welcome to Anubis - your guide to Egyptian museums and culture!\n\nI'm here to help you discover amazing museums, book tickets, find souvenirs, and answer any questions about Egyptian history.\n\nWhat would you like to explore today?";
+      return t("ai_chat.responses.greeting");
     }
 
     // Thanks
     if (lowerMessage.includes("thank") || lowerMessage.includes("thanks")) {
-      return "You're very welcome! 😊 Feel free to ask me anything else about museums, tickets, or Egyptian culture. Happy exploring!";
+      return t("ai_chat.responses.thanks");
     }
 
     // Default response
-    return "I'm here to help you with information about Egyptian museums, tickets, locations, and more!\n\nYou can ask me about:\n- Museum locations and hours\n- Ticket prices\n- Recommendations\n- Directions\n- Souvenirs\n\nWhat would you like to know?";
+    return t("ai_chat.responses.default");
   };
 
   const handleSendMessage = (text = inputText) => {
@@ -167,7 +148,7 @@ export default function AIChatbot() {
               source={require("../../assets/images/sparkling_stars.png")}
               style={styles.sparklingIcon}
             />
-            <Text style={styles.title}>Ask our AI anything</Text>
+            <Text style={styles.title}>{t("ai_chat.title")}</Text>
           </View>
         )}
 
@@ -189,7 +170,7 @@ export default function AIChatbot() {
             >
               <View style={styles.messageLabelContainer}>
                 <Text style={styles.messageLabel}>
-                  {message.sender === "user" ? "ME" : "OUR AI"}
+                  {message.sender === "user" ? t("ai_chat.label_me") : t("ai_chat.label_ai")}
                 </Text>
               </View>
               <View
@@ -207,7 +188,7 @@ export default function AIChatbot() {
         {/* Suggestions */}
         {showSuggestions && messages.length === 0 && (
           <View style={styles.suggestionsSection}>
-            <Text style={styles.suggestionsTitle}>Suggestions on what to ask Our AI</Text>
+            <Text style={styles.suggestionsTitle}>{t("ai_chat.suggestions_title")}</Text>
             <View style={styles.suggestionsContainer}>
               {suggestions.map((suggestion, index) => (
                 <TouchableOpacity
@@ -229,7 +210,7 @@ export default function AIChatbot() {
               style={styles.input}
               value={inputText}
               onChangeText={setInputText}
-              placeholder="Ask me anything"
+              placeholder={t("ai_chat.input_placeholder")}
               placeholderTextColor="rgba(0, 0, 0, 0.4)"
               multiline
               maxLength={500}
