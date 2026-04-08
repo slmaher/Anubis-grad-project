@@ -88,6 +88,14 @@
       "pharaonic_keychain": "Porte-clés pharaonique"
     }
   },
+  "cart": {
+    "title": "Votre panier",
+    "items_in_bag": "{{count}} articles dans votre panier",
+    "empty": "Votre panier est vide",
+    "browse": "Parcourir les souvenirs",
+    "total": "Total",
+    "checkout": "PASSER AU PAIEMENT"
+  },
   "ai_chat": {
     "title": "Demandez n'importe quoi à notre IA",
     "label_me": "MOI",

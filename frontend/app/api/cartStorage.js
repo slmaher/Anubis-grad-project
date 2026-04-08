@@ -40,7 +40,9 @@ export async function setCartItems(items) {
 
 export async function addItemToCart(item) {
   const current = await getCartItems();
-  const index = current.findIndex((entry) => String(entry.id) === String(item.id));
+  const index = current.findIndex(
+    (entry) => String(entry.id) === String(item.id),
+  );
 
   if (index >= 0) {
     current[index] = {
@@ -80,7 +82,10 @@ export async function clearCart() {
 export function getCartTotals(items) {
   const safeItems = Array.isArray(items) ? items : [];
 
-  const totalItems = safeItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  const totalItems = safeItems.reduce(
+    (sum, item) => sum + (item.quantity || 0),
+    0,
+  );
   const totalPrice = safeItems.reduce(
     (sum, item) => sum + (item.price || 0) * (item.quantity || 0),
     0,

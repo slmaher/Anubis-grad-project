@@ -88,6 +88,14 @@
       "pharaonic_keychain": "Pharaonic keychain"
     }
   },
+  "cart": {
+    "title": "Your cart",
+    "items_in_bag": "{{count}} items in your bag",
+    "empty": "Your cart is empty",
+    "browse": "Browse souvenirs",
+    "total": "Total",
+    "checkout": "CHECK OUT"
+  },
   "ai_chat": {
     "title": "Ask our AI anything",
     "label_me": "ME",
