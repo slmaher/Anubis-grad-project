@@ -54,6 +54,15 @@ export default function ShoppingBagScreen() {
     setItems(updatedItems);
   };
 
+  const handleBackPress = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/marketplace");
+  };
+
   const { totalItems, totalPrice } = getCartTotals(items);
 
   return (
@@ -67,7 +76,8 @@ export default function ShoppingBagScreen() {
           <View style={styles.header}>
             <TouchableOpacity
               style={styles.iconButton}
-              onPress={() => router.back()}
+              onPress={handleBackPress}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <MaterialCommunityIcons
                 name="chevron-left"
@@ -193,7 +203,7 @@ export default function ShoppingBagScreen() {
               <MaterialCommunityIcons
                 name="credit-card-outline"
                 size={16}
-                color="#fff"
+                color="#2C2010"
               />
               <Text style={styles.checkoutText}>
                 {t("cart.checkout", "CHECK OUT")}
@@ -343,40 +353,48 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#46392c",
+    backgroundColor: "rgba(249,247,244,0.98)",
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: DIVIDER,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
   },
   totalLabel: {
     fontSize: 11,
-    color: "#DEE4EE",
+    color: MUTED,
     marginBottom: 2,
+    fontWeight: "600",
   },
   totalAmount: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    fontSize: 28,
+    fontWeight: "500",
+    color: DARK,
   },
   checkoutBtn: {
-    backgroundColor: "#D9A441",
+    backgroundColor: "#EDE1C2",
     paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
     borderRadius: 24,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
   },
   checkoutBtnDisabled: {
     opacity: 0.45,
   },
   checkoutText: {
-    color: "#FFFFFF",
+    color: "#2C2010",
     fontSize: 12,
     fontWeight: "700",
     letterSpacing: 0.9,

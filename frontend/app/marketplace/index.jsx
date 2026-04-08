@@ -130,6 +130,15 @@ export default function Marketplace() {
     return item ? item.quantity : 0;
   };
 
+  const handleBackPress = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/(tabs)/home");
+  };
+
   const filteredProducts = products.filter((product) => {
     const matchesCategory = product.category === activeCategory;
     const translatedName = t(product.nameKey);
@@ -157,7 +166,8 @@ export default function Marketplace() {
           <View style={styles.header}>
             <TouchableOpacity
               style={styles.backButton}
-              onPress={() => router.back()}
+              onPress={handleBackPress}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <MaterialCommunityIcons
                 name="chevron-left"

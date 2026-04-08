@@ -94,7 +94,9 @@ function CheckoutScreen({ onSuccess }) {
       return;
     }
 
-    setAddressTitle(nextTitle || t("checkout.address_title", "Default address"));
+    setAddressTitle(
+      nextTitle || t("checkout.address_title", "Default address"),
+    );
     setAddressLine(nextAddress);
     setAddressModalVisible(false);
   };
@@ -119,17 +121,28 @@ function CheckoutScreen({ onSuccess }) {
                   {t("checkout.secure_checkout", "Secure checkout")}
                 </Text>
                 <Text style={styles.heroTitle}>
-                  {t("checkout.ready_to_complete", "Ready to complete your order")}
+                  {t(
+                    "checkout.ready_to_complete",
+                    "Ready to complete your order",
+                  )}
                 </Text>
               </View>
               <View style={styles.heroIconCircle}>
-                <MaterialCommunityIcons name="shield-check" size={22} color={DARK} />
+                <MaterialCommunityIcons
+                  name="shield-check"
+                  size={22}
+                  color={DARK}
+                />
               </View>
             </View>
 
             <View style={styles.heroStatsRow}>
               <View style={styles.heroStatChip}>
-                <MaterialCommunityIcons name="cart-outline" size={14} color={DARK} />
+                <MaterialCommunityIcons
+                  name="cart-outline"
+                  size={14}
+                  color={DARK}
+                />
                 <Text style={styles.heroStatText}>
                   {t("checkout.items_count", {
                     count: totalItems,
@@ -138,7 +151,11 @@ function CheckoutScreen({ onSuccess }) {
                 </Text>
               </View>
               <View style={styles.heroStatChip}>
-                <MaterialCommunityIcons name="truck-outline" size={14} color={DARK} />
+                <MaterialCommunityIcons
+                  name="truck-outline"
+                  size={14}
+                  color={DARK}
+                />
                 <Text style={styles.heroStatText}>
                   {t("checkout.fast_delivery", "Fast delivery")}
                 </Text>
@@ -146,20 +163,29 @@ function CheckoutScreen({ onSuccess }) {
             </View>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
             <View style={styles.sectionCard}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionLabel}>
                   {t("checkout.delivery_address", "Delivery Address")}
                 </Text>
                 <TouchableOpacity onPress={openAddressEditor}>
-                  <Text style={styles.linkText}>{t("checkout.change", "Change")}</Text>
+                  <Text style={styles.linkText}>
+                    {t("checkout.change", "Change")}
+                  </Text>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.addressRow}>
                 <View style={styles.addressIcon}>
-                  <MaterialCommunityIcons name="map-marker-outline" size={20} color={DARK} />
+                  <MaterialCommunityIcons
+                    name="map-marker-outline"
+                    size={20}
+                    color={DARK}
+                  />
                 </View>
 
                 <View style={styles.addressInfo}>
@@ -222,7 +248,11 @@ function CheckoutScreen({ onSuccess }) {
                 activeOpacity={0.85}
               >
                 <MaterialCommunityIcons
-                  name={voucherApplied ? "ticket-confirmation-outline" : "ticket-outline"}
+                  name={
+                    voucherApplied
+                      ? "ticket-confirmation-outline"
+                      : "ticket-outline"
+                  }
                   size={18}
                   color={DARK}
                 />
@@ -271,7 +301,11 @@ function CheckoutScreen({ onSuccess }) {
             </View>
 
             <View style={styles.noteCard}>
-              <MaterialCommunityIcons name="information-outline" size={18} color={DARK} />
+              <MaterialCommunityIcons
+                name="information-outline"
+                size={18}
+                color={DARK}
+              />
               <Text style={[styles.noteText, isRTL && styles.textRtl]}>
                 {t(
                   "checkout.note",
@@ -290,7 +324,11 @@ function CheckoutScreen({ onSuccess }) {
 
               {cartItems.length === 0 ? (
                 <View style={styles.emptyState}>
-                  <MaterialCommunityIcons name="cart-off" size={28} color={MUTED} />
+                  <MaterialCommunityIcons
+                    name="cart-off"
+                    size={28}
+                    color={MUTED}
+                  />
                   <Text style={styles.emptyTitle}>
                     {t("checkout.empty_title", "No items to pay for")}
                   </Text>
@@ -316,7 +354,10 @@ function CheckoutScreen({ onSuccess }) {
                       <Text style={styles.itemQty}>{item.quantity}</Text>
                     </View>
                     <View style={styles.itemInfo}>
-                      <Text style={[styles.itemName, isRTL && styles.textRtl]} numberOfLines={2}>
+                      <Text
+                        style={[styles.itemName, isRTL && styles.textRtl]}
+                        numberOfLines={2}
+                      >
                         {t(item.nameKey, item.nameKey)}
                       </Text>
                       <Text style={[styles.itemPrice, isRTL && styles.textRtl]}>
@@ -332,15 +373,16 @@ function CheckoutScreen({ onSuccess }) {
             </View>
 
             <TouchableOpacity
-              style={[
-                styles.payBtn,
-                totalItems === 0 && styles.payBtnDisabled,
-              ]}
+              style={[styles.payBtn, totalItems === 0 && styles.payBtnDisabled]}
               onPress={handlePayNow}
               activeOpacity={0.85}
               disabled={totalItems === 0}
             >
-              <MaterialCommunityIcons name="credit-card-check-outline" size={18} color="#fff" />
+              <MaterialCommunityIcons
+                name="credit-card-check-outline"
+                size={18}
+                color="#fff"
+              />
               <Text style={styles.payBtnText}>
                 {t("checkout.pay_now", "Pay now")}
               </Text>
@@ -392,7 +434,10 @@ function CheckoutScreen({ onSuccess }) {
                       {t("common.cancel", "Cancel")}
                     </Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.modalPrimaryBtn} onPress={saveAddress}>
+                  <TouchableOpacity
+                    style={styles.modalPrimaryBtn}
+                    onPress={saveAddress}
+                  >
                     <Text style={styles.modalPrimaryText}>
                       {t("common.save", "Save")}
                     </Text>
@@ -419,7 +464,10 @@ function AfterPaymentScreen({ onBack }) {
     >
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
-          <CheckoutHeader title={t("checkout.title", "Checkout")} onBack={onBack} />
+          <CheckoutHeader
+            title={t("checkout.title", "Checkout")}
+            onBack={onBack}
+          />
 
           <View style={styles.successCard}>
             <View style={styles.successIconWrap}>
