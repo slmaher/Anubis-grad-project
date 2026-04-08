@@ -1,4 +1,14 @@
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image, ImageBackground, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  ImageBackground,
+  ActivityIndicator,
+} from "react-native";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -101,13 +111,13 @@ export default function Explore() {
   const handleMuseumPress = (museum) => {
     router.push({
       pathname: "/museum-profile",
-      params: { 
+      params: {
         id: museum._id || museum.id,
         name: museum.name,
         city: museum.city,
         description: museum.description,
         imageUrl: museum.imageUrl,
-      }
+      },
     });
   };
 
@@ -154,7 +164,9 @@ export default function Explore() {
 
   const getImageSource = (museum) => {
     const useRemote = museum.imageUrl && !failedImageIds[museum._id];
-    return useRemote ? { uri: museum.imageUrl } : getLocalImageForMuseum(museum);
+    return useRemote
+      ? { uri: museum.imageUrl }
+      : getLocalImageForMuseum(museum);
   };
 
   const handleImageError = (museumId) => {
@@ -173,7 +185,7 @@ export default function Explore() {
           <Text style={styles.headerTitle}>{t("explore.title")}</Text>
         </View>
 
-        <ScrollView 
+        <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
         >
@@ -213,7 +225,11 @@ export default function Explore() {
                   style={styles.clearSearchButton}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <MaterialCommunityIcons name="close-circle" size={18} color="#90867B" />
+                  <MaterialCommunityIcons
+                    name="close-circle"
+                    size={18}
+                    color="#90867B"
+                  />
                 </TouchableOpacity>
               )}
             </View>
@@ -246,7 +262,9 @@ export default function Explore() {
             <>
               {/* Hero Card */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t("explore.museums_section")}</Text>
+                <Text style={styles.sectionTitle}>
+                  {t("explore.museums_section")}
+                </Text>
 
                 <TouchableOpacity
                   style={styles.heroCard}
@@ -261,14 +279,28 @@ export default function Explore() {
                   />
                   <View style={styles.heroOverlay}>
                     <View style={styles.heroBadge}>
-                      <MaterialCommunityIcons name="star-four-points" size={14} color="#F8E6B0" />
-                      <Text style={styles.heroBadgeText}>{t("explore.filters.recommended")}</Text>
+                      <MaterialCommunityIcons
+                        name="star-four-points"
+                        size={14}
+                        color="#F8E6B0"
+                      />
+                      <Text style={styles.heroBadgeText}>
+                        {t("explore.filters.recommended")}
+                      </Text>
                     </View>
-                    <Text style={styles.heroName} numberOfLines={2}>{filteredMuseums[0].name}</Text>
+                    <Text style={styles.heroName} numberOfLines={2}>
+                      {filteredMuseums[0].name}
+                    </Text>
                     <View style={styles.heroMetaRow}>
-                      <MaterialCommunityIcons name="map-marker-outline" size={15} color="#FFF8E8" />
+                      <MaterialCommunityIcons
+                        name="map-marker-outline"
+                        size={15}
+                        color="#FFF8E8"
+                      />
                       <Text style={styles.heroMetaText} numberOfLines={1}>
-                        {filteredMuseums[0].city || filteredMuseums[0].location || "Cairo"}
+                        {filteredMuseums[0].city ||
+                          filteredMuseums[0].location ||
+                          "Cairo"}
                       </Text>
                     </View>
                   </View>
@@ -293,9 +325,15 @@ export default function Explore() {
                             {museum.name}
                           </Text>
                           <View style={styles.ratingContainer}>
-                            <MaterialCommunityIcons name="star" size={12} color="#FFD36B" />
+                            <MaterialCommunityIcons
+                              name="star"
+                              size={12}
+                              color="#FFD36B"
+                            />
                             <Text style={styles.rating}>{museum.rating}</Text>
-                            <Text style={styles.reviews}>({museum.reviewsCount})</Text>
+                            <Text style={styles.reviews}>
+                              ({museum.reviewsCount})
+                            </Text>
                           </View>
                         </View>
                       </View>
@@ -322,13 +360,21 @@ export default function Explore() {
                       <Text style={styles.featuredName}>{museum.name}</Text>
                       <View style={styles.featuredFooter}>
                         <View style={styles.featuredMetaLeft}>
-                          <MaterialCommunityIcons name="clock-outline" size={14} color="#FFF5DE" />
+                          <MaterialCommunityIcons
+                            name="clock-outline"
+                            size={14}
+                            color="#FFF5DE"
+                          />
                           <Text style={styles.featuredPrice}>
                             {museum.openingHours || "Open today"}
                           </Text>
                         </View>
                         <View style={styles.arrowButton}>
-                          <MaterialCommunityIcons name="arrow-top-right" size={18} color="#ffffff" />
+                          <MaterialCommunityIcons
+                            name="arrow-top-right"
+                            size={18}
+                            color="#ffffff"
+                          />
                         </View>
                       </View>
                     </View>
@@ -340,9 +386,15 @@ export default function Explore() {
 
           {!loading && !error && filteredMuseums.length === 0 && (
             <View style={styles.emptyState}>
-              <MaterialCommunityIcons name="magnify-close" size={40} color="#9A8E80" />
+              <MaterialCommunityIcons
+                name="magnify-close"
+                size={40}
+                color="#9A8E80"
+              />
               <Text style={styles.emptyStateTitle}>No museums found</Text>
-              <Text style={styles.emptyStateBody}>Try another name, city, or clear your filters.</Text>
+              <Text style={styles.emptyStateBody}>
+                Try another name, city, or clear your filters.
+              </Text>
               <TouchableOpacity
                 style={styles.clearFiltersButton}
                 onPress={() => {

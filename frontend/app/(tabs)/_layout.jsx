@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { View, TouchableOpacity, Text, StyleSheet, Animated, Dimensions } from "react-native";
+import { View, TouchableOpacity, Text, StyleSheet, Animated, useWindowDimensions } from "react-native";
 import { useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -9,14 +9,22 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-const SCREEN_WIDTH = Dimensions.get("window").width;
+const TAB_COUNT = 5;
 
 function CustomTabBar({ state, descriptors, navigation }) {
   const bubblePosition = useRef(new Animated.Value(0)).current;
   const router = useRouter();
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
 
-  const TAB_WIDTH = (SCREEN_WIDTH - 80) / 5; // dynamic width (left+right = 40+40)
+  const isCompact = width < 390;
+  const isTablet = width >= 768;
+  const horizontalInset = isTablet ? 28 : isCompact ? 10 : 16;
+  const tabBarWidth = Math.min(width - horizontalInset * 2, 640);
+  const TAB_WIDTH = tabBarWidth / TAB_COUNT;
+  const iconSize = isCompact ? 22 : 26;
+  const communityIconSize = isCompact ? 20 : 24;
+  const labelSize = isCompact ? 9.5 : 11;
 
   useEffect(() => {
     Animated.spring(bubblePosition, {
@@ -28,19 +36,19 @@ function CustomTabBar({ state, descriptors, navigation }) {
   }, [state.index]);
 
   const getIcon = (routeName, isFocused) => {
-    const color = isFocused ? "#000" : "#666";
+    const color = "#2C2010";
 
     switch (routeName) {
       case 'home':
-        return <Feather name="home" size={26} color={color} />;
+        return <Feather name="home" size={iconSize} color={color} />;
       case 'explore':
-        return <MaterialIcons name="explore" size={26} color={color} />;
+        return <MaterialIcons name="explore" size={iconSize} color={color} />;
       case 'scan':
-        return <Ionicons name="scan" size={26} color={color} />;
+        return <Ionicons name="scan" size={iconSize} color={color} />;
       case 'events':
-        return <MaterialIcons name="event-available" size={26} color={color} />;
+        return <MaterialIcons name="event-available" size={iconSize} color={color} />;
       case 'community':
-        return <FontAwesome name="group" size={24} color={color} />;
+        return <FontAwesome name="group" size={communityIconSize} color={color} />;
       default:
         return null;
     }
@@ -78,15 +86,15 @@ if (hideTabBar) {
 
 
   return (
-    <View style={styles.tabBarContainer}>
-      <View style={styles.tabBar}>
+    <View style={[styles.tabBarContainer, { left: horizontalInset, right: horizontalInset }] }>
+      <View style={[styles.tabBar, { width: tabBarWidth }] }>
 
         {/* 🔥 SMOOTH MOVING BUBBLE */}
         <Animated.View
           style={[
             styles.activeBubble,
             {
-              width: TAB_WIDTH + 10,
+              width: Math.max(TAB_WIDTH - 6, 52),
               transform: [
                 {
                   translateX: bubblePosition.interpolate({
@@ -125,7 +133,15 @@ if (hideTabBar) {
                 {getIcon(route.name, isFocused)}
               </View>
 
-              <Text style={[styles.tabLabel, isFocused && styles.tabLabelActive]}>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                style={[
+                  styles.tabLabel,
+                  { fontSize: labelSize },
+                  isFocused && styles.tabLabelActive,
+                ]}
+              >
                 {getLabel(route.name)}
               </Text>
             </TouchableOpacity>
@@ -157,40 +173,38 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBarContainer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 30,
-    right: 30,
+    position: "absolute",
+    bottom: 20,
+    alignSelf: "center",
   },
 
   tabBar: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.90)', // 🔥 less transparent
-    borderRadius: 38,
-    paddingVertical: 8,
+    flexDirection: "row",
+    backgroundColor: "rgba(255, 255, 255, 0.90)",
+    borderRadius: 30,
+    paddingVertical: 3,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.9)',
-
-    shadowColor: '#000',
+    borderColor: "rgba(255,255,255,0.9)",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
     shadowRadius: 15,
     elevation: 12,
 
-    alignItems: 'center',
-    overflow: 'hidden',
+    alignItems: "center",
+    overflow: "hidden",
   },
 
   activeBubble: {
-    position: 'absolute',
-    height: 70, // 🔥 bigger bubble
+    position: "absolute",
+    height: 62,
     borderRadius: 35,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: "rgba(255,255,255,0.9)",
 
-    top: 4,
-    left: -5,
+    top: 5,
+    left: -4,
 
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.12,
     shadowRadius: 6,
@@ -198,26 +212,26 @@ const styles = StyleSheet.create({
   },
 
   tabButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 65,
+    alignItems: "center",
+    justifyContent: "center",
+    height: 52,
     zIndex: 2,
+    paddingHorizontal: 2,
   },
 
   iconContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   tabLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: "600",
+      color: '#2C2010',
     marginTop: 4,
   },
 
   tabLabelActive: {
-    color: '#000',
-    fontWeight: '700',
+      color: '#2C2010',
+    fontWeight: "700",
   },
 });
