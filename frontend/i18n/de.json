@@ -88,6 +88,14 @@
       "pharaonic_keychain": "Pharaonischer Schlüsselanhänger"
     }
   },
+  "cart": {
+    "title": "Dein Warenkorb",
+    "items_in_bag": "{{count}} Artikel in deinem Warenkorb",
+    "empty": "Dein Warenkorb ist leer",
+    "browse": "Souvenirs durchstöbern",
+    "total": "Gesamt",
+    "checkout": "ZUR KASSE"
+  },
   "ai_chat": {
     "title": "Frag unsere KI alles",
     "label_me": "ICH",

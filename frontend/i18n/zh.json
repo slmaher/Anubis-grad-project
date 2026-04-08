@@ -88,6 +88,14 @@
       "pharaonic_keychain": "法老钥匙扣"
     }
   },
+  "cart": {
+    "title": "你的购物车",
+    "items_in_bag": "购物车中有 {{count}} 件商品",
+    "empty": "你的购物车是空的",
+    "browse": "浏览纪念品",
+    "total": "总计",
+    "checkout": "去结算"
+  },
   "ai_chat": {
     "title": "向我们的 AI 提问任何问题",
     "label_me": "我",
