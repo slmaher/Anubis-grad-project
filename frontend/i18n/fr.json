@@ -69,6 +69,25 @@
     "expert": "Expert",
     "book_now": "Réserver maintenant"
   },
+  "marketplace": {
+    "title": "Marché des souvenirs",
+    "search_placeholder": "Rechercher des souvenirs",
+    "available_items": "Articles disponibles",
+    "no_items": "Aucun article trouvé",
+    "categories": {
+      "jewelry": "Bijoux",
+      "artifact": "Artéfact",
+      "books": "Livres"
+    },
+    "products": {
+      "egyptian_keychain": "Porte-clés égyptien",
+      "cleopatra_keychain": "Porte-clés pharaon Cléopâtre",
+      "egyptian_pottery": "Éclats de poterie égyptienne",
+      "egyptian_hand_mirror": "Miroir à main égyptien",
+      "pharaonic_pyramid_keychain": "Porte-clés pyramide pharaonique 3D",
+      "pharaonic_keychain": "Porte-clés pharaonique"
+    }
+  },
   "ai_chat": {
     "title": "Demandez n'importe quoi à notre IA",
     "label_me": "MOI",

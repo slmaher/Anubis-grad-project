@@ -69,6 +69,25 @@
     "expert": "خبير",
     "book_now": "حجز الآن"
   },
+  "marketplace": {
+    "title": "سوق الهدايا التذكارية",
+    "search_placeholder": "ابحث عن الهدايا التذكارية",
+    "available_items": "العناصر المتاحة",
+    "no_items": "لم يتم العثور على عناصر",
+    "categories": {
+      "jewelry": "المجوهرات",
+      "artifact": "القطع الأثرية",
+      "books": "الكتب"
+    },
+    "products": {
+      "egyptian_keychain": "سلسلة مفاتيح مصرية",
+      "cleopatra_keychain": "سلسلة مفاتيح كليوباترا الفرعونية",
+      "egyptian_pottery": "شظايا فخار مصرية",
+      "egyptian_hand_mirror": "مرآة يد مصرية",
+      "pharaonic_pyramid_keychain": "سلسلة مفاتيح هرم فرعوني ثلاثية الأبعاد",
+      "pharaonic_keychain": "سلسلة مفاتيح فرعونية"
+    }
+  },
   "ai_chat": {
     "title": "اسأل الذكاء الاصطناعي أي شيء",
     "label_me": "أنا",

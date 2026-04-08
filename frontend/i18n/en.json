@@ -69,6 +69,25 @@
     "expert": "Expert",
     "book_now": "Book now"
   },
+  "marketplace": {
+    "title": "Souvenir Marketplace",
+    "search_placeholder": "Search souvenirs",
+    "available_items": "Available items",
+    "no_items": "No items found",
+    "categories": {
+      "jewelry": "Jewelry",
+      "artifact": "Artifact",
+      "books": "Books"
+    },
+    "products": {
+      "egyptian_keychain": "Egyptian keychain",
+      "cleopatra_keychain": "Cleopatra Pharaoh Keychain Souvenir",
+      "egyptian_pottery": "Egyptian pottery sherds",
+      "egyptian_hand_mirror": "Egyptian hand mirror",
+      "pharaonic_pyramid_keychain": "Pharaonic 3D Pyramid Keychain",
+      "pharaonic_keychain": "Pharaonic keychain"
+    }
+  },
   "ai_chat": {
     "title": "Ask our AI anything",
     "label_me": "ME",

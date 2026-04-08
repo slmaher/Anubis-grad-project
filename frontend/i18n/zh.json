@@ -69,6 +69,25 @@
     "expert": "专家",
     "book_now": "正式下单"
   },
+  "marketplace": {
+    "title": "纪念品市场",
+    "search_placeholder": "搜索纪念品",
+    "available_items": "可用商品",
+    "no_items": "未找到商品",
+    "categories": {
+      "jewelry": "珠宝",
+      "artifact": "文物",
+      "books": "书籍"
+    },
+    "products": {
+      "egyptian_keychain": "埃及钥匙扣",
+      "cleopatra_keychain": "克利奥帕特拉法老钥匙扣",
+      "egyptian_pottery": "埃及陶器碎片",
+      "egyptian_hand_mirror": "埃及手镜",
+      "pharaonic_pyramid_keychain": "法老 3D 金字塔钥匙扣",
+      "pharaonic_keychain": "法老钥匙扣"
+    }
+  },
   "ai_chat": {
     "title": "向我们的 AI 提问任何问题",
     "label_me": "我",

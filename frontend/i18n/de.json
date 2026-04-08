@@ -69,6 +69,25 @@
     "expert": "Experte",
     "book_now": "Jetzt buchen"
   },
+  "marketplace": {
+    "title": "Souvenir-Marktplatz",
+    "search_placeholder": "Souvenirs suchen",
+    "available_items": "Verfügbare Artikel",
+    "no_items": "Keine Artikel gefunden",
+    "categories": {
+      "jewelry": "Schmuck",
+      "artifact": "Artefakt",
+      "books": "Bücher"
+    },
+    "products": {
+      "egyptian_keychain": "Ägyptischer Schlüsselanhänger",
+      "cleopatra_keychain": "Cleopatra-Pharao-Schlüsselanhänger",
+      "egyptian_pottery": "Ägyptische Töpferscherben",
+      "egyptian_hand_mirror": "Ägyptischer Handspiegel",
+      "pharaonic_pyramid_keychain": "Pharaonischer 3D-Pyramiden-Schlüsselanhänger",
+      "pharaonic_keychain": "Pharaonischer Schlüsselanhänger"
+    }
+  },
   "ai_chat": {
     "title": "Frag unsere KI alles",
     "label_me": "ICH",
