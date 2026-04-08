@@ -65,7 +65,10 @@ export default function ShoppingBagScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => router.back()}
+            >
               <MaterialCommunityIcons
                 name="chevron-left"
                 size={28}
@@ -73,11 +76,11 @@ export default function ShoppingBagScreen() {
               />
             </TouchableOpacity>
 
-            <Text style={styles.headerTitle}>{t("cart.title", "Your cart")}</Text>
+            <Text style={styles.headerTitle}>
+              {t("cart.title", "Your cart")}
+            </Text>
 
-            <TouchableOpacity style={styles.iconButton} onPress={() => router.push("/profile")}> 
-              <MaterialCommunityIcons name="account-outline" size={22} color={DARK} />
-            </TouchableOpacity>
+            <View style={styles.headerSpacer} />
           </View>
 
           <Text style={styles.subTitle}>
@@ -94,7 +97,11 @@ export default function ShoppingBagScreen() {
           >
             {items.map((item) => (
               <View key={item.id} style={styles.cartCard}>
-                <Image source={item.image} style={styles.productImage} resizeMode="cover" />
+                <Image
+                  source={item.image}
+                  style={styles.productImage}
+                  resizeMode="cover"
+                />
 
                 <View
                   style={[
@@ -117,20 +124,32 @@ export default function ShoppingBagScreen() {
                       style={styles.qtyBtn}
                       onPress={() => updateQty(item.id, -1)}
                     >
-                      <MaterialCommunityIcons name="minus" size={14} color={DARK} />
+                      <MaterialCommunityIcons
+                        name="minus"
+                        size={14}
+                        color={DARK}
+                      />
                     </TouchableOpacity>
                     <Text style={styles.qtyNumber}>{item.quantity}</Text>
                     <TouchableOpacity
                       style={styles.qtyBtn}
                       onPress={() => updateQty(item.id, 1)}
                     >
-                      <MaterialCommunityIcons name="plus" size={14} color={DARK} />
+                      <MaterialCommunityIcons
+                        name="plus"
+                        size={14}
+                        color={DARK}
+                      />
                     </TouchableOpacity>
                   </View>
                 </View>
 
                 <TouchableOpacity style={styles.favoriteBtn}>
-                  <MaterialCommunityIcons name="heart-outline" size={18} color={MUTED} />
+                  <MaterialCommunityIcons
+                    name="heart-outline"
+                    size={18}
+                    color={MUTED}
+                  />
                 </TouchableOpacity>
               </View>
             ))}
@@ -171,8 +190,14 @@ export default function ShoppingBagScreen() {
               onPress={() => router.push("/marketplace/checkout")}
               disabled={totalItems === 0}
             >
-              <MaterialCommunityIcons name="credit-card-outline" size={16} color="#fff" />
-              <Text style={styles.checkoutText}>{t("cart.checkout", "CHECK OUT")}</Text>
+              <MaterialCommunityIcons
+                name="credit-card-outline"
+                size={16}
+                color="#fff"
+              />
+              <Text style={styles.checkoutText}>
+                {t("cart.checkout", "CHECK OUT")}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -192,7 +217,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 18,
-    paddingTop: 10,
+    paddingTop: 20,
   },
   header: {
     flexDirection: "row",
@@ -209,6 +234,10 @@ const styles = StyleSheet.create({
     borderColor: "rgba(220,210,198,0.7)",
     alignItems: "center",
     justifyContent: "center",
+  },
+  headerSpacer: {
+    width: 40,
+    height: 40,
   },
   headerTitle: {
     fontSize: 18,
@@ -314,7 +343,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#5E6A7C",
+    backgroundColor: "#46392c",
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -335,7 +364,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   checkoutBtn: {
-    backgroundColor: "#2F3846",
+    backgroundColor: "#D9A441",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 24,
