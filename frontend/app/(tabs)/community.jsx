@@ -18,7 +18,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useTranslation } from "react-i18next";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { api } from "../api/client";
-import { getAuthToken } from "../api/authStorage";
+import { getAuthToken, getAuthUser } from "../api/authStorage";
 
 export default function Community() {
   const router = useRouter();
@@ -29,6 +29,12 @@ export default function Community() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [isCommentModalVisible, setCommentModalVisible] = useState(false);
+  const [activePostId, setActivePostId] = useState(null);
+  const [newComment, setNewComment] = useState("");
+  const [isCommentSubmitting, setCommentSubmitting] = useState(false);
+  const [isLikingPostId, setIsLikingPostId] = useState(null);
 
   const fetchPosts = async () => {
     try {
@@ -42,8 +48,124 @@ export default function Community() {
   };
 
   useEffect(() => {
-    fetchPosts();
+    const bootstrap = async () => {
+      const authUser = await getAuthUser();
+      setCurrentUserId(authUser?._id || authUser?.id || null);
+      fetchPosts();
+    };
+
+    bootstrap();
   }, []);
+
+  const normalizeId = (value) => {
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    if (typeof value === "object") {
+      if (typeof value._id === "string") return value._id;
+      if (typeof value.id === "string") return value.id;
+    }
+    return String(value);
+  };
+
+  const isPostLikedByCurrentUser = (post) => {
+    if (!currentUserId || !Array.isArray(post?.likedBy)) {
+      return false;
+    }
+
+    return post.likedBy.some((likedUser) => {
+      return normalizeId(likedUser) === currentUserId;
+    });
+  };
+
+  const handleToggleLike = async (postId) => {
+    if (!postId || isLikingPostId === postId) return;
+
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        alert(t("community.must_be_logged_in"));
+        return;
+      }
+
+      setIsLikingPostId(postId);
+      const response = await api.togglePostLike(postId, token);
+      const likes = response?.data?.likes;
+      const liked = response?.data?.liked;
+
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          const id = post._id || post.id;
+          if (id !== postId) {
+            return post;
+          }
+
+          const currentLikedBy = Array.isArray(post.likedBy) ? post.likedBy : [];
+          const filteredLikedBy = currentLikedBy.filter(
+            (likedUser) => normalizeId(likedUser) !== currentUserId,
+          );
+
+          return {
+            ...post,
+            likes: typeof likes === "number" ? likes : post.likes || 0,
+            likedBy:
+              liked && currentUserId
+                ? [...filteredLikedBy, currentUserId]
+                : filteredLikedBy,
+          };
+        }),
+      );
+    } catch (error) {
+      alert(error.message || "Failed to update like.");
+    } finally {
+      setIsLikingPostId(null);
+    }
+  };
+
+  const openCommentModal = (postId) => {
+    setActivePostId(postId);
+    setNewComment("");
+    setCommentModalVisible(true);
+  };
+
+  const handleAddComment = async () => {
+    if (!activePostId || !newComment.trim() || isCommentSubmitting) return;
+
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        alert(t("community.must_be_logged_in"));
+        return;
+      }
+
+      setCommentSubmitting(true);
+      const response = await api.addPostComment(
+        activePostId,
+        newComment.trim(),
+        token,
+      );
+
+      if (response?.data) {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) => {
+            const id = post._id || post.id;
+            return id === activePostId ? response.data : post;
+          }),
+        );
+      }
+
+      setNewComment("");
+      setCommentModalVisible(false);
+    } catch (error) {
+      alert(error.message || "Failed to add comment.");
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
+
+  const activePost = posts.find((post) => (post._id || post.id) === activePostId);
+  const activePostComments = Array.isArray(activePost?.comments)
+    ? activePost.comments
+    : [];
 
   const handleCreatePost = async () => {
     if (!newPostContent.trim() && !selectedImage) return;
@@ -261,22 +383,38 @@ export default function Community() {
               )}
 
               <View style={styles.postActions}>
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => handleToggleLike(post._id || post.id)}
+                  disabled={isLikingPostId === (post._id || post.id)}
+                >
                   <View style={styles.actionRow}>
                     <MaterialCommunityIcons
-                      name="heart-outline"
+                      name={
+                        isPostLikedByCurrentUser(post)
+                          ? "heart"
+                          : "heart-outline"
+                      }
                       size={18}
-                      color="#666"
+                      color={isPostLikedByCurrentUser(post) ? "#d43f3a" : "#666"}
                     />
                     <Text style={styles.actionCount}>{post.likes || 0}</Text>
                   </View>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionButton}>
-                  <MaterialCommunityIcons
-                    name="comment-outline"
-                    size={18}
-                    color="#666"
-                  />
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => openCommentModal(post._id || post.id)}
+                >
+                  <View style={styles.actionRow}>
+                    <MaterialCommunityIcons
+                      name="comment-outline"
+                      size={18}
+                      color="#666"
+                    />
+                    <Text style={styles.actionCount}>
+                      {Array.isArray(post.comments) ? post.comments.length : 0}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}>
                   <MaterialCommunityIcons
@@ -368,6 +506,80 @@ export default function Community() {
             >
               <Text style={styles.postButtonText}>{t("community.post")}</Text>
             </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isCommentModalVisible}
+        onRequestClose={() => {
+          setCommentModalVisible(false);
+          setNewComment("");
+        }}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Comments</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setCommentModalVisible(false);
+                  setNewComment("");
+                }}
+              >
+                <Text style={styles.closeModalText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              style={styles.commentsList}
+              contentContainerStyle={styles.commentsListContent}
+              keyboardShouldPersistTaps="handled"
+            >
+              {activePostComments.length === 0 ? (
+                <Text style={styles.emptyCommentsText}>No comments yet.</Text>
+              ) : (
+                activePostComments.map((comment, index) => (
+                  <View
+                    key={comment._id || `${normalizeId(comment.user)}_${index}`}
+                    style={styles.commentItem}
+                  >
+                    <Text style={styles.commentAuthor}>
+                      {comment.user?.name || t("community.anonymous")}
+                    </Text>
+                    <Text style={styles.commentContent}>{comment.content}</Text>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+
+            <View style={styles.commentInputRow}>
+              <TextInput
+                style={styles.commentInput}
+                placeholder="Write a comment..."
+                value={newComment}
+                onChangeText={setNewComment}
+                placeholderTextColor="#999"
+              />
+              <TouchableOpacity
+                style={[
+                  styles.sendCommentButton,
+                  (!newComment.trim() || isCommentSubmitting) &&
+                    styles.postButtonDisabled,
+                ]}
+                disabled={!newComment.trim() || isCommentSubmitting}
+                onPress={handleAddComment}
+              >
+                <Text style={styles.sendCommentText}>
+                  {isCommentSubmitting ? "..." : "Send"}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -613,6 +825,62 @@ const styles = StyleSheet.create({
   actionCount: {
     color: "#666",
     fontSize: 12,
+  },
+  commentsList: {
+    maxHeight: 260,
+  },
+  commentsListContent: {
+    paddingBottom: 8,
+  },
+  emptyCommentsText: {
+    color: "#666",
+    textAlign: "center",
+    marginVertical: 16,
+  },
+  commentItem: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    paddingVertical: 8,
+  },
+  commentAuthor: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#2C2010",
+    marginBottom: 2,
+  },
+  commentContent: {
+    fontSize: 13,
+    color: "#333",
+    lineHeight: 18,
+  },
+  commentInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    paddingTop: 10,
+    marginTop: 6,
+  },
+  commentInput: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    color: "#333",
+    fontSize: 14,
+  },
+  sendCommentButton: {
+    backgroundColor: "#000",
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  sendCommentText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
   },
   fab: {
     position: "absolute",

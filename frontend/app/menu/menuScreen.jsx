@@ -36,6 +36,13 @@ export default function MenuScreen({ onClose }) {
 
   const menuItems = [
     {
+      id: "language",
+      label: t("menu.language"),
+      iconLib: "ion",
+      iconName: "language-outline",
+      isLanguage: true,
+    },
+    {
       id: "setting",
       label: t("menu.setting"),
       iconLib: "material",
@@ -94,13 +101,7 @@ export default function MenuScreen({ onClose }) {
       iconName: "location-outline",
       route: "/Map",
     },
-    {
-      id: "language",
-      label: t("menu.language"),
-      iconLib: "ion",
-      iconName: "language-outline",
-      isLanguage: true,
-    },
+
     {
       id: "logout",
       label: t("menu.logout"),
