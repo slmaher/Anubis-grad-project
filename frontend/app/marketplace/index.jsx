@@ -11,9 +11,16 @@ import {
   TextInput,
 } from "react-native";
 import { useRouter } from "expo-router";
+import React from "react";
 import { useState } from "react";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTranslation } from "react-i18next";
+import { useFocusEffect } from "@react-navigation/native";
+import {
+  addItemToCart,
+  getCartItems,
+  updateCartItemQuantity,
+} from "../api/cartStorage";
 
 export default function Marketplace() {
   const router = useRouter();
@@ -89,33 +96,33 @@ export default function Marketplace() {
     return cart.reduce((sum, item) => sum + item.quantity, 0);
   };
 
-  const addToCart = (product) => {
-    const existingItem = cart.find((item) => item.id === product.id);
-    if (existingItem) {
-      setCart(
-        cart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item,
-        ),
-      );
-    } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
-    }
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
+
+      const loadCart = async () => {
+        const storedItems = await getCartItems();
+        if (isActive) {
+          setCart(storedItems);
+        }
+      };
+
+      loadCart();
+
+      return () => {
+        isActive = false;
+      };
+    }, []),
+  );
+
+  const addToCart = async (product) => {
+    const updated = await addItemToCart(product);
+    setCart(updated);
   };
 
-  const updateQuantity = (productId, delta) => {
-    setCart(
-      cart
-        .map((item) => {
-          if (item.id === productId) {
-            const newQuantity = item.quantity + delta;
-            return newQuantity > 0 ? { ...item, quantity: newQuantity } : null;
-          }
-          return item;
-        })
-        .filter(Boolean),
-    );
+  const updateQuantity = async (productId, delta) => {
+    const updated = await updateCartItemQuantity(productId, delta);
+    setCart(updated);
   };
 
   const getProductQuantity = (productId) => {

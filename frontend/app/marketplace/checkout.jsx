@@ -8,6 +8,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
+import { useFocusEffect } from "@react-navigation/native";
+import {
+  clearCart,
+  getCartItems,
+  getCartTotals,
+} from "../api/cartStorage";
 
 const PaymentIcons = () => (
   <View style={styles.paymentIcons}>
@@ -46,7 +54,33 @@ const PaymentIcons = () => (
 );
 
 const CheckoutScreen = ({ onSuccess }) => {
+  const router = useRouter();
+  const { t } = useTranslation();
   const [voucherApplied, setVoucherApplied] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
+
+      const loadCartItems = async () => {
+        const storedItems = await getCartItems();
+        if (isActive) {
+          setCartItems(storedItems);
+        }
+      };
+
+      loadCartItems();
+
+      return () => {
+        isActive = false;
+      };
+    }, []),
+  );
+
+  const { totalItems, totalPrice } = getCartTotals(cartItems);
+  const deliveryFee = totalItems > 0 ? 60 : 0;
+  const totalPayment = totalPrice + deliveryFee;
 
   return (
     <ImageBackground
@@ -57,11 +91,11 @@ const CheckoutScreen = ({ onSuccess }) => {
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.backArrow}>‹</Text>
           </TouchableOpacity>
 
-          <Text style={styles.headerTitle}>Checkout</Text>
+          <Text style={styles.headerTitle}>{t("checkout.title", "Checkout")}</Text>
 
           <View style={{ width: 32 }} />
         </View>
@@ -69,7 +103,7 @@ const CheckoutScreen = ({ onSuccess }) => {
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Delivery Address */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Delivery Address</Text>
+            <Text style={styles.sectionLabel}>{t("checkout.delivery_address", "Delivery Address")}</Text>
 
             <View style={styles.addressCard}>
               <View style={styles.mapThumb}>
@@ -83,7 +117,7 @@ const CheckoutScreen = ({ onSuccess }) => {
                   </Text>
 
                   <TouchableOpacity>
-                    <Text style={styles.changeText}>Change</Text>
+                    <Text style={styles.changeText}>{t("checkout.change", "Change")}</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -91,7 +125,7 @@ const CheckoutScreen = ({ onSuccess }) => {
                   <Text style={styles.etaIcon}>🕐</Text>
                   <Text style={styles.deliveryEta}>
                     {" "}
-                    Delivered in next 7 days
+                    {t("checkout.delivered_in_next_days", "Delivered in next 7 days")}
                   </Text>
                 </View>
               </View>
@@ -102,7 +136,7 @@ const CheckoutScreen = ({ onSuccess }) => {
 
           {/* Payment Method */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Payment Method</Text>
+            <Text style={styles.sectionLabel}>{t("checkout.payment_method", "Payment Method")}</Text>
 
             <PaymentIcons />
 
@@ -111,7 +145,9 @@ const CheckoutScreen = ({ onSuccess }) => {
               onPress={() => setVoucherApplied(!voucherApplied)}
             >
               <Text style={styles.voucherText}>
-                {voucherApplied ? "✓ Voucher Applied" : "Add Voucher"}
+                {voucherApplied
+                  ? t("checkout.voucher_applied", "✓ Voucher Applied")
+                  : t("checkout.add_voucher", "Add Voucher")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -133,18 +169,20 @@ const CheckoutScreen = ({ onSuccess }) => {
           {/* Summary */}
           <View style={styles.summarySection}>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryKey}>Total Items (2)</Text>
-              <Text style={styles.summaryVal}>560 LE</Text>
+              <Text style={styles.summaryKey}>
+                {t("checkout.total_items", "Total Items")} ({totalItems})
+              </Text>
+              <Text style={styles.summaryVal}>{totalPrice} LE</Text>
             </View>
 
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryKey}>Standard Delivery</Text>
-              <Text style={styles.summaryVal}>60 LE</Text>
+              <Text style={styles.summaryKey}>{t("checkout.standard_delivery", "Standard Delivery")}</Text>
+              <Text style={styles.summaryVal}>{deliveryFee} LE</Text>
             </View>
 
             <View style={[styles.summaryRow, styles.summaryTotalRow]}>
-              <Text style={styles.totalKey}>Total Payment</Text>
-              <Text style={styles.totalVal}>620 LE</Text>
+              <Text style={styles.totalKey}>{t("checkout.total_payment", "Total Payment")}</Text>
+              <Text style={styles.totalVal}>{totalPayment} LE</Text>
             </View>
           </View>
 
@@ -152,10 +190,14 @@ const CheckoutScreen = ({ onSuccess }) => {
           <View style={styles.payBtnContainer}>
             <TouchableOpacity
               style={styles.payBtn}
-              onPress={onSuccess}
+              onPress={async () => {
+                await clearCart();
+                onSuccess();
+              }}
               activeOpacity={0.85}
+              disabled={totalItems === 0}
             >
-              <Text style={styles.payBtnText}>Pay Now</Text>
+              <Text style={styles.payBtnText}>{t("checkout.pay_now", "Pay Now")}</Text>
             </TouchableOpacity>
           </View>
 
