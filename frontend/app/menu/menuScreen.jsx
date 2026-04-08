@@ -33,6 +33,7 @@ export default function MenuScreen({ onClose }) {
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const [languageMenuVisible, setLanguageMenuVisible] = useState(false);
+  const isRTL = i18n.dir(i18n.language) === "rtl";
 
   const menuItems = [
     {
@@ -189,21 +190,24 @@ export default function MenuScreen({ onClose }) {
     setLanguageMenuVisible(false);
   };
 
-  const slideAnim = React.useRef(new Animated.Value(-300)).current; // hidden left initially
+  const hiddenOffset = isRTL ? 300 : -300;
+  const slideAnim = React.useRef(new Animated.Value(hiddenOffset)).current;
 
   React.useEffect(() => {
-    // slide in from left when screen opens
+    slideAnim.setValue(hiddenOffset);
     Animated.timing(slideAnim, {
       toValue: 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
+  }, [hiddenOffset, slideAnim]);
 
+  React.useEffect(() => {
     loadCounts();
   }, []);
 
   return (
-    <View style={StyleSheet.absoluteFill}>
+    <View style={styles.container}>
       {/* DARK OVERLAY */}
       <TouchableOpacity
         style={styles.overlay}
@@ -213,7 +217,11 @@ export default function MenuScreen({ onClose }) {
 
       {/* SLIDING MENU */}
       <Animated.View
-        style={[styles.background, { transform: [{ translateX: slideAnim }] }]}
+        style={[
+          styles.background,
+          isRTL ? styles.backgroundRtl : styles.backgroundLtr,
+          { transform: [{ translateX: slideAnim }] },
+        ]}
       >
         <ImageBackground
           source={require("../../assets/images/beige-background.jpeg")}
@@ -222,9 +230,15 @@ export default function MenuScreen({ onClose }) {
         >
           <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
-              <View style={styles.headerSpacer} />
+              <TouchableOpacity
+                style={styles.headerButton}
+                onPress={onClose}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={24} color={MUTED} />
+              </TouchableOpacity>
               <Text style={styles.headerTitle}>{t("menu.title")}</Text>
-              <View style={styles.headerSpacer} />
+              <View style={styles.headerButton} />
             </View>
 
             <ScrollView
@@ -316,15 +330,25 @@ const MUTED = "#9A8C7A";
 const DIVIDER = "rgba(180,160,130,0.3)";
 
 const styles = StyleSheet.create({
+  container: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1000,
+    elevation: 1000,
+  },
   background: {
     position: "absolute",
     top: 0,
     bottom: 0,
-    left: 0,
     width: 350, // drawer width
     backgroundColor: "transparent",
-    zIndex: 999,
+    zIndex: 2,
     elevation: 20,
+  },
+  backgroundLtr: {
+    left: 0,
+  },
+  backgroundRtl: {
+    right: 0,
   },
   safeArea: { flex: 1 },
   header: {
@@ -334,7 +358,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
   },
-  headerSpacer: { width: 32 },
+  headerButton: {
+    width: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   headerTitle: {
     fontSize: 17,
     fontWeight: "500",
@@ -421,5 +449,6 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.3)",
+    zIndex: 1,
   },
 });

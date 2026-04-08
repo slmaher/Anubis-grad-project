@@ -99,7 +99,9 @@ export default function Community() {
             return post;
           }
 
-          const currentLikedBy = Array.isArray(post.likedBy) ? post.likedBy : [];
+          const currentLikedBy = Array.isArray(post.likedBy)
+            ? post.likedBy
+            : [];
           const filteredLikedBy = currentLikedBy.filter(
             (likedUser) => normalizeId(likedUser) !== currentUserId,
           );
@@ -162,7 +164,9 @@ export default function Community() {
     }
   };
 
-  const activePost = posts.find((post) => (post._id || post.id) === activePostId);
+  const activePost = posts.find(
+    (post) => (post._id || post.id) === activePostId,
+  );
   const activePostComments = Array.isArray(activePost?.comments)
     ? activePost.comments
     : [];
@@ -396,7 +400,9 @@ export default function Community() {
                           : "heart-outline"
                       }
                       size={18}
-                      color={isPostLikedByCurrentUser(post) ? "#d43f3a" : "#666"}
+                      color={
+                        isPostLikedByCurrentUser(post) ? "#d43f3a" : "#666"
+                      }
                     />
                     <Text style={styles.actionCount}>{post.likes || 0}</Text>
                   </View>
