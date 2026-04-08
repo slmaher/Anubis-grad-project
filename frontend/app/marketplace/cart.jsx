@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,14 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useFocusEffect } from '@react-navigation/native';
+import {
+  getCartItems,
+  updateCartItemQuantity,
+  getCartTotals,
+} from '../api/cartStorage';
 
 const DIVIDER = '#E8E8E8';
 const GRAY_BG = '#F2F2F2';
@@ -16,37 +24,6 @@ const DARK_FOOTER = '#5A6473';
 const ICON_GRAY = '#9B9B9B';
 const PRICE_GRAY = '#AAAAAA';
 const HEART_COLOR = '#CCCCCC';
-
-const initialItems = [
-  {
-    id: '1',
-    name: 'Lorem',
-    price: '$225.00',
-    quantity: 1,
-    image: 'https://i.imgur.com/QkIa5tT.jpeg',
-  },
-  {
-    id: '2',
-    name: 'Lorem',
-    price: '$225.00',
-    quantity: 1,
-    image: require('../../assets/images/keychain.jpeg'),
-  },
-  {
-    id: '3',
-    name: 'Lorem',
-    price: '$225.00',
-    quantity: 1,
-    image: 'https://i.imgur.com/Qphac99.jpeg',
-  },
-  {
-    id: '4',
-    name: 'Lorem',
-    price: '$225.00',
-    quantity: 1,
-    image: 'https://i.imgur.com/QkIa5tT.jpeg',
-  },
-];
 
 const HomeIcon = () => (
   <Text style={{ fontSize: 20, color: ICON_GRAY }}>⌂</Text>
@@ -60,30 +37,45 @@ const HeartIconNav = () => (
   <Text style={{ fontSize: 18, color: ICON_GRAY }}>♡</Text>
 );
 
-const CartIconNav = () => (
+const CartIconNav = ({ count }) => (
   <View style={styles.cartIconWrapper}>
     <Text style={{ fontSize: 18, color: '#FFFFFF' }}>🛒</Text>
     <View style={styles.cartBadge}>
-      <Text style={styles.cartBadgeText}>-</Text>
+      <Text style={styles.cartBadgeText}>{count > 99 ? '99+' : count}</Text>
     </View>
   </View>
 );
 
 export default function ShoppingBagScreen() {
   const router = useRouter();
-  const [items, setItems] = useState(initialItems);
+  const { t } = useTranslation();
+  const [items, setItems] = React.useState([]);
 
-  const updateQty = (id, delta) => {
-    setItems(prev =>
-      prev.map(item =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-          : item,
-      ),
-    );
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
+
+      const loadItems = async () => {
+        const storedItems = await getCartItems();
+        if (isActive) {
+          setItems(storedItems);
+        }
+      };
+
+      loadItems();
+
+      return () => {
+        isActive = false;
+      };
+    }, []),
+  );
+
+  const updateQty = async (id, delta) => {
+    const updatedItems = await updateCartItemQuantity(id, delta);
+    setItems(updatedItems);
   };
 
-  const totalPrice = 100;
+  const { totalItems, totalPrice } = getCartTotals(items);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -100,9 +92,9 @@ export default function ShoppingBagScreen() {
             >
               <Text style={styles.backArrow}>‹</Text>
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Your cart</Text>
+            <Text style={styles.headerTitle}>{t('cart.title', 'Your cart')}</Text>
             <TouchableOpacity style={styles.profileBtn}>
-              <Text style={styles.profileIcon}>👤</Text>
+              <MaterialCommunityIcons name="account" size={16} color="#666" />
             </TouchableOpacity>
           </View>
 
@@ -115,13 +107,13 @@ export default function ShoppingBagScreen() {
             {items.map(item => (
               <View key={item.id} style={styles.cartCard}>
                 <Image
-                  source={typeof item.image === 'string' ? { uri: item.image } : item.image}
+                  source={item.image}
                   style={styles.productImage}
                   resizeMode="cover"
                 />
                 <View style={styles.cardContent}>
-                  <Text style={styles.productName}>{item.name}</Text>
-                  <Text style={styles.productPrice}>{item.price}</Text>
+                  <Text style={styles.productName}>{t(item.nameKey, item.nameKey)}</Text>
+                  <Text style={styles.productPrice}>{item.price} LE</Text>
                   <TouchableOpacity>
                     <Text style={styles.heartIcon}>♡</Text>
                   </TouchableOpacity>
@@ -143,20 +135,34 @@ export default function ShoppingBagScreen() {
                 </View>
               </View>
             ))}
+
+            {items.length === 0 && (
+              <View style={styles.emptyState}>
+                <MaterialCommunityIcons
+                  name="cart-outline"
+                  size={28}
+                  color="#8B7B6C"
+                />
+                <Text style={styles.emptyStateText}>
+                  {t('cart.empty', 'Your cart is empty')}
+                </Text>
+              </View>
+            )}
           </ScrollView>
 
           {/* Footer */}
           <View style={styles.footer}>
             <View style={styles.footerTop}>
               <View>
-                <Text style={styles.totalLabel}>Total</Text>
-                <Text style={styles.totalAmount}>$ {totalPrice}</Text>
+                <Text style={styles.totalLabel}>{t('cart.total', 'Total')}</Text>
+                <Text style={styles.totalAmount}>{totalPrice} LE</Text>
               </View>
               <TouchableOpacity
                 style={styles.checkoutBtn}
                 onPress={() => router.push('/marketplace/checkout')}
+                disabled={totalItems === 0}
               >
-                <Text style={styles.checkoutText}>CHECK OUT</Text>
+                <Text style={styles.checkoutText}>{t('cart.checkout', 'CHECK OUT')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -181,7 +187,7 @@ export default function ShoppingBagScreen() {
                 style={[styles.navItem, styles.navItemActive]}
                 onPress={() => router.push("/marketplace")}
               >
-                <CartIconNav />
+                <CartIconNav count={totalItems} />
               </TouchableOpacity>
             </View>
           </View>
@@ -415,5 +421,16 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 8,
     fontWeight: '700',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 30,
+    gap: 8,
+  },
+  emptyStateText: {
+    fontSize: 13,
+    color: '#777',
+    fontWeight: '500',
   },
 });
