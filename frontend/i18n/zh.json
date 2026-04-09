@@ -12,6 +12,21 @@
     "grand_museum": "大埃及博物馆",
     "egyptian_museum": "埃及博物馆"
   },
+  "tickets": {
+    "title": "门票",
+    "today_label": "今天是 {{date}}",
+    "welcome": "欢迎！",
+    "search_placeholder": "按博物馆或时间搜索",
+    "buy_ticket": "购买门票",
+    "no_results": "没有符合搜索条件的门票",
+    "museums": {
+      "grand_egyptian_museum": "大埃及博物馆",
+      "egyptian_museum": "埃及博物馆",
+      "museum_of_islamic_art": "伊斯兰艺术博物馆",
+      "coptic_museum": "科普特博物馆",
+      "national_museum_of_egyptian_civilization": "埃及文明国家博物馆"
+    }
+  },
   "menu": {
     "title": "菜单",
     "setting": "设置",

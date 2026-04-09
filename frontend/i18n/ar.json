@@ -12,6 +12,21 @@
     "grand_museum": "المتحف المصري الكبير",
     "egyptian_museum": "المتحف المصري"
   },
+  "tickets": {
+    "title": "التذاكر",
+    "today_label": "تاريخ اليوم {{date}}",
+    "welcome": "مرحباً!",
+    "search_placeholder": "ابحث باسم المتحف أو الوقت",
+    "buy_ticket": "احجز تذكرة",
+    "no_results": "لا توجد نتائج مطابقة للبحث",
+    "museums": {
+      "grand_egyptian_museum": "المتحف المصري الكبير",
+      "egyptian_museum": "المتحف المصري",
+      "museum_of_islamic_art": "متحف الفن الإسلامي",
+      "coptic_museum": "المتحف القبطي",
+      "national_museum_of_egyptian_civilization": "المتحف القومي للحضارة المصرية"
+    }
+  },
   "menu": {
     "title": "القائمة",
     "setting": "الإعدادات",

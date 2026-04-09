@@ -12,6 +12,21 @@
     "grand_museum": "Grand Egyptian Museum",
     "egyptian_museum": "Egyptian Museum"
   },
+  "tickets": {
+    "title": "Tickets",
+    "today_label": "Today's {{date}}",
+    "welcome": "Welcome!",
+    "search_placeholder": "Search by museum or time",
+    "buy_ticket": "Buy ticket",
+    "no_results": "No tickets match your search",
+    "museums": {
+      "grand_egyptian_museum": "Grand Egyptian Museum",
+      "egyptian_museum": "Egyptian Museum",
+      "museum_of_islamic_art": "Museum of Islamic Art",
+      "coptic_museum": "Coptic Museum",
+      "national_museum_of_egyptian_civilization": "National Museum of Egyptian Civilization"
+    }
+  },
   "menu": {
     "title": "Menu",
     "setting": "Setting",
