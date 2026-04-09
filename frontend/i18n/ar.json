@@ -27,6 +27,20 @@
       "national_museum_of_egyptian_civilization": "المتحف القومي للحضارة المصرية"
     }
   },
+  "tickets_checkout": {
+    "title": "إتمام الحجز",
+    "hot_choice": "الخيار المميز",
+    "detail": "تفاصيل",
+    "details": "التفاصيل ˄",
+    "continue": "متابعة →",
+    "total": "الإجمالي",
+    "default_museum_name": "المتحف",
+    "default_museum_time": "10:00 ص",
+    "silver_ticket": "التذكرة الفضية",
+    "silver_description": "الموقع العلوي في القاعة، رؤية كاملة",
+    "gold_ticket": "التذكرة الذهبية",
+    "gold_description": "الموقع الأوسط في القاعة، على المسرح"
+  },
   "menu": {
     "title": "القائمة",
     "setting": "الإعدادات",

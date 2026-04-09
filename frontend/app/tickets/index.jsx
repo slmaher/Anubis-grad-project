@@ -1,4 +1,12 @@
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ImageBackground } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  ImageBackground,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -88,7 +96,7 @@ export default function Tickets() {
         museumId: museum.id,
         museumName: t(`tickets.museums.${museum.nameKey}`),
         museumTime: museum.time,
-      }
+      },
     });
   };
 
@@ -96,14 +104,22 @@ export default function Tickets() {
     const translatedName = t(`tickets.museums.${museum.nameKey}`);
     const q = searchQuery.trim().toLowerCase();
     if (!q) return true;
-    return translatedName.toLowerCase().includes(q) || museum.time.toLowerCase().includes(q);
+    return (
+      translatedName.toLowerCase().includes(q) ||
+      museum.time.toLowerCase().includes(q)
+    );
   });
 
   return (
     <View style={styles.backgroundLayer}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.back")}
+          >
             <MaterialCommunityIcons name="arrow-left" size={22} color={ACCENT} />
           </TouchableOpacity>
 
@@ -134,7 +150,12 @@ export default function Tickets() {
 
           <View style={styles.museumsContainer}>
             {filteredMuseums.map((museum) => (
-              <View key={museum.id} style={styles.museumCardWrap}>
+              <TouchableOpacity
+                key={museum.id}
+                style={styles.museumCardWrap}
+                activeOpacity={0.92}
+                onPress={() => handleBuyTicket(museum)}
+              >
                 <ImageBackground
                   source={museum.image}
                   style={styles.museumCardBackground}
@@ -145,10 +166,19 @@ export default function Tickets() {
                       <TouchableOpacity
                         style={styles.arrowButton}
                         onPress={() => handleBuyTicket(museum)}
+                        hitSlop={10}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("tickets.buy_ticket")}
                       >
-                        <MaterialCommunityIcons name="arrow-right" size={18} color="#fff" />
+                        <MaterialCommunityIcons
+                          name="arrow-right"
+                          size={18}
+                          color="#fff"
+                        />
                       </TouchableOpacity>
-                      <Text style={styles.buyTicketText}>{t("tickets.buy_ticket")}</Text>
+                      <Text style={styles.buyTicketText}>
+                        {t("tickets.buy_ticket")}
+                      </Text>
                     </View>
 
                     <View style={styles.museumInfoContainer}>
@@ -163,7 +193,7 @@ export default function Tickets() {
                     </View>
                   </View>
                 </ImageBackground>
-              </View>
+              </TouchableOpacity>
             ))}
 
             {filteredMuseums.length === 0 && (
@@ -196,7 +226,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 25,
+    paddingTop: 20,
     paddingHorizontal: 18,
     paddingBottom: 16,
     backgroundColor: "transparent",
@@ -213,7 +243,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
-    
+
     shadowRadius: 6,
     elevation: 3,
   },
@@ -235,7 +265,7 @@ const styles = StyleSheet.create({
   },
   welcomeSection: {
     marginBottom: 10,
-    paddingHorizontal:2,
+    paddingHorizontal: 2,
   },
   dateText: {
     fontSize: 14,
@@ -251,7 +281,7 @@ const styles = StyleSheet.create({
     borderColor: BORDER,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    marginBottom: 20,
+    marginBottom: 10,
     gap: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },

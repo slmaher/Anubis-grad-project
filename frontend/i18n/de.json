@@ -27,6 +27,20 @@
       "national_museum_of_egyptian_civilization": "Nationalmuseum der Ägyptischen Zivilisation"
     }
   },
+  "tickets_checkout": {
+    "title": "Kasse",
+    "hot_choice": "Top-Auswahl",
+    "detail": "Details",
+    "details": "Details ˄",
+    "continue": "→ Weiter",
+    "total": "Gesamt",
+    "default_museum_name": "Museum",
+    "default_museum_time": "10:00 AM",
+    "silver_ticket": "Silberticket",
+    "silver_description": "Oberer Platz im Auditorium, volle Sicht",
+    "gold_ticket": "Goldticket",
+    "gold_description": "Zentraler Platz im Auditorium, auf der Bühne"
+  },
   "menu": {
     "title": "Menü",
     "setting": "Einstellung",
