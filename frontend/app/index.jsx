@@ -1,15 +1,22 @@
 import { View, Text, Image, StyleSheet } from "react-native";
 import { useEffect } from "react";
-import { useRouter } from "expo-router";
+import { useRouter, useRootNavigationState } from "expo-router";
 
 export default function Splash() {
   const router = useRouter();
+  const navigationState = useRootNavigationState();
 
   useEffect(() => {
-    setTimeout(() => {
+    if (!navigationState?.key) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
       router.replace("/onboarding/one");
     }, 2500);
-  }, []);
+
+    return () => clearTimeout(timeoutId);
+  }, [navigationState?.key, router]);
 
   return (
     <View style={styles.container}>

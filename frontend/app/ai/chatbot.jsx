@@ -14,58 +14,29 @@ import { useRouter } from "expo-router";
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "../../i18n/i18n";
+import { api } from "../api/client";
 
-// ─── Ollama config ─────────────────────────────────────────────────────────────
-const OLLAMA_URL = "http://localhost:11434/api/chat";
-const MODEL = "llama3.1:8b";
+async function callGeminiViaBackend(chatHistory, langCode) {
+  const history = chatHistory.map((msg) => ({
+    sender: msg.sender,
+    text: msg.text,
+  }));
 
-// Language → system-message instruction
-const LANGUAGE_INSTRUCTIONS = {
-  ar: "Always respond in Arabic (العربية). If the user writes in any other language, still reply in Arabic.",
-  en: "Always respond in English.",
-  fr: "Always respond in French (Français). If the user writes in any other language, still reply in French.",
-  de: "Always respond in German (Deutsch). If the user writes in any other language, still reply in German.",
-  zh: "Always respond in Simplified Chinese (简体中文). If the user writes in any other language, still reply in Chinese.",
-};
-
-function buildSystemMessage(langCode) {
-  const instruction =
-    LANGUAGE_INSTRUCTIONS[langCode] || LANGUAGE_INSTRUCTIONS["en"];
-  return {
-    role: "system",
-    content: `You are Anubis, a friendly and knowledgeable AI assistant for an Egyptian museum tour app.
-You help visitors with museum information, exhibits, tickets, directions, opening hours, events, and Egyptian culture/history.
-Be concise, helpful, and engaging. ${instruction}`,
-  };
+  const result = await api.getAiChatReply(history, langCode);
+  return result?.data?.reply ?? "";
 }
 
-async function callOllama(chatHistory, langCode) {
-  const systemMessage = buildSystemMessage(langCode);
+function buildLocalFallbackReply(t) {
+  const quotaLine = t(
+    "ai_chat.quota_message",
+    "Gemini quota is currently exceeded. Using local assistant answers for now.",
+  );
+  const defaultLine = t(
+    "ai_chat.responses.default",
+    "I can help with museums, tickets, directions, and recommendations.",
+  );
 
-  const ollamaMessages = [
-    systemMessage,
-    ...chatHistory.map((msg) => ({
-      role: msg.sender === "user" ? "user" : "assistant",
-      content: msg.text,
-    })),
-  ];
-
-  const response = await fetch(OLLAMA_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: ollamaMessages,
-      stream: false,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Ollama API error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.message?.content ?? "";
+  return `${quotaLine}\n\n${defaultLine}`;
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
@@ -107,7 +78,7 @@ export default function AIChatbot() {
     try {
       // Detect active language (strip region suffix, e.g. "ar-EG" → "ar")
       const currentLang = (i18n.language || "en").split("-")[0];
-      const aiText = await callOllama(updatedHistory, currentLang);
+      const aiText = await callGeminiViaBackend(updatedHistory, currentLang);
 
       setMessages((prev) => [
         ...prev,
@@ -119,16 +90,23 @@ export default function AIChatbot() {
         },
       ]);
     } catch (error) {
-      console.error("Ollama error:", error);
+      console.error("Gemini chat error:", error);
+
+      const isQuotaError =
+        error?.status === 429 ||
+        String(error?.message || "").toLowerCase().includes("quota");
+
+      const messageText = isQuotaError
+        ? buildLocalFallbackReply(t)
+        : t("ai_chat.error_message") || "Something went wrong. Please try again.";
+
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
-          text:
-            t("ai_chat.error_message") ||
-            "Something went wrong. Please try again.",
+          text: messageText,
           sender: "ai",
-          isError: true,
+          isError: !isQuotaError,
           timestamp: new Date(),
         },
       ]);
