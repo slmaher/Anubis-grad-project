@@ -27,6 +27,20 @@
       "national_museum_of_egyptian_civilization": "埃及文明国家博物馆"
     }
   },
+  "tickets_checkout": {
+    "title": "结账",
+    "hot_choice": "热门选择",
+    "detail": "详情",
+    "details": "详情 ˄",
+    "continue": "继续 →",
+    "total": "合计",
+    "default_museum_name": "博物馆",
+    "default_museum_time": "10:00 AM",
+    "silver_ticket": "银票",
+    "silver_description": "礼堂上层位置，视野完整",
+    "gold_ticket": "金票",
+    "gold_description": "礼堂中央位置，靠近舞台"
+  },
   "menu": {
     "title": "菜单",
     "setting": "设置",
