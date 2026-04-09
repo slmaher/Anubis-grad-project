@@ -10,10 +10,10 @@ type ChatHistoryItem = {
   text: string;
 };
 
-type GeminiApiResponse = {
-  candidates?: Array<{
-    content?: {
-      parts?: Array<{ text?: string }>;
+type GroqApiResponse = {
+  choices?: Array<{
+    message?: {
+      content?: string;
     };
   }>;
   error?: {
@@ -29,47 +29,45 @@ const LANGUAGE_INSTRUCTIONS: Record<string, string> = {
   zh: 'Always respond in Simplified Chinese (简体中文). If the user writes in any other language, still reply in Chinese.'
 };
 
-// Models available for this API key (verified via /v1beta/models endpoint)
-// gemini-2.5-flash is the most capable and has been working; try it first
-const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash-001', 'gemini-2.0-flash', 'gemini-2.0-flash-lite'];
+const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama3-70b-8192', 'mixtral-8x7b-32768'];
 
-function requestGemini(prompt: string): Promise<string> {
+function requestGroq(prompt: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const apiKey = env.geminiApiKey;
+    const apiKey = env.groqApiKey;
 
     if (!apiKey) {
-      const error = new Error('Gemini API key is not configured on backend');
+      const error = new Error('Groq API key is not configured on backend');
       (error as Error & { status?: number }).status = 500;
       reject(error);
       return;
     }
 
-    const body = JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.6,
-        maxOutputTokens: 700
-      }
-    });
-
     const tryModel = (modelIndex: number) => {
-      if (modelIndex >= GEMINI_MODELS.length) {
-        const error = new Error('All Gemini models are currently quota-limited. Please try again later or upgrade your Gemini plan.');
+      if (modelIndex >= GROQ_MODELS.length) {
+        const error = new Error('All Groq models failed or are quota-limited. Please try again later.');
         (error as Error & { status?: number }).status = 429;
         reject(error);
         return;
       }
 
-      const model = GEMINI_MODELS[modelIndex];
-      console.log(`[Gemini] Trying model: ${model}`);
+      const model = GROQ_MODELS[modelIndex];
+      console.log(`[Groq] Trying model: ${model}`);
+
+      const body = JSON.stringify({
+        model: model,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.6,
+        max_tokens: 700
+      });
 
       const req = https.request(
         {
-          hostname: 'generativelanguage.googleapis.com',
-          path: `/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+          hostname: 'api.groq.com',
+          path: '/openai/v1/chat/completions',
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Length': Buffer.byteLength(body)
           }
         },
@@ -83,23 +81,22 @@ function requestGemini(prompt: string): Promise<string> {
           res.on('end', () => {
             const statusCode = res.statusCode ?? 500;
 
-            // Fallback to next model on Not Found OR quota exceeded (429)
             if (statusCode === 404 || statusCode === 429) {
-              console.log(`[Gemini] Model ${model} returned ${statusCode}, trying next model...`);
+              console.log(`[Groq] Model ${model} returned ${statusCode}, trying next model...`);
               tryModel(modelIndex + 1);
               return;
             }
 
             if (statusCode < 200 || statusCode >= 300) {
               try {
-                const parsed = JSON.parse(data) as GeminiApiResponse;
-                const message = parsed?.error?.message || `Gemini API request failed with status ${statusCode}`;
+                const parsed = JSON.parse(data) as GroqApiResponse;
+                const message = parsed?.error?.message || `Groq API request failed with status ${statusCode}`;
                 const error = new Error(message);
                 (error as Error & { status?: number }).status = 502;
                 reject(error);
                 return;
               } catch {
-                const error = new Error(`Gemini API request failed with status ${statusCode}`);
+                const error = new Error(`Groq API request failed with status ${statusCode}`);
                 (error as Error & { status?: number }).status = 502;
                 reject(error);
                 return;
@@ -107,11 +104,11 @@ function requestGemini(prompt: string): Promise<string> {
             }
 
             try {
-              const parsed = JSON.parse(data) as GeminiApiResponse;
-              const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+              const parsed = JSON.parse(data) as GroqApiResponse;
+              const text = parsed?.choices?.[0]?.message?.content;
 
               if (!text || typeof text !== 'string') {
-                const error = new Error('Gemini returned an empty response');
+                const error = new Error('Groq returned an empty response');
                 (error as Error & { status?: number }).status = 502;
                 reject(error);
                 return;
@@ -119,7 +116,7 @@ function requestGemini(prompt: string): Promise<string> {
 
               resolve(text.trim());
             } catch {
-              const error = new Error('Failed to parse Gemini response');
+              const error = new Error('Failed to parse Groq response');
               (error as Error & { status?: number }).status = 502;
               reject(error);
             }
@@ -128,7 +125,7 @@ function requestGemini(prompt: string): Promise<string> {
       );
 
       req.on('error', (networkError) => {
-        const error = new Error(`Gemini network error: ${networkError.message}`);
+        const error = new Error(`Groq network error: ${networkError.message}`);
         (error as Error & { status?: number }).status = 502;
         reject(error);
       });
@@ -173,7 +170,7 @@ ${transcript}
 
 Now reply as the assistant to the latest user message.`;
 
-    const reply = await requestGemini(prompt);
+    const reply = await requestGroq(prompt);
 
     return res.json({ success: true, data: { reply } });
   } catch (err) {
