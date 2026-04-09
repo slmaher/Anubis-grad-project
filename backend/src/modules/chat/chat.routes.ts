@@ -2,7 +2,7 @@ import { NextFunction, Response, Router } from 'express';
 
 import { MessageModel } from './message.model';
 import { UserModel } from '../users/user.model';
-import { CreateMessageDto, MarkAsReadDto } from './message.dto';
+import { CreateMessageDto } from './message.dto';
 import { authenticate, AuthenticatedRequest } from '../../common/middleware/auth';
 import { validateBody } from '../../common/middleware/validationMiddleware';
 import { SocketService } from './socket.service';

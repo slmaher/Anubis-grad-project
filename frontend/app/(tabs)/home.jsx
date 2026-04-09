@@ -45,7 +45,11 @@ export default function Home() {
               </TouchableOpacity>
 
               <View style={styles.searchBar}>
-                <MaterialCommunityIcons name="magnify" size={18} color="#857565" />
+                <MaterialCommunityIcons
+                  name="magnify"
+                  size={18}
+                  color="#857565"
+                />
                 <TextInput
                   style={styles.searchInput}
                   placeholder={t("home.search")}
@@ -144,7 +148,11 @@ export default function Home() {
                   onPress={() => router.push("/(tabs)/explore")}
                 >
                   <Text style={styles.seeAll}>{t("home.see_all")}</Text>
-                  <MaterialCommunityIcons name="arrow-left" size={14} color="#685440" />
+                  <MaterialCommunityIcons
+                    name="arrow-left"
+                    size={14}
+                    color="#685440"
+                  />
                 </TouchableOpacity>
               </View>
 

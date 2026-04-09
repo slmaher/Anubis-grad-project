@@ -132,6 +132,12 @@ export const api = {
       token,
     });
   },
+  getAiChatReply(history, language) {
+    return apiRequest("/api/assistant/chat", {
+      method: "POST",
+      body: { history, language },
+    });
+  },
 
   // Friends
   sendFriendRequest(receiverId, token) {

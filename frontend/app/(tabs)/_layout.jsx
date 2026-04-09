@@ -1,13 +1,20 @@
 import { Tabs } from "expo-router";
-import { View, TouchableOpacity, Text, StyleSheet, Animated, useWindowDimensions } from "react-native";
+import {
+  View,
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  Animated,
+  useWindowDimensions,
+} from "react-native";
 import { useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import Feather from '@expo/vector-icons/Feather';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import AntDesign from '@expo/vector-icons/AntDesign';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import Feather from "@expo/vector-icons/Feather";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 const TAB_COUNT = 5;
 
@@ -39,16 +46,20 @@ function CustomTabBar({ state, descriptors, navigation }) {
     const color = "#2C2010";
 
     switch (routeName) {
-      case 'home':
+      case "home":
         return <Feather name="home" size={iconSize} color={color} />;
-      case 'explore':
+      case "explore":
         return <MaterialIcons name="explore" size={iconSize} color={color} />;
-      case 'scan':
+      case "scan":
         return <Ionicons name="scan" size={iconSize} color={color} />;
-      case 'events':
-        return <MaterialIcons name="event-available" size={iconSize} color={color} />;
-      case 'community':
-        return <FontAwesome name="group" size={communityIconSize} color={color} />;
+      case "events":
+        return (
+          <MaterialIcons name="event-available" size={iconSize} color={color} />
+        );
+      case "community":
+        return (
+          <FontAwesome name="group" size={communityIconSize} color={color} />
+        );
       default:
         return null;
     }
@@ -56,39 +67,51 @@ function CustomTabBar({ state, descriptors, navigation }) {
 
   const getLabel = (routeName) => {
     switch (routeName) {
-      case 'home': return t("tabs.home");
-      case 'explore': return t("tabs.explore");
-      case 'scan': return t("tabs.scan");
-      case 'events': return t("tabs.events");
-      case 'community': return t("tabs.community");
-      default: return '';
+      case "home":
+        return t("tabs.home");
+      case "explore":
+        return t("tabs.explore");
+      case "scan":
+        return t("tabs.scan");
+      case "events":
+        return t("tabs.events");
+      case "community":
+        return t("tabs.community");
+      default:
+        return "";
     }
   };
 
   const currentRoute = state.routes[state.index].name;
 
-const hideTabBar = currentRoute === 'scan' || currentRoute === 'community' || currentRoute === 'scan-result';
+  const hideTabBar =
+    currentRoute === "scan" ||
+    currentRoute === "community" ||
+    currentRoute === "scan-result";
 
-useEffect(() => {
+  useEffect(() => {
+    if (hideTabBar) {
+      Animated.spring(bubblePosition, {
+        toValue: -1, // move bubble offscreen smoothly
+        useNativeDriver: true,
+        friction: 7,
+        tension: 60,
+      }).start();
+    }
+  }, [hideTabBar]);
+
   if (hideTabBar) {
-    Animated.spring(bubblePosition, {
-      toValue: -1, // move bubble offscreen smoothly
-      useNativeDriver: true,
-      friction: 7,
-      tension: 60,
-    }).start();
+    return null;
   }
-}, [hideTabBar]);
-
-if (hideTabBar) {
-  return null;
-}
-
 
   return (
-    <View style={[styles.tabBarContainer, { left: horizontalInset, right: horizontalInset }] }>
-      <View style={[styles.tabBar, { width: tabBarWidth }] }>
-
+    <View
+      style={[
+        styles.tabBarContainer,
+        { left: horizontalInset, right: horizontalInset },
+      ]}
+    >
+      <View style={[styles.tabBar, { width: tabBarWidth }]}>
         {/* 🔥 SMOOTH MOVING BUBBLE */}
         <Animated.View
           style={[
@@ -117,10 +140,10 @@ if (hideTabBar) {
           const onPress = () => {
             if (route.name === "events") {
               router.push("/eventScreen/eventScreen"); // <- navigate to event screen
-              } else if (!isFocused) {
-                navigation.navigate(route.name);
-              }
-            };
+            } else if (!isFocused) {
+              navigation.navigate(route.name);
+            }
+          };
 
           return (
             <TouchableOpacity
@@ -147,7 +170,6 @@ if (hideTabBar) {
             </TouchableOpacity>
           );
         })}
-
       </View>
     </View>
   );
@@ -226,12 +248,12 @@ const styles = StyleSheet.create({
 
   tabLabel: {
     fontWeight: "600",
-      color: '#2C2010',
+    color: "#2C2010",
     marginTop: 4,
   },
 
   tabLabelActive: {
-      color: '#2C2010',
+    color: "#2C2010",
     fontWeight: "700",
   },
 });
