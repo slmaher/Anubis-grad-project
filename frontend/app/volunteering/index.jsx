@@ -275,7 +275,9 @@ export default function VolunteeringScreen() {
         }
       } catch {
         if (isMounted) {
-          setFeedbackMessage(t("volunteering_screen.feedback.live_data_failed"));
+          setFeedbackMessage(
+            t("volunteering_screen.feedback.live_data_failed"),
+          );
         }
       } finally {
         if (isMounted) {
@@ -292,7 +294,8 @@ export default function VolunteeringScreen() {
   }, []);
 
   const handleAction = (item) => {
-    const parsedAmount = Number.parseFloat(String(item.amount).split(" ")[0]) || 100;
+    const parsedAmount =
+      Number.parseFloat(String(item.amount).split(" ")[0]) || 100;
 
     router.push({
       pathname: "/marketplace/checkout",
@@ -331,7 +334,9 @@ export default function VolunteeringScreen() {
           prev.includes(item.id) ? prev : [...prev, item.id],
         );
         setFeedbackMessage(
-          t("volunteering_screen.feedback.already_joined", { title: item.title }),
+          t("volunteering_screen.feedback.already_joined", {
+            title: item.title,
+          }),
         );
         return;
       }
@@ -490,7 +495,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal:15,
+    paddingHorizontal: 15,
   },
   header: {
     marginTop: 20,

@@ -16,6 +16,11 @@ import { api } from "../api/client";
 import { getAuthToken } from "../api/authStorage";
 import { useChatSocket } from "../hooks/useChatSocket";
 
+const getInitial = (name) => {
+  if (!name || typeof name !== "string") return "U";
+  return name.trim().charAt(0).toUpperCase() || "U";
+};
+
 // Swipeable Message Item Component
 const SwipeableMessageItem = ({ item, onPress, onDelete }) => {
   const translateX = useRef(new Animated.Value(0)).current;
@@ -100,7 +105,15 @@ const SwipeableMessageItem = ({ item, onPress, onDelete }) => {
           onPress={handlePress}
           activeOpacity={0.7}
         >
-          <Image source={item.avatar} style={styles.messageAvatar} />
+          {item.avatar ? (
+            <Image source={{ uri: item.avatar }} style={styles.messageAvatar} />
+          ) : (
+            <View style={styles.messageAvatarFallback}>
+              <Text style={styles.messageAvatarFallbackText}>
+                {getInitial(item.name)}
+              </Text>
+            </View>
+          )}
 
           <View style={styles.messageContent}>
             <View style={styles.messageHeader}>
@@ -123,40 +136,13 @@ export default function MessagesList() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const defaultFriends = [
-    {
-      id: 1,
-      name: "Benjamin",
-      image: require("../../assets/images/profile-benjamin.png"),
-    },
-    {
-      id: 2,
-      name: "Farita",
-      image: require("../../assets/images/profile-farita.png"),
-    },
-    {
-      id: 3,
-      name: "Marie",
-      image: require("../../assets/images/profile-marie.png"),
-    },
-    {
-      id: 4,
-      name: "Claire",
-      image: require("../../assets/images/profile-claire.png"),
-    },
-    {
-      id: 5,
-      name: "Alex",
-      image: require("../../assets/images/profile-alex.png"),
-    },
-  ];
-  const [friends, setFriends] = useState(defaultFriends);
+  const [friends, setFriends] = useState([]);
 
   const loadAcceptedFriends = useCallback(async () => {
     try {
       const token = await getAuthToken();
       if (!token) {
-        setFriends(defaultFriends);
+        setFriends([]);
         return;
       }
 
@@ -165,25 +151,17 @@ export default function MessagesList() {
         const mapped = response.data.map((item) => ({
           id: item.id || item._id,
           name: item.name,
-          image: item.avatar
-            ? { uri: item.avatar }
-            : require("../../assets/images/profile-farita.png"),
+          avatar: item.avatar || null,
         }));
 
-        const merged = [...mapped, ...defaultFriends].filter(
-          (friend, index, arr) =>
-            index ===
-            arr.findIndex((entry) => String(entry.id) === String(friend.id)),
-        );
-
-        setFriends(merged);
+        setFriends(mapped);
         return;
       }
 
-      setFriends(defaultFriends);
+      setFriends([]);
     } catch (error) {
       console.error("Failed to load friends:", error);
-      setFriends(defaultFriends);
+      setFriends([]);
     }
   }, []);
 
@@ -204,7 +182,7 @@ export default function MessagesList() {
                 minute: "2-digit",
               })
             : "",
-          avatar: require("../../assets/images/profile-farita.png"), // Default for now
+          avatar: conv.user?.avatar || null,
           unread: conv.unreadCount > 0,
         }));
         setConversations(formatted);
@@ -289,7 +267,13 @@ export default function MessagesList() {
           >
             {friends.map((friend) => (
               <TouchableOpacity key={friend.id} style={styles.friendAvatar}>
-                <Image source={friend.image} style={styles.friendImage} />
+                {friend.avatar ? (
+                  <Image source={{ uri: friend.avatar }} style={styles.friendImage} />
+                ) : (
+                  <View style={styles.friendFallbackAvatar}>
+                    <Text style={styles.friendFallbackText}>{getInitial(friend.name)}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -432,6 +416,21 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
   },
+  friendFallbackAvatar: {
+    width: 55,
+    height: 55,
+    borderRadius: 27.5,
+    borderWidth: 2,
+    borderColor: "#fff",
+    backgroundColor: "rgba(255, 255, 255, 0.22)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  friendFallbackText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "700",
+  },
   tabsContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -514,6 +513,20 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     marginRight: 15,
+  },
+  messageAvatarFallback: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 15,
+    backgroundColor: "#C4B5A0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  messageAvatarFallbackText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
   },
   messageContent: {
     flex: 1,
