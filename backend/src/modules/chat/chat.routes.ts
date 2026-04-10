@@ -170,7 +170,7 @@ chatRouter.get(
             isRead: false
           });
 
-          const otherUser = await UserModel.findById(otherUserId).select('name email');
+          const otherUser = await UserModel.findById(otherUserId).select('name email avatar');
 
           return {
             user: otherUser,
