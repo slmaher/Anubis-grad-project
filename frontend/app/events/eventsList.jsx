@@ -111,7 +111,9 @@ export default function EventsListScreen() {
       <StatusBar barStyle="dark-content" backgroundColor={LIGHT} />
 
       <SafeAreaView style={styles.safeArea}>
-        <View style={[styles.content, { paddingHorizontal: horizontalPadding }]}>
+        <View
+          style={[styles.content, { paddingHorizontal: horizontalPadding }]}
+        >
           <View style={styles.header}>
             <TouchableOpacity
               style={styles.headerIconButton}
@@ -119,7 +121,11 @@ export default function EventsListScreen() {
               accessibilityRole="button"
               accessibilityLabel={t("common.back")}
             >
-              <MaterialCommunityIcons name="chevron-left" size={26} color={DARK} />
+              <MaterialCommunityIcons
+                name="chevron-left"
+                size={26}
+                color={DARK}
+              />
             </TouchableOpacity>
           </View>
 
@@ -129,7 +135,9 @@ export default function EventsListScreen() {
                 key={label}
                 style={[styles.tabItem, index === 0 && styles.tabItemActive]}
               >
-                <Text style={[styles.tabText, index === 0 && styles.tabTextActive]}>
+                <Text
+                  style={[styles.tabText, index === 0 && styles.tabTextActive]}
+                >
                   {label}
                 </Text>
               </TouchableOpacity>
@@ -150,7 +158,9 @@ export default function EventsListScreen() {
             {EVENTS.map((item) => (
               <View key={item.id} style={styles.timelineItem}>
                 <View style={styles.dateRail}>
-                  <Text style={styles.date}>{formatEventDate(item.startsAt)}</Text>
+                  <Text style={styles.date}>
+                    {formatEventDate(item.startsAt)}
+                  </Text>
                   <View style={styles.line} />
                 </View>
 
