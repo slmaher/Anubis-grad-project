@@ -5,6 +5,17 @@ import { api } from "../api/client";
 import { getAuthToken, getAuthUser } from "../api/authStorage";
 import { useChatSocket } from "../hooks/useChatSocket";
 
+const DARK = "#2C2010";
+const MUTED = "#8B7B6C";
+const LIGHT = "#EDE6DF";
+const CARD_BG = "rgba(249,247,244,0.98)";
+const BORDER = "#E5DED5";
+
+const getInitial = (name) => {
+  if (!name || typeof name !== "string") return "U";
+  return name.trim().charAt(0).toUpperCase() || "U";
+};
+
 export default function ChatScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -16,6 +27,10 @@ export default function ChatScreen() {
 
   const contactName = params.contactName || "Contact";
   const contactId = params.contactId;
+  const contactAvatar =
+    typeof params.contactAvatar === "string" && params.contactAvatar !== "null"
+      ? params.contactAvatar
+      : null;
 
   const fetchMessages = useCallback(async () => {
     try {
@@ -104,24 +119,26 @@ export default function ChatScreen() {
     >
       {/* Brown Header (Empty with back button) */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* White Contact Info Section */}
-      <View style={styles.contactInfo}>
-        <Text style={styles.contactName}>{contactName}</Text>
-        
-        <TouchableOpacity style={styles.callButton}>
-          <Image
-            source={require("../../assets/images/phone-icon.png")}
-            style={styles.callIcon}
-          />
-        </TouchableOpacity>
+        <View style={styles.headerTopRow}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backIcon}>←</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.headerIdentityRow}>
+          {contactAvatar ? (
+            <Image source={{ uri: contactAvatar }} style={styles.headerAvatar} />
+          ) : (
+            <View style={styles.headerAvatarFallback}>
+              <Text style={styles.headerAvatarFallbackText}>{getInitial(contactName)}</Text>
+            </View>
+          )}
+          <Text style={styles.headerContactName} numberOfLines={1}>
+            {contactName}
+          </Text>
+        </View>
       </View>
 
       {/* Chat Messages */}
@@ -133,7 +150,7 @@ export default function ChatScreen() {
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
         {loading ? (
-          <ActivityIndicator size="small" color="#6B5B4F" />
+          <ActivityIndicator size="small" color={DARK} />
         ) : chatMessages.map((msg) => (
           <View key={msg.id} style={styles.messageWrapper}>
             {msg.images ? (
@@ -187,7 +204,7 @@ export default function ChatScreen() {
             placeholder="Type your message..."
             value={message}
             onChangeText={setMessage}
-            placeholderTextColor="#999"
+            placeholderTextColor={MUTED}
             multiline
           />
           <TouchableOpacity 
@@ -208,15 +225,20 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: LIGHT,
   },
   header: {
-    backgroundColor: "#6B5B4F",
-    paddingTop: 55,
-    paddingBottom: 20,
+    backgroundColor: "#756557",
+    paddingTop: 10,
+    paddingBottom: 14,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 25,
-    borderBottomRightRadius: 25,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
+  headerTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
   },
   backButton: {
     width: 40,
@@ -224,73 +246,89 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  headerIdentityRow: {
+    marginTop: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingHorizontal: 12,
+  },
+  headerAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.75)",
+  },
+  headerAvatarFallback: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255,255,255,0.22)",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerAvatarFallbackText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+  },
   backIcon: {
     fontSize: 28,
     color: "#fff",
   },
-  contactInfo: {
-    backgroundColor: "#F5F5F5",
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  contactName: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: "#2C3E50",
-    lineHeight: 28,
-  },
-  callButton: {
-    width: 45,
-    height: 45,
-    borderRadius: 22.5,
-    backgroundColor: "#E8E8E8",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  callIcon: {
-    width: 22,
-    height: 22,
-    tintColor: "#6B5B4F",
+  headerContactName: {
+    textAlign: "left",
+    fontSize: 30,
+    fontWeight: "700",
+    color: "#fff",
+    lineHeight: 34,
+    maxWidth: "78%",
   },
   messagesContainer: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: LIGHT,
   },
   messagesContent: {
     paddingHorizontal: 15,
-    paddingVertical: 20,
+    paddingVertical: 16,
     paddingBottom: 10,
   },
   messageWrapper: {
     marginBottom: 15,
   },
   messageBubble: {
-    maxWidth: "75%",
-    borderRadius: 18,
-    padding: 12,
+    maxWidth: "65%",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical:10,
+    borderWidth: 1,
   },
   receivedBubble: {
     alignSelf: "flex-start",
-    backgroundColor: "#E8E8E8",
+    backgroundColor: CARD_BG,
+    borderColor: BORDER,
     borderTopLeftRadius: 4,
   },
   sentBubble: {
     alignSelf: "flex-end",
-    backgroundColor: "#D9D9D9",
+    backgroundColor: "#756557",
+    borderColor: "#9A846E",
     borderTopRightRadius: 4,
   },
   messageText: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 17,
+    lineHeight: 24,
+    fontWeight: "500",
   },
   receivedText: {
-    color: "#000",
+    color: DARK,
   },
   sentText: {
-    color: "#000",
+    color: "#fff",
   },
   messageFooter: {
     flexDirection: "row",
@@ -301,15 +339,15 @@ const styles = StyleSheet.create({
   },
   messageTime: {
     fontSize: 11,
-    color: "#666",
+    color: MUTED,
     marginTop: 4,
   },
   sentTime: {
-    color: "#666",
+    color: "rgba(255,255,255,0.75)",
   },
   checkmark: {
     fontSize: 12,
-    color: "#4A90E2",
+    color: "#E7D3B4",
   },
   imagesContainer: {
     flexDirection: "row",
@@ -322,20 +360,22 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   inputContainer: {
-    backgroundColor: "#F5F5F5",
+    backgroundColor: LIGHT,
     paddingHorizontal: 15,
-    paddingVertical: 12,
-    paddingBottom: 25,
+    paddingVertical: 10,
+    paddingBottom: 10,
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
+    borderTopColor: BORDER,
   },
   inputWrapper: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    backgroundColor: "#fff",
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
+    alignItems: "center",
+    backgroundColor: CARD_BG,
+    borderRadius: 26,
+    borderWidth: 1,
+    borderColor: BORDER,
+    paddingHorizontal: 10,
+    paddingVertical: 0,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -347,19 +387,28 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 15,
-    color: "#000",
+    fontSize: 17,
+    color: DARK,
     maxHeight: 100,
-    paddingVertical: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
   },
   sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#6B5B4F",
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#756557",
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 8,
+    marginLeft: 6,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.16,
+    shadowRadius: 4,
+    elevation: 3,
   },
   sendIcon: {
     width: 20,
