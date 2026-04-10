@@ -2,7 +2,6 @@ import React, { useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import {
-  Alert,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -109,9 +108,15 @@ function VolunteerCard({ item, onPress, isJoined }) {
       >
         <View style={styles.btnRow}>
           {isJoined ? (
-            <MaterialCommunityIcons name="check-circle" size={14} color="#fff" />
+            <MaterialCommunityIcons
+              name="check-circle"
+              size={14}
+              color="#fff"
+            />
           ) : null}
-          <Text style={styles.primaryBtnText}>{isJoined ? "Joined" : "Sign up"}</Text>
+          <Text style={styles.primaryBtnText}>
+            {isJoined ? "Joined" : "Sign up"}
+          </Text>
         </View>
       </TouchableOpacity>
     </View>
@@ -136,7 +141,11 @@ function DonateCard({ item, onPress }) {
         <Text style={styles.amountValue}>{item.amount}</Text>
       </View>
 
-      <TouchableOpacity style={styles.primaryBtn} onPress={onPress} activeOpacity={0.9}>
+      <TouchableOpacity
+        style={styles.primaryBtn}
+        onPress={onPress}
+        activeOpacity={0.9}
+      >
         <Text style={styles.primaryBtnText}>Donate now</Text>
       </TouchableOpacity>
     </View>
@@ -148,37 +157,25 @@ export default function VolunteeringScreen() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("volunteer");
   const [joinedIds, setJoinedIds] = useState([]);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
 
   const activeData = useMemo(
     () => (activeTab === "volunteer" ? volunteerItems : donateItems),
-    [activeTab]
+    [activeTab],
   );
 
   const handleAction = (item) => {
-    const action = activeTab === "volunteer" ? "signed up" : "donated";
-    Alert.alert("Success", `You ${action} for \"${item.title}\".`);
+    setFeedbackMessage(`Thanks for supporting \"${item.title}\".`);
   };
 
   const handleVolunteerSignUp = (item) => {
     if (joinedIds.includes(item.id)) {
-      Alert.alert("Already joined", `You already joined \"${item.title}\".`);
+      setFeedbackMessage(`You already joined \"${item.title}\".`);
       return;
     }
 
-    Alert.alert(
-      "Confirm sign up",
-      `Do you want to join \"${item.title}\"?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Join",
-          onPress: () => {
-            setJoinedIds((prev) => [...prev, item.id]);
-            Alert.alert("Success", `You are now signed up for \"${item.title}\".`);
-          },
-        },
-      ]
-    );
+    setJoinedIds((prev) => [...prev, item.id]);
+    setFeedbackMessage(`You are now signed up for \"${item.title}\".`);
   };
 
   return (
@@ -194,7 +191,11 @@ export default function VolunteeringScreen() {
               accessibilityRole="button"
               accessibilityLabel={t("common.back")}
             >
-              <MaterialCommunityIcons name="chevron-left" size={24} color={DARK} />
+              <MaterialCommunityIcons
+                name="chevron-left"
+                size={24}
+                color={DARK}
+              />
             </TouchableOpacity>
 
             <Text style={styles.title}>{t("community.volunteering")}</Text>
@@ -204,17 +205,28 @@ export default function VolunteeringScreen() {
 
           <View style={styles.toggleWrap}>
             <TouchableOpacity
-              style={[styles.toggleBtn, activeTab === "donate" && styles.toggleBtnActive]}
+              style={[
+                styles.toggleBtn,
+                activeTab === "donate" && styles.toggleBtnActive,
+              ]}
               onPress={() => setActiveTab("donate")}
               activeOpacity={0.9}
             >
-              <Text style={[styles.toggleText, activeTab === "donate" && styles.toggleTextActive]}>
+              <Text
+                style={[
+                  styles.toggleText,
+                  activeTab === "donate" && styles.toggleTextActive,
+                ]}
+              >
                 Donate
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.toggleBtn, activeTab === "volunteer" && styles.toggleBtnActive]}
+              style={[
+                styles.toggleBtn,
+                activeTab === "volunteer" && styles.toggleBtnActive,
+              ]}
               onPress={() => setActiveTab("volunteer")}
               activeOpacity={0.9}
             >
@@ -235,11 +247,23 @@ export default function VolunteeringScreen() {
               : "Donation campaigns"}
           </Text>
 
-          {activeTab === "volunteer" ? (
-            <Text style={styles.helperText}>{joinedIds.length} joined opportunities</Text>
+          {feedbackMessage ? (
+            <View style={styles.feedbackBox}>
+              <MaterialCommunityIcons name="check-circle-outline" size={14} color={DARK} />
+              <Text style={styles.feedbackText}>{feedbackMessage}</Text>
+            </View>
           ) : null}
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>
+          {activeTab === "volunteer" ? (
+            <Text style={styles.helperText}>
+              {joinedIds.length} joined opportunities
+            </Text>
+          ) : null}
+
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+          >
             {activeData.map((item) =>
               activeTab === "volunteer" ? (
                 <VolunteerCard
@@ -249,8 +273,12 @@ export default function VolunteeringScreen() {
                   onPress={() => handleVolunteerSignUp(item)}
                 />
               ) : (
-                <DonateCard key={item.id} item={item} onPress={() => handleAction(item)} />
-              )
+                <DonateCard
+                  key={item.id}
+                  item={item}
+                  onPress={() => handleAction(item)}
+                />
+              ),
             )}
           </ScrollView>
         </View>
@@ -335,6 +363,24 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 12,
     marginBottom: 10,
+  },
+  feedbackBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 10,
+    backgroundColor: "rgba(184, 150, 90, 0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(184, 150, 90, 0.3)",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  feedbackText: {
+    color: DARK,
+    fontSize: 12,
+    fontWeight: "600",
+    flex: 1,
   },
   listContent: {
     paddingBottom: 22,
