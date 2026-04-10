@@ -71,6 +71,26 @@
     "events": "Events",
     "community": "Community"
   },
+  "events_hero": {
+    "title_line_1": "Ready for",
+    "title_line_2": "today's event?",
+    "subtitle": "Let us find you an event for your interest",
+    "stat_all": "All",
+    "stat_active": "Active",
+    "stat_upcoming": "Upcoming",
+    "find_nearest": "Find nearest event"
+  },
+  "events_list": {
+    "title": "Events list",
+    "see_all": "See all",
+    "buy_ticket": "Buy ticket",
+    "tabs": {
+      "all": "All",
+      "now": "Now",
+      "upcoming": "Upcoming",
+      "past": "Past"
+    }
+  },
   "community": {
     "title": "Community",
     "search_placeholder": "Search",

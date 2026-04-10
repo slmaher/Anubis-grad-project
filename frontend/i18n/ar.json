@@ -71,6 +71,26 @@
     "events": "الفعاليات",
     "community": "المجتمع"
   },
+  "events_hero": {
+    "title_line_1": "هل أنت مستعد",
+    "title_line_2": "لفعالية اليوم؟",
+    "subtitle": "دعنا نساعدك في العثور على فعالية تناسب اهتماماتك",
+    "stat_all": "الكل",
+    "stat_active": "نشطة",
+    "stat_upcoming": "قادمة",
+    "find_nearest": "ابحث عن أقرب فعالية"
+  },
+  "events_list": {
+    "title": "قائمة الفعاليات",
+    "see_all": "عرض الكل",
+    "buy_ticket": "احجز تذكرة",
+    "tabs": {
+      "all": "الكل",
+      "now": "الآن",
+      "upcoming": "القادمة",
+      "past": "السابقة"
+    }
+  },
   "community": {
     "title": "المجتمع",
     "search_placeholder": "بحث",
