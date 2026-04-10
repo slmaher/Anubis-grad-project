@@ -1,7 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
+  ActivityIndicator,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -11,6 +13,8 @@ import {
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
+import { api } from "../api/client";
+import { getAuthUser } from "../api/authStorage";
 
 const DARK = "#2C2010";
 const MUTED = "#8B7B6C";
@@ -18,8 +22,9 @@ const LIGHT = "#EDE6DF";
 const CARD_BG = "rgba(249,247,244,0.98)";
 const BORDER = "#E5DED5";
 const ACCENT = "#B8965A";
+const JOINED_STORAGE_KEY = "volunteering_joined_ids";
 
-const volunteerItems = [
+const fallbackVolunteerItems = [
   {
     id: "v1",
     title: "Museum Tour Guide",
@@ -49,7 +54,7 @@ const volunteerItems = [
   },
 ];
 
-const donateItems = [
+const fallbackDonateItems = [
   {
     id: "d1",
     title: "Artifact Restoration Fund",
@@ -85,6 +90,8 @@ function MetaPill({ icon, text }) {
 function VolunteerCard({ item, onPress, isJoined }) {
   return (
     <View style={styles.card}>
+      <View style={styles.cardAccent} />
+
       <View style={styles.cardHeader}>
         <View style={styles.iconBadge}>
           <MaterialCommunityIcons name={item.icon} size={20} color={ACCENT} />
@@ -126,6 +133,8 @@ function VolunteerCard({ item, onPress, isJoined }) {
 function DonateCard({ item, onPress }) {
   return (
     <View style={styles.card}>
+      <View style={styles.cardAccent} />
+
       <View style={styles.cardHeader}>
         <View style={styles.iconBadge}>
           <MaterialCommunityIcons name={item.icon} size={20} color={ACCENT} />
@@ -157,25 +166,141 @@ export default function VolunteeringScreen() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("volunteer");
   const [joinedIds, setJoinedIds] = useState([]);
+  const [joinedHydrated, setJoinedHydrated] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [volunteerItems, setVolunteerItems] = useState(fallbackVolunteerItems);
+  const [donateItems, setDonateItems] = useState(fallbackDonateItems);
 
   const activeData = useMemo(
     () => (activeTab === "volunteer" ? volunteerItems : donateItems),
-    [activeTab],
+    [activeTab, volunteerItems, donateItems],
   );
 
-  const handleAction = (item) => {
-    setFeedbackMessage(`Thanks for supporting \"${item.title}\".`);
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadJoinedIds = async () => {
+      try {
+        const raw = await AsyncStorage.getItem(JOINED_STORAGE_KEY);
+        if (!isMounted || !raw) return;
+
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setJoinedIds(parsed.filter((id) => typeof id === "string"));
+        }
+      } catch {
+        // keep default empty state if storage read fails
+      } finally {
+        if (isMounted) {
+          setJoinedHydrated(true);
+        }
+      }
+    };
+
+    loadJoinedIds();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!joinedHydrated) return;
+
+    AsyncStorage.setItem(JOINED_STORAGE_KEY, JSON.stringify(joinedIds)).catch(() => {
+      // ignore storage write failure, UI state is still usable
+    });
+  }, [joinedIds, joinedHydrated]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadScreenData = async () => {
+      setIsLoading(true);
+      try {
+        const [volunteerRes, donationRes] = await Promise.allSettled([
+          api.getVolunteerOpportunities(),
+          api.getDonationCampaigns(),
+        ]);
+
+        if (!isMounted) return;
+
+        if (
+          volunteerRes.status === "fulfilled" &&
+          Array.isArray(volunteerRes.value?.data) &&
+          volunteerRes.value.data.length > 0
+        ) {
+          setVolunteerItems(volunteerRes.value.data);
+        }
+
+        if (
+          donationRes.status === "fulfilled" &&
+          Array.isArray(donationRes.value?.data) &&
+          donationRes.value.data.length > 0
+        ) {
+          setDonateItems(
+            donationRes.value.data.map((item) => ({
+              ...item,
+              amount: `${item.amount} ${item.currency || "EGP"}`,
+            })),
+          );
+        }
+      } catch {
+        if (isMounted) {
+          setFeedbackMessage("Could not load live data. Showing local data.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadScreenData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleAction = async (item) => {
+    try {
+      await api.contributeDonationCampaign(item.id, {
+        amount: Number.parseFloat(String(item.amount).split(" ")[0]) || 100,
+        message: "Donation from volunteering screen",
+      });
+      setFeedbackMessage(`Thanks for supporting \"${item.title}\".`);
+    } catch (error) {
+      setFeedbackMessage(error?.message || "Donation failed. Please try again.");
+    }
   };
 
-  const handleVolunteerSignUp = (item) => {
+  const handleVolunteerSignUp = async (item) => {
     if (joinedIds.includes(item.id)) {
       setFeedbackMessage(`You already joined \"${item.title}\".`);
       return;
     }
 
-    setJoinedIds((prev) => [...prev, item.id]);
-    setFeedbackMessage(`You are now signed up for \"${item.title}\".`);
+    try {
+      const authUser = await getAuthUser();
+      await api.signUpVolunteerOpportunity(item.id, {
+        applicantName: authUser?.name,
+        applicantEmail: authUser?.email,
+      });
+
+      setJoinedIds((prev) => [...prev, item.id]);
+      setFeedbackMessage(`You are now signed up for \"${item.title}\".`);
+    } catch (error) {
+      const isConflict = error?.status === 409;
+      if (isConflict) {
+        setJoinedIds((prev) => (prev.includes(item.id) ? prev : [...prev, item.id]));
+        setFeedbackMessage(`You already joined \"${item.title}\".`);
+        return;
+      }
+
+      setFeedbackMessage(error?.message || "Signup failed. Please try again.");
+    }
   };
 
   return (
@@ -241,29 +366,44 @@ export default function VolunteeringScreen() {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.sectionTitle}>
-            {activeTab === "volunteer"
-              ? "Volunteering opportunities"
-              : "Donation campaigns"}
-          </Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>
+              {activeTab === "volunteer"
+                ? "Volunteering opportunities"
+                : "Donation campaigns"}
+            </Text>
+
+            {activeTab === "volunteer" ? (
+              <View style={styles.countChip}>
+                <Text style={styles.countChipText}>
+                  {joinedHydrated ? `${joinedIds.length} joined` : "..."}
+                </Text>
+              </View>
+            ) : null}
+          </View>
 
           {feedbackMessage ? (
             <View style={styles.feedbackBox}>
-              <MaterialCommunityIcons name="check-circle-outline" size={14} color={DARK} />
+              <MaterialCommunityIcons
+                name="check-circle-outline"
+                size={14}
+                color={DARK}
+              />
               <Text style={styles.feedbackText}>{feedbackMessage}</Text>
             </View>
-          ) : null}
-
-          {activeTab === "volunteer" ? (
-            <Text style={styles.helperText}>
-              {joinedIds.length} joined opportunities
-            </Text>
           ) : null}
 
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContent}
           >
+            {isLoading ? (
+              <View style={styles.loadingBox}>
+                <ActivityIndicator color={DARK} />
+                <Text style={styles.loadingText}>Loading opportunities...</Text>
+              </View>
+            ) : null}
+
             {activeData.map((item) =>
               activeTab === "volunteer" ? (
                 <VolunteerCard
@@ -297,11 +437,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 15,
   },
   header: {
-    marginTop: 6,
-    marginBottom: 14,
+    marginTop: 8,
+    marginBottom: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -318,8 +458,9 @@ const styles = StyleSheet.create({
   },
   title: {
     color: DARK,
-    fontSize: 20,
+    fontSize: 21,
     fontWeight: "800",
+    letterSpacing: 0.2,
   },
   headerSpacer: {
     width: 36,
@@ -328,11 +469,11 @@ const styles = StyleSheet.create({
   toggleWrap: {
     flexDirection: "row",
     gap: 8,
-    marginBottom: 14,
+    marginBottom: 16,
     backgroundColor: CARD_BG,
     borderWidth: 1,
     borderColor: BORDER,
-    borderRadius: 16,
+    borderRadius: 15,
     padding: 4,
   },
   toggleBtn: {
@@ -343,7 +484,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   toggleBtnActive: {
-    backgroundColor: "rgba(184, 150, 90, 0.2)",
+    backgroundColor: "rgba(184, 150, 90, 0.28)",
   },
   toggleText: {
     color: MUTED,
@@ -353,28 +494,41 @@ const styles = StyleSheet.create({
   toggleTextActive: {
     color: DARK,
   },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
   sectionTitle: {
     color: "#7D654F",
     fontSize: 14,
     fontWeight: "700",
-    marginBottom: 4,
   },
-  helperText: {
-    color: MUTED,
-    fontSize: 12,
-    marginBottom: 10,
+  countChip: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(184, 150, 90, 0.3)",
+    backgroundColor: "rgba(184, 150, 90, 0.12)",
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+  },
+  countChipText: {
+    color: DARK,
+    fontSize: 11,
+    fontWeight: "700",
   },
   feedbackBox: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     marginBottom: 10,
-    backgroundColor: "rgba(184, 150, 90, 0.16)",
+    backgroundColor: "rgba(184, 150, 90, 0.12)",
     borderWidth: 1,
-    borderColor: "rgba(184, 150, 90, 0.3)",
+    borderColor: "rgba(184, 150, 90, 0.24)",
     borderRadius: 10,
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: 7,
   },
   feedbackText: {
     color: DARK,
@@ -383,20 +537,43 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingBottom: 22,
+    paddingBottom: 24,
     gap: 12,
+  },
+  loadingBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  loadingText: {
+    color: MUTED,
+    fontSize: 12,
+    fontWeight: "600",
   },
   card: {
     backgroundColor: CARD_BG,
     borderWidth: 1,
     borderColor: BORDER,
-    borderRadius: 18,
+    borderRadius: 17,
     padding: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardAccent: {
+    height: 3,
+    width: 44,
+    borderRadius: 999,
+    backgroundColor: "rgba(184, 150, 90, 0.8)",
+    marginBottom: 10,
   },
   cardHeader: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 10,
+    marginBottom: 9,
   },
   iconBadge: {
     width: 38,
@@ -416,12 +593,12 @@ const styles = StyleSheet.create({
     color: DARK,
     fontSize: 16,
     fontWeight: "800",
-    marginBottom: 4,
+    marginBottom: 3,
   },
   cardDesc: {
     color: MUTED,
     fontSize: 12,
-    lineHeight: 18,
+    lineHeight: 17,
   },
   metaRow: {
     flexDirection: "row",
@@ -436,8 +613,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: BORDER,
     borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     backgroundColor: "rgba(255,255,255,0.65)",
   },
   metaText: {
@@ -468,11 +645,13 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   primaryBtn: {
-    alignSelf: "flex-start",
+    alignSelf: "flex-end",
     backgroundColor: DARK,
     borderRadius: 999,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 8,
+    minWidth: 92,
+    alignItems: "center",
   },
   primaryBtnJoined: {
     backgroundColor: "#4F5A39",
