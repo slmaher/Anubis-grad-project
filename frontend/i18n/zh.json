@@ -71,6 +71,26 @@
     "events": "活动",
     "community": "社区"
   },
+  "events_hero": {
+    "title_line_1": "准备好参加",
+    "title_line_2": "今天的活动了吗？",
+    "subtitle": "让我们为你找到符合兴趣的活动",
+    "stat_all": "全部",
+    "stat_active": "进行中",
+    "stat_upcoming": "即将开始",
+    "find_nearest": "查找最近活动"
+  },
+  "events_list": {
+    "title": "活动列表",
+    "see_all": "查看全部",
+    "buy_ticket": "购买门票",
+    "tabs": {
+      "all": "全部",
+      "now": "现在",
+      "upcoming": "即将开始",
+      "past": "已结束"
+    }
+  },
   "community": {
     "title": "社区",
     "search_placeholder": "搜索",

@@ -71,6 +71,26 @@
     "events": "Événements",
     "community": "Communauté"
   },
+  "events_hero": {
+    "title_line_1": "Prêt pour",
+    "title_line_2": "l'événement d'aujourd'hui ?",
+    "subtitle": "Laissez-nous trouver un événement adapté à vos centres d'intérêt",
+    "stat_all": "Tous",
+    "stat_active": "Actifs",
+    "stat_upcoming": "À venir",
+    "find_nearest": "Trouver l'événement le plus proche"
+  },
+  "events_list": {
+    "title": "Liste des événements",
+    "see_all": "Voir tout",
+    "buy_ticket": "Acheter un billet",
+    "tabs": {
+      "all": "Tous",
+      "now": "Maintenant",
+      "upcoming": "À venir",
+      "past": "Passés"
+    }
+  },
   "community": {
     "title": "Communauté",
     "search_placeholder": "Rechercher",
