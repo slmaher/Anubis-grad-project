@@ -2,7 +2,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Image,
   FlatList,
@@ -10,7 +9,7 @@ import {
   PanResponder,
   ActivityIndicator,
 } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { api } from "../api/client";
 import { getAuthToken } from "../api/authStorage";
@@ -120,9 +119,6 @@ const SwipeableMessageItem = ({ item, onPress, onDelete }) => {
               <Text style={styles.messageName}>{item.name}</Text>
               <Text style={styles.messageTime}>{item.time}</Text>
             </View>
-            <Text style={styles.messageText} numberOfLines={1}>
-              {item.message}
-            </Text>
           </View>
         </TouchableOpacity>
       </Animated.View>
@@ -132,38 +128,8 @@ const SwipeableMessageItem = ({ item, onPress, onDelete }) => {
 
 export default function MessagesList() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("Messages");
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const [friends, setFriends] = useState([]);
-
-  const loadAcceptedFriends = useCallback(async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        setFriends([]);
-        return;
-      }
-
-      const response = await api.getFriends(token);
-      if (response?.success && Array.isArray(response.data)) {
-        const mapped = response.data.map((item) => ({
-          id: item.id || item._id,
-          name: item.name,
-          avatar: item.avatar || null,
-        }));
-
-        setFriends(mapped);
-        return;
-      }
-
-      setFriends([]);
-    } catch (error) {
-      console.error("Failed to load friends:", error);
-      setFriends([]);
-    }
-  }, []);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -175,7 +141,7 @@ export default function MessagesList() {
         const formatted = response.data.map((conv) => ({
           id: conv.user._id,
           name: conv.user.name,
-          message: conv.lastMessage?.content || "No messages yet",
+          message: conv.lastMessage?.content || "",
           time: conv.lastMessage
             ? new Date(conv.lastMessage.createdAt).toLocaleTimeString([], {
                 hour: "2-digit",
@@ -197,12 +163,6 @@ export default function MessagesList() {
   useEffect(() => {
     fetchConversations();
   }, [fetchConversations]);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadAcceptedFriends();
-    }, [loadAcceptedFriends]),
-  );
 
   const handleNewMessage = useCallback(
     (message) => {
@@ -249,80 +209,9 @@ export default function MessagesList() {
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>Chat with{"\n"}friends</Text>
-
-        {/* Friends Avatars */}
-        <View style={styles.friendsSection}>
-          <TouchableOpacity style={styles.searchButton}>
-            <Image
-              source={require("../../assets/images/search-icon-white.png")}
-              style={styles.searchIcon}
-            />
-          </TouchableOpacity>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.friendsScroll}
-          >
-            {friends.map((friend) => (
-              <TouchableOpacity key={friend.id} style={styles.friendAvatar}>
-                {friend.avatar ? (
-                  <Image source={{ uri: friend.avatar }} style={styles.friendImage} />
-                ) : (
-                  <View style={styles.friendFallbackAvatar}>
-                    <Text style={styles.friendFallbackText}>{getInitial(friend.name)}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Tabs */}
-        <View style={styles.tabsContainer}>
-          <TouchableOpacity
-            style={styles.tab}
-            onPress={() => setActiveTab("Messages")}
-          >
-            <View style={styles.tabContent}>
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "Messages" && styles.activeTabText,
-                ]}
-              >
-                Messages
-              </Text>
-              {activeTab === "Messages" && (
-                <View style={styles.unreadIndicator} />
-              )}
-            </View>
-            {activeTab === "Messages" && (
-              <View style={styles.activeTabIndicator} />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.tab}
-            onPress={() => setActiveTab("Calls")}
-          >
-            <Text style={styles.tabText}>Calls</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.tab}
-            onPress={() => setActiveTab("Groups")}
-          >
-            <Text style={styles.tabText}>Groups</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.tab}>
-            <View style={styles.createBadge}>
-              <Text style={styles.createButtonText}>CREATE</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          Chat with friends
+        </Text>
       </View>
 
       {/* Messages List */}
@@ -351,14 +240,14 @@ export default function MessagesList() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#EDE6DF",
   },
   header: {
     backgroundColor: "#6B5B4F",
     paddingTop: 60,
-    paddingBottom: 0,
-    borderBottomLeftRadius: 25,
-    borderBottomRightRadius: 25,
+    paddingBottom: 18,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   backButton: {
     position: "absolute",
@@ -375,136 +264,42 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#fff",
     paddingHorizontal: 20,
     paddingLeft: 70,
-    marginBottom: 25,
-    lineHeight: 30,
-  },
-  friendsSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    marginBottom: 25,
-  },
-  searchButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 15,
-  },
-  searchIcon: {
-    width: 22,
-    height: 22,
-    tintColor: "#fff",
-  },
-  friendsScroll: {
-    flex: 1,
-  },
-  friendAvatar: {
-    marginRight: 12,
-  },
-  friendImage: {
-    width: 55,
-    height: 55,
-    borderRadius: 27.5,
-    borderWidth: 2,
-    borderColor: "#fff",
-  },
-  friendFallbackAvatar: {
-    width: 55,
-    height: 55,
-    borderRadius: 27.5,
-    borderWidth: 2,
-    borderColor: "#fff",
-    backgroundColor: "rgba(255, 255, 255, 0.22)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  friendFallbackText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  tabsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    gap: 15,
-  },
-  tab: {
-    paddingBottom: 12,
-    alignItems: "center",
-  },
-  tabContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  tabText: {
-    fontSize: 14,
-    color: "rgba(255, 255, 255, 0.6)",
-    fontWeight: "500",
-  },
-  activeTabText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-  unreadIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#FF8C42",
-  },
-  activeTabIndicator: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 2,
-    backgroundColor: "#fff",
-  },
-  createBadge: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.25)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
-  },
-  createButtonText: {
-    fontSize: 12,
-    color: "rgba(255, 255, 255, 0.8)",
-    fontWeight: "600",
+    marginBottom: 4,
+    lineHeight: 26,
+    paddingRight: 24,
   },
   messagesList: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#EDE6DF",
   },
   messagesContent: {
     paddingBottom: 30,
+    paddingTop: 14,
   },
   messageItemContainer: {
     position: "relative",
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(249,247,244,0.98)",
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    borderBottomColor: "#E5DED5",
     overflow: "hidden",
+    marginHorizontal: 10,
+    marginBottom: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E5DED5",
   },
   messageItemWrapper: {
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(249,247,244,0.98)",
   },
   messageItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(249,247,244,0.98)",
     paddingVertical: 15,
     paddingHorizontal: 20,
   },
@@ -534,21 +329,16 @@ const styles = StyleSheet.create({
   messageHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 5,
+    marginBottom: 0,
   },
   messageName: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#000",
+    color: "#2C2010",
   },
   messageTime: {
     fontSize: 12,
-    color: "#999",
-  },
-  messageText: {
-    fontSize: 13,
-    color: "#666",
-    lineHeight: 18,
+    color: "#9A8C7A",
   },
   swipeActions: {
     position: "absolute",
@@ -586,7 +376,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   emptyText: {
-    color: "#999",
+    color: "#8B7B6C",
     fontSize: 16,
   },
 });
