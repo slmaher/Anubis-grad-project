@@ -177,4 +177,26 @@ export const api = {
       token,
     });
   },
+
+  // Volunteering screen APIs
+  getVolunteerOpportunities() {
+    return apiRequest("/api/volunteers/opportunities");
+  },
+  signUpVolunteerOpportunity(opportunityId, payload = {}) {
+    return apiRequest(`/api/volunteers/opportunities/${opportunityId}/signup`, {
+      method: "POST",
+      body: payload,
+    });
+  },
+
+  // Donation screen APIs
+  getDonationCampaigns() {
+    return apiRequest("/api/donations/campaigns");
+  },
+  contributeDonationCampaign(campaignId, payload = {}) {
+    return apiRequest(`/api/donations/campaigns/${campaignId}/contribute`, {
+      method: "POST",
+      body: payload,
+    });
+  },
 };
