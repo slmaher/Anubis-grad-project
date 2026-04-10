@@ -275,9 +275,7 @@ export default function VolunteeringScreen() {
         }
       } catch {
         if (isMounted) {
-          setFeedbackMessage(
-            t("volunteering_screen.feedback.live_data_failed"),
-          );
+          setFeedbackMessage(t("volunteering_screen.feedback.live_data_failed"));
         }
       } finally {
         if (isMounted) {
@@ -293,19 +291,20 @@ export default function VolunteeringScreen() {
     };
   }, []);
 
-  const handleAction = (item) => {
-    const parsedAmount =
-      Number.parseFloat(String(item.amount).split(" ")[0]) || 100;
-
-    router.push({
-      pathname: "/marketplace/checkout",
-      params: {
-        source: "donation",
-        campaignId: item.id,
-        campaignTitle: item.title,
-        donationAmount: String(parsedAmount),
-      },
-    });
+  const handleAction = async (item) => {
+    try {
+      await api.contributeDonationCampaign(item.id, {
+        amount: Number.parseFloat(String(item.amount).split(" ")[0]) || 100,
+        message: t("volunteering_screen.feedback.donation_note"),
+      });
+      setFeedbackMessage(
+        t("volunteering_screen.feedback.support_thanks", { title: item.title }),
+      );
+    } catch (error) {
+      setFeedbackMessage(
+        error?.message || t("volunteering_screen.feedback.donation_failed"),
+      );
+    }
   };
 
   const handleVolunteerSignUp = async (item) => {
@@ -334,9 +333,7 @@ export default function VolunteeringScreen() {
           prev.includes(item.id) ? prev : [...prev, item.id],
         );
         setFeedbackMessage(
-          t("volunteering_screen.feedback.already_joined", {
-            title: item.title,
-          }),
+          t("volunteering_screen.feedback.already_joined", { title: item.title }),
         );
         return;
       }
@@ -498,7 +495,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   header: {
-    marginTop: 20,
+    marginTop: 8,
     marginBottom: 16,
     flexDirection: "row",
     alignItems: "center",
