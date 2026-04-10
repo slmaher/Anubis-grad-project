@@ -158,6 +158,16 @@
       }
     }
   },
+  "chat_pages": {
+    "list_title": "Chat with friends",
+    "no_conversations": "No conversations found",
+    "contact_fallback": "Contact",
+    "type_message": "Type your message...",
+    "translate": "Translate",
+    "show_original": "Show original",
+    "translating": "Translating...",
+    "translate_failed": "Translation failed"
+  },
   "community": {
     "title": "Community",
     "search_placeholder": "Search",

@@ -158,6 +158,16 @@
       }
     }
   },
+  "chat_pages": {
+    "list_title": "与朋友聊天",
+    "no_conversations": "未找到会话",
+    "contact_fallback": "联系人",
+    "type_message": "输入你的消息...",
+    "translate": "翻译",
+    "show_original": "显示原文",
+    "translating": "翻译中...",
+    "translate_failed": "翻译失败"
+  },
   "community": {
     "title": "社区",
     "search_placeholder": "搜索",

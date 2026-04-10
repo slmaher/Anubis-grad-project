@@ -158,6 +158,16 @@
       }
     }
   },
+  "chat_pages": {
+    "list_title": "الدردشة مع الأصدقاء",
+    "no_conversations": "لا توجد محادثات",
+    "contact_fallback": "جهة الاتصال",
+    "type_message": "اكتب رسالتك...",
+    "translate": "ترجمة",
+    "show_original": "عرض الأصل",
+    "translating": "جاري الترجمة...",
+    "translate_failed": "فشلت الترجمة"
+  },
   "community": {
     "title": "المجتمع",
     "search_placeholder": "بحث",
