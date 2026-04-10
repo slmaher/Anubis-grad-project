@@ -158,6 +158,16 @@
       }
     }
   },
+  "chat_pages": {
+    "list_title": "Chat mit Freunden",
+    "no_conversations": "Keine Unterhaltungen gefunden",
+    "contact_fallback": "Kontakt",
+    "type_message": "Gib deine Nachricht ein...",
+    "translate": "Ubersetzen",
+    "show_original": "Original anzeigen",
+    "translating": "Wird ubersetzt...",
+    "translate_failed": "Ubersetzung fehlgeschlagen"
+  },
   "community": {
     "title": "Gemeinschaft",
     "search_placeholder": "Suchen",

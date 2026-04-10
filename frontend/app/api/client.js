@@ -138,6 +138,66 @@ export const api = {
       body: { history, language },
     });
   },
+  async translateTextMyMemory(text, targetLang, sourceLang = "en") {
+    const langCodePattern = /^[a-z]{2}(?:-[a-z]{2})?$/i;
+    const normalizedSource = langCodePattern.test(String(sourceLang || ""))
+      ? String(sourceLang)
+      : "en";
+    const normalizedTarget = langCodePattern.test(String(targetLang || ""))
+      ? String(targetLang)
+      : "en";
+
+    const makeRequest = async (fromLang) => {
+      const query = new URLSearchParams({
+        q: text,
+        langpair: `${fromLang}|${normalizedTarget}`,
+      });
+
+      const response = await fetch(
+        `https://api.mymemory.translated.net/get?${query.toString()}`,
+      );
+
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+
+      if (!response.ok) {
+        const message =
+          (data && (data.responseDetails || data.message)) ||
+          `MyMemory request failed with status ${response.status}`;
+        throw new Error(message);
+      }
+
+      const translatedText = data?.responseData?.translatedText;
+      if (!translatedText || typeof translatedText !== "string") {
+        throw new Error("MyMemory did not return translated text.");
+      }
+
+      return {
+        success: true,
+        data: {
+          translatedText,
+          match: data?.responseData?.match,
+        },
+      };
+    };
+
+    try {
+      return await makeRequest(normalizedSource);
+    } catch (error) {
+      const shouldRetryWithEnglish =
+        normalizedSource.toLowerCase() !== "en" &&
+        /source language|langpair|invalid/i.test(String(error?.message || ""));
+
+      if (shouldRetryWithEnglish) {
+        return makeRequest("en");
+      }
+      throw error;
+    }
+  },
 
   // Friends
   sendFriendRequest(receiverId, token) {

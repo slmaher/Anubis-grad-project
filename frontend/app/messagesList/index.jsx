@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { getAuthToken } from "../api/authStorage";
 import { useChatSocket } from "../hooks/useChatSocket";
@@ -128,6 +129,7 @@ const SwipeableMessageItem = ({ item, onPress, onDelete }) => {
 
 export default function MessagesList() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -210,7 +212,7 @@ export default function MessagesList() {
         </TouchableOpacity>
 
         <Text style={styles.headerTitle} numberOfLines={1}>
-          Chat with friends
+          {t("chat_pages.list_title")}
         </Text>
       </View>
 
@@ -228,7 +230,7 @@ export default function MessagesList() {
           contentContainerStyle={styles.messagesContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No conversations found</Text>
+              <Text style={styles.emptyText}>{t("chat_pages.no_conversations")}</Text>
             </View>
           }
         />
