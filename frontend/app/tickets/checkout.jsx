@@ -1,4 +1,10 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,16 +20,18 @@ export default function Checkout() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { t, i18n } = useTranslation();
-  
-  const museumName = params.museumName || t("tickets_checkout.default_museum_name");
-  const museumTime = params.museumTime || t("tickets_checkout.default_museum_time");
-  
+
+  const museumName =
+    params.museumName || t("tickets_checkout.default_museum_name");
+  const museumTime =
+    params.museumTime || t("tickets_checkout.default_museum_time");
+
   // Generate dates for the next 7 days
   const generateDates = () => {
     const dates = [];
     const today = new Date();
     const locale = i18n.language || "en";
-    
+
     for (let i = 0; i < 7; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
@@ -39,7 +47,7 @@ export default function Checkout() {
 
   const dates = generateDates();
   const [selectedDate, setSelectedDate] = useState(0);
-  
+
   const [tickets, setTickets] = useState([
     {
       id: 1,
@@ -60,15 +68,20 @@ export default function Checkout() {
   ]);
 
   const updateQuantity = (id, delta) => {
-    setTickets(tickets.map(ticket => 
-      ticket.id === id 
-        ? { ...ticket, quantity: Math.max(0, ticket.quantity + delta) }
-        : ticket
-    ));
+    setTickets(
+      tickets.map((ticket) =>
+        ticket.id === id
+          ? { ...ticket, quantity: Math.max(0, ticket.quantity + delta) }
+          : ticket,
+      ),
+    );
   };
 
   const calculateTotal = () => {
-    return tickets.reduce((sum, ticket) => sum + (ticket.price * ticket.quantity), 0);
+    return tickets.reduce(
+      (sum, ticket) => sum + ticket.price * ticket.quantity,
+      0,
+    );
   };
 
   const handleContinue = () => {
@@ -143,7 +156,9 @@ export default function Checkout() {
                 {ticket.isHotChoice && (
                   <View style={styles.hotChoiceBadge}>
                     <Text style={styles.hotChoiceIcon}>🔥</Text>
-                    <Text style={styles.hotChoiceText}>{t("tickets_checkout.hot_choice")}</Text>
+                    <Text style={styles.hotChoiceText}>
+                      {t("tickets_checkout.hot_choice")}
+                    </Text>
                   </View>
                 )}
 
@@ -156,16 +171,21 @@ export default function Checkout() {
                       {t(`tickets_checkout.${ticket.descriptionKey}`)}
                     </Text>
                     <Text style={styles.ticketDate}>
-                      {dates[selectedDate].day}, {dates[selectedDate].month} {dates[selectedDate].date} • {museumTime}
+                      {dates[selectedDate].day}, {dates[selectedDate].month}{" "}
+                      {dates[selectedDate].date} • {museumTime}
                     </Text>
                   </View>
                   <TouchableOpacity style={styles.detailButton}>
-                    <Text style={styles.detailButtonText}>{t("tickets_checkout.detail")}</Text>
+                    <Text style={styles.detailButtonText}>
+                      {t("tickets_checkout.detail")}
+                    </Text>
                   </TouchableOpacity>
                 </View>
 
                 <View style={styles.ticketFooter}>
-                  <Text style={styles.ticketPrice}>LE {ticket.price.toFixed(3)}</Text>
+                  <Text style={styles.ticketPrice}>
+                    LE {ticket.price.toFixed(3)}
+                  </Text>
 
                   <View style={styles.quantityContainer}>
                     <TouchableOpacity
@@ -181,7 +201,14 @@ export default function Checkout() {
                       style={[styles.quantityButton, styles.quantityButtonPlus]}
                       onPress={() => updateQuantity(ticket.id, 1)}
                     >
-                      <Text style={[styles.quantityButtonText, styles.quantityButtonTextPlus]}>+</Text>
+                      <Text
+                        style={[
+                          styles.quantityButtonText,
+                          styles.quantityButtonTextPlus,
+                        ]}
+                      >
+                        +
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -197,19 +224,27 @@ export default function Checkout() {
         <View style={styles.bottomSection}>
           <View style={styles.totalContainer}>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>{t("tickets_checkout.total")}</Text>
+              <Text style={styles.totalLabel}>
+                {t("tickets_checkout.total")}
+              </Text>
               <TouchableOpacity>
-                <Text style={styles.detailsLink}>{t("tickets_checkout.details")}</Text>
+                <Text style={styles.detailsLink}>
+                  {t("tickets_checkout.details")}
+                </Text>
               </TouchableOpacity>
             </View>
-            <Text style={styles.totalAmount}>LE {calculateTotal().toFixed(3)}</Text>
+            <Text style={styles.totalAmount}>
+              LE {calculateTotal().toFixed(3)}
+            </Text>
           </View>
 
           <TouchableOpacity
             style={styles.continueButton}
             onPress={handleContinue}
           >
-            <Text style={styles.continueButtonText}>{t("tickets_checkout.continue")}</Text>
+            <Text style={styles.continueButtonText}>
+              {t("tickets_checkout.continue")}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -230,7 +265,6 @@ const styles = StyleSheet.create({
     borderRadius: 130,
     top: -120,
     left: -90,
-   
   },
 
   container: {
