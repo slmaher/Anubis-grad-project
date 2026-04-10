@@ -54,7 +54,7 @@ export default function AIChatbot() {
   const suggestions = [t("ai_chat.suggestion_1"), t("ai_chat.suggestion_2")];
 
   // Auto-scroll when messages or loading state changes
-  useEffect(() => {
+  useEffect(() => { 
     scrollViewRef.current?.scrollToEnd({ animated: true });
   }, [messages, isLoading]);
 
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: 50,
+    paddingTop: 20,
     paddingHorizontal: 20,
     paddingBottom: 10,
   },
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   backIcon: {
-    fontSize: 28,
+    fontSize: 30,
     color: "#000",
     fontWeight: "600",
   },
@@ -300,25 +300,25 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   sparklingIcon: {
-    width: 50,
-    height: 50,
+    width: 55,
+    height: 55,
     marginBottom: 15,
     tintColor: "#000",
   },
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "600",
     color: "#000",
   },
   messagesContainer: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
   },
   messagesContent: {
-    paddingBottom: 20,
+    paddingBottom: 10,
   },
   messageWrapper: {
-    marginBottom: 20,
+    marginBottom: 10,
   },
   userMessageWrapper: {
     alignItems: "flex-end",
@@ -327,10 +327,10 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   messageLabelContainer: {
-    marginBottom: 5,
+    marginBottom: 0,
   },
   messageLabel: {
-    fontSize: 11,
+    fontSize: 16,
     fontWeight: "600",
     color: "rgba(0, 0, 0, 0.5)",
     letterSpacing: 0.5,
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 220, 220, 0.85)",
   },
   messageText: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#333",
     lineHeight: 20,
   },
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   },
   typingDots: {
     fontSize: 12,
-    color: "#8B7B6C",
+    color: "#5c5146",
     letterSpacing: 4,
   },
   suggestionsSection: {

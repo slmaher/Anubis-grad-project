@@ -120,7 +120,11 @@ export default function Tickets() {
             accessibilityRole="button"
             accessibilityLabel={t("common.back")}
           >
-            <MaterialCommunityIcons name="arrow-left" size={22} color={ACCENT} />
+            <MaterialCommunityIcons
+              name="arrow-left"
+              size={22}
+              color={ACCENT}
+            />
           </TouchableOpacity>
 
           <Text style={styles.headerTitle}>{t("tickets.title")}</Text>
