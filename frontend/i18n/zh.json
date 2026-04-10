@@ -91,6 +91,73 @@
       "past": "已结束"
     }
   },
+  "volunteering_screen": {
+    "tabs": {
+      "volunteer": "志愿者",
+      "donate": "捐赠"
+    },
+    "section": {
+      "volunteering_opportunities": "志愿服务机会",
+      "donation_campaigns": "捐赠活动",
+      "joined_count": "已加入 {{count}} 项",
+      "joined_loading": "..."
+    },
+    "buttons": {
+      "sign_up": "报名",
+      "joined": "已加入",
+      "donate_now": "立即捐赠"
+    },
+    "suggested_amount": "建议金额",
+    "loading_opportunities": "正在加载机会...",
+    "feedback": {
+      "live_data_failed": "无法加载实时数据，正在显示本地数据。",
+      "support_thanks": "感谢你支持 \"{{title}}\"。",
+      "donation_failed": "捐赠失败，请重试。",
+      "signup_success": "你已成功报名 \"{{title}}\"。",
+      "already_joined": "你已经加入了 \"{{title}}\"。",
+      "signup_failed": "报名失败，请重试。",
+      "donation_note": "来自志愿服务页面的捐赠"
+    },
+    "items": {
+      "volunteer": {
+        "v1": {
+          "title": "博物馆导览志愿者",
+          "desc": "帮助访客了解文物，并在导览中分享埃及文化故事。",
+          "location": "国家博物馆",
+          "schedule": "周末",
+          "duration": "每周4小时"
+        },
+        "v2": {
+          "title": "遗产花园维护",
+          "desc": "维护遗产花园，并学习埃及本土植物传统。",
+          "location": "植物园",
+          "schedule": "时间灵活",
+          "duration": "每周3小时"
+        },
+        "v3": {
+          "title": "艺术工坊助教",
+          "desc": "协助儿童参与受埃及文化启发的艺术与手工课程。",
+          "location": "文化中心",
+          "schedule": "周六",
+          "duration": "每周2小时"
+        }
+      },
+      "donate": {
+        "d1": {
+          "title": "文物修复基金",
+          "desc": "帮助修复脆弱文物，为后代保护文化遗产。"
+        },
+        "d2": {
+          "title": "学生参观支持计划",
+          "desc": "资助学生参观博物馆及相关教育资源，帮助年轻探索者成长。"
+        },
+        "d3": {
+          "title": "社区展览项目",
+          "desc": "支持轮换展览与本地活动，让历史更贴近社区。"
+        }
+      }
+    }
+  },
   "community": {
     "title": "社区",
     "search_placeholder": "搜索",

@@ -91,6 +91,73 @@
       "past": "Past"
     }
   },
+  "volunteering_screen": {
+    "tabs": {
+      "volunteer": "Volunteer",
+      "donate": "Donate"
+    },
+    "section": {
+      "volunteering_opportunities": "Volunteering opportunities",
+      "donation_campaigns": "Donation campaigns",
+      "joined_count": "{{count}} joined",
+      "joined_loading": "..."
+    },
+    "buttons": {
+      "sign_up": "Sign up",
+      "joined": "Joined",
+      "donate_now": "Donate now"
+    },
+    "suggested_amount": "Suggested amount",
+    "loading_opportunities": "Loading opportunities...",
+    "feedback": {
+      "live_data_failed": "Could not load live data. Showing local data.",
+      "support_thanks": "Thanks for supporting \"{{title}}\".",
+      "donation_failed": "Donation failed. Please try again.",
+      "signup_success": "You are now signed up for \"{{title}}\".",
+      "already_joined": "You already joined \"{{title}}\".",
+      "signup_failed": "Signup failed. Please try again.",
+      "donation_note": "Donation from volunteering screen"
+    },
+    "items": {
+      "volunteer": {
+        "v1": {
+          "title": "Museum Tour Guide",
+          "desc": "Help visitors discover artifacts and share Egyptian stories through guided tours.",
+          "location": "National Museum",
+          "schedule": "Weekends",
+          "duration": "4 hrs/week"
+        },
+        "v2": {
+          "title": "Heritage Garden Care",
+          "desc": "Maintain heritage gardens and learn about native Egyptian botanical traditions.",
+          "location": "Botanical Gardens",
+          "schedule": "Flexible",
+          "duration": "3 hrs/week"
+        },
+        "v3": {
+          "title": "Art Workshop Assistant",
+          "desc": "Support children in hands-on art and craft workshops inspired by Egyptian culture.",
+          "location": "Cultural Center",
+          "schedule": "Saturdays",
+          "duration": "2 hrs/week"
+        }
+      },
+      "donate": {
+        "d1": {
+          "title": "Artifact Restoration Fund",
+          "desc": "Help restore fragile artifacts and preserve cultural heritage for future generations."
+        },
+        "d2": {
+          "title": "Student Access Program",
+          "desc": "Sponsor museum access and educational materials for students and young explorers."
+        },
+        "d3": {
+          "title": "Community Exhibits",
+          "desc": "Support rotating exhibits and local events that bring history closer to communities."
+        }
+      }
+    }
+  },
   "community": {
     "title": "Community",
     "search_placeholder": "Search",

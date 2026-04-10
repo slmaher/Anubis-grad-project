@@ -91,6 +91,73 @@
       "past": "Passés"
     }
   },
+  "volunteering_screen": {
+    "tabs": {
+      "volunteer": "Bénévole",
+      "donate": "Donner"
+    },
+    "section": {
+      "volunteering_opportunities": "Opportunités de bénévolat",
+      "donation_campaigns": "Campagnes de dons",
+      "joined_count": "{{count}} inscrit(s)",
+      "joined_loading": "..."
+    },
+    "buttons": {
+      "sign_up": "S'inscrire",
+      "joined": "Inscrit",
+      "donate_now": "Faire un don"
+    },
+    "suggested_amount": "Montant suggéré",
+    "loading_opportunities": "Chargement des opportunités...",
+    "feedback": {
+      "live_data_failed": "Impossible de charger les données en direct. Affichage des données locales.",
+      "support_thanks": "Merci de soutenir \"{{title}}\".",
+      "donation_failed": "Le don a échoué. Veuillez réessayer.",
+      "signup_success": "Vous êtes maintenant inscrit à \"{{title}}\".",
+      "already_joined": "Vous êtes déjà inscrit à \"{{title}}\".",
+      "signup_failed": "Échec de l'inscription. Veuillez réessayer.",
+      "donation_note": "Don depuis l'écran de bénévolat"
+    },
+    "items": {
+      "volunteer": {
+        "v1": {
+          "title": "Guide de visite du musée",
+          "desc": "Aidez les visiteurs à découvrir les artefacts et à partager des récits égyptiens pendant les visites guidées.",
+          "location": "Musée national",
+          "schedule": "Week-ends",
+          "duration": "4 h/semaine"
+        },
+        "v2": {
+          "title": "Entretien du jardin patrimonial",
+          "desc": "Entretenez les jardins patrimoniaux et découvrez les traditions botaniques égyptiennes.",
+          "location": "Jardins botaniques",
+          "schedule": "Flexible",
+          "duration": "3 h/semaine"
+        },
+        "v3": {
+          "title": "Assistant atelier d'art",
+          "desc": "Aidez les enfants lors d'ateliers d'art et d'artisanat inspirés de la culture égyptienne.",
+          "location": "Centre culturel",
+          "schedule": "Samedis",
+          "duration": "2 h/semaine"
+        }
+      },
+      "donate": {
+        "d1": {
+          "title": "Fonds de restauration des artefacts",
+          "desc": "Aidez à restaurer des artefacts fragiles et à préserver le patrimoine culturel pour les générations futures."
+        },
+        "d2": {
+          "title": "Programme d'accès étudiant",
+          "desc": "Soutenez l'accès aux musées et aux ressources éducatives pour les étudiants et jeunes explorateurs."
+        },
+        "d3": {
+          "title": "Expositions communautaires",
+          "desc": "Soutenez les expositions tournantes et les événements locaux qui rapprochent l'histoire des communautés."
+        }
+      }
+    }
+  },
   "community": {
     "title": "Communauté",
     "search_placeholder": "Rechercher",
