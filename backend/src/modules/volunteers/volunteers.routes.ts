@@ -1,42 +1,46 @@
-import { NextFunction, Response, Router } from 'express';
+import { NextFunction, Response, Router } from "express";
 
-import { VolunteerModel } from './volunteer.model';
-import { MuseumModel } from '../museums/museum.model';
-import { CreateVolunteerDto, UpdateVolunteerDto } from './volunteer.dto';
-import { authenticate, authorizeRoles, AuthenticatedRequest } from '../../common/middleware/auth';
-import { validateBody } from '../../common/middleware/validationMiddleware';
-import { UserRole } from '../users/user.roles';
+import { VolunteerModel } from "./volunteer.model";
+import { MuseumModel } from "../museums/museum.model";
+import { CreateVolunteerDto, UpdateVolunteerDto } from "./volunteer.dto";
+import {
+  authenticate,
+  authorizeRoles,
+  AuthenticatedRequest,
+} from "../../common/middleware/auth";
+import { validateBody } from "../../common/middleware/validationMiddleware";
+import { UserRole } from "../users/user.roles";
 
 const volunteersRouter = Router();
 
 const volunteerOpportunities = [
   {
-    id: 'v1',
-    title: 'Museum Tour Guide',
-    desc: 'Help visitors discover artifacts and share Egyptian stories through guided tours.',
-    location: 'National Museum',
-    schedule: 'Weekends',
-    duration: '4 hrs/week',
-    icon: 'account-tie-outline'
+    id: "v1",
+    title: "Museum Tour Guide",
+    desc: "Help visitors discover artifacts and share Egyptian stories through guided tours.",
+    location: "National Museum",
+    schedule: "Weekends",
+    duration: "4 hrs/week",
+    icon: "account-tie-outline",
   },
   {
-    id: 'v2',
-    title: 'Heritage Garden Care',
-    desc: 'Maintain heritage gardens and learn about native Egyptian botanical traditions.',
-    location: 'Botanical Gardens',
-    schedule: 'Flexible',
-    duration: '3 hrs/week',
-    icon: 'sprout-outline'
+    id: "v2",
+    title: "Heritage Garden Care",
+    desc: "Maintain heritage gardens and learn about native Egyptian botanical traditions.",
+    location: "Botanical Gardens",
+    schedule: "Flexible",
+    duration: "3 hrs/week",
+    icon: "sprout-outline",
   },
   {
-    id: 'v3',
-    title: 'Art Workshop Assistant',
-    desc: 'Support children in hands-on art and craft workshops inspired by Egyptian culture.',
-    location: 'Cultural Center',
-    schedule: 'Saturdays',
-    duration: '2 hrs/week',
-    icon: 'palette-outline'
-  }
+    id: "v3",
+    title: "Art Workshop Assistant",
+    desc: "Support children in hands-on art and craft workshops inspired by Egyptian culture.",
+    location: "Cultural Center",
+    schedule: "Saturdays",
+    duration: "2 hrs/week",
+    icon: "palette-outline",
+  },
 ];
 
 const opportunitySignups: Array<{
@@ -48,59 +52,71 @@ const opportunitySignups: Array<{
 }> = [];
 
 // GET /api/volunteers/opportunities - list screen opportunities (public)
-volunteersRouter.get('/opportunities', (_req, res: Response) => {
+volunteersRouter.get("/opportunities", (_req, res: Response) => {
   return res.json({
     success: true,
     data: volunteerOpportunities,
-    total: volunteerOpportunities.length
+    total: volunteerOpportunities.length,
   });
 });
 
 // POST /api/volunteers/opportunities/:opportunityId/signup - screen sign up action (public)
-volunteersRouter.post('/opportunities/:opportunityId/signup', (req, res: Response) => {
-  const { opportunityId } = req.params;
-  const { applicantName, applicantEmail } = req.body as {
-    applicantName?: string;
-    applicantEmail?: string;
-  };
+volunteersRouter.post(
+  "/opportunities/:opportunityId/signup",
+  (req, res: Response) => {
+    const { opportunityId } = req.params;
+    const { applicantName, applicantEmail } = req.body as {
+      applicantName?: string;
+      applicantEmail?: string;
+    };
 
-  const opportunity = volunteerOpportunities.find((item) => item.id === opportunityId);
-  if (!opportunity) {
-    return res.status(404).json({ success: false, message: 'Opportunity not found' });
-  }
-
-  if (applicantEmail) {
-    const alreadyJoined = opportunitySignups.some(
-      (entry) =>
-        entry.opportunityId === opportunityId &&
-        entry.applicantEmail?.toLowerCase() === applicantEmail.toLowerCase()
+    const opportunity = volunteerOpportunities.find(
+      (item) => item.id === opportunityId,
     );
-
-    if (alreadyJoined) {
-      return res.status(409).json({ success: false, message: 'You already signed up for this opportunity' });
+    if (!opportunity) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Opportunity not found" });
     }
-  }
 
-  const signup = {
-    signupId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    opportunityId,
-    applicantName,
-    applicantEmail,
-    createdAt: new Date().toISOString()
-  };
+    if (applicantEmail) {
+      const alreadyJoined = opportunitySignups.some(
+        (entry) =>
+          entry.opportunityId === opportunityId &&
+          entry.applicantEmail?.toLowerCase() === applicantEmail.toLowerCase(),
+      );
 
-  opportunitySignups.push(signup);
+      if (alreadyJoined) {
+        return res
+          .status(409)
+          .json({
+            success: false,
+            message: "You already signed up for this opportunity",
+          });
+      }
+    }
 
-  return res.status(201).json({
-    success: true,
-    message: `Signed up for ${opportunity.title}`,
-    data: signup
-  });
-});
+    const signup = {
+      signupId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      opportunityId,
+      applicantName,
+      applicantEmail,
+      createdAt: new Date().toISOString(),
+    };
+
+    opportunitySignups.push(signup);
+
+    return res.status(201).json({
+      success: true,
+      message: `Signed up for ${opportunity.title}`,
+      data: signup,
+    });
+  },
+);
 
 // GET /api/volunteers - list volunteers (users see their own, Admin/Guide see all)
 volunteersRouter.get(
-  '/',
+  "/",
   authenticate,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
@@ -111,7 +127,10 @@ volunteersRouter.get(
       const skip = Number(req.query.skip) || 0;
 
       // Non-admins/guides only see their own volunteer records
-      if (req.user!.role !== UserRole.Admin && req.user!.role !== UserRole.Guide) {
+      if (
+        req.user!.role !== UserRole.Admin &&
+        req.user!.role !== UserRole.Guide
+      ) {
         filter.user = req.user!.id;
       }
 
@@ -124,8 +143,8 @@ volunteersRouter.get(
       }
 
       const volunteers = await VolunteerModel.find(filter)
-        .populate('user', 'name email')
-        .populate('museum', 'name city location')
+        .populate("user", "name email")
+        .populate("museum", "name city location")
         .sort({ createdAt: -1 })
         .limit(limit)
         .skip(skip);
@@ -135,26 +154,28 @@ volunteersRouter.get(
       return res.json({
         success: true,
         data: volunteers,
-        pagination: { limit, skip, total }
+        pagination: { limit, skip, total },
       });
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // GET /api/volunteers/:id - get one volunteer record
 volunteersRouter.get(
-  '/:id',
+  "/:id",
   authenticate,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const volunteer = await VolunteerModel.findById(req.params.id)
-        .populate('user', 'name email')
-        .populate('museum', 'name description city location');
+        .populate("user", "name email")
+        .populate("museum", "name description city location");
 
       if (!volunteer) {
-        return res.status(404).json({ success: false, message: 'Volunteer record not found' });
+        return res
+          .status(404)
+          .json({ success: false, message: "Volunteer record not found" });
       }
 
       // Non-admins/guides can only view their own records
@@ -165,7 +186,7 @@ volunteersRouter.get(
       if (!isAdminOrGuide && !isOwner) {
         return res.status(403).json({
           success: false,
-          message: 'Forbidden: You can only view your own volunteer records'
+          message: "Forbidden: You can only view your own volunteer records",
         });
       }
 
@@ -173,12 +194,12 @@ volunteersRouter.get(
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // POST /api/volunteers - create volunteer application (authenticated users)
 volunteersRouter.post(
-  '/',
+  "/",
   authenticate,
   validateBody(CreateVolunteerDto),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -188,7 +209,9 @@ volunteersRouter.post(
       // Verify museum exists
       const museum = await MuseumModel.findById(dto.museum);
       if (!museum) {
-        return res.status(400).json({ success: false, message: 'Museum not found' });
+        return res
+          .status(400)
+          .json({ success: false, message: "Museum not found" });
       }
 
       // Validate dates
@@ -196,7 +219,7 @@ volunteersRouter.post(
       if (startDate < new Date()) {
         return res.status(400).json({
           success: false,
-          message: 'Start date must be in the future'
+          message: "Start date must be in the future",
         });
       }
 
@@ -205,7 +228,7 @@ volunteersRouter.post(
         if (endDate <= startDate) {
           return res.status(400).json({
             success: false,
-            message: 'End date must be after start date'
+            message: "End date must be after start date",
           });
         }
       }
@@ -217,24 +240,24 @@ volunteersRouter.post(
         endDate: dto.endDate ? new Date(dto.endDate) : undefined,
         role: dto.role,
         notes: dto.notes,
-        status: 'pending'
+        status: "pending",
       });
 
       const populated = await volunteer.populate([
-        { path: 'user', select: 'name email' },
-        { path: 'museum', select: 'name city location' }
+        { path: "user", select: "name email" },
+        { path: "museum", select: "name city location" },
       ]);
 
       return res.status(201).json({ success: true, data: populated });
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // PATCH /api/volunteers/:id - update volunteer record (owner or Admin/Guide)
 volunteersRouter.patch(
-  '/:id',
+  "/:id",
   authenticate,
   validateBody(UpdateVolunteerDto),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -243,7 +266,9 @@ volunteersRouter.patch(
       const volunteer = await VolunteerModel.findById(req.params.id);
 
       if (!volunteer) {
-        return res.status(404).json({ success: false, message: 'Volunteer record not found' });
+        return res
+          .status(404)
+          .json({ success: false, message: "Volunteer record not found" });
       }
 
       const isOwner = volunteer.user.toString() === req.user!.id;
@@ -254,7 +279,7 @@ volunteersRouter.patch(
       if (!isAdminOrGuide && !isOwner) {
         return res.status(403).json({
           success: false,
-          message: 'Forbidden: You can only update your own volunteer records'
+          message: "Forbidden: You can only update your own volunteer records",
         });
       }
 
@@ -262,19 +287,22 @@ volunteersRouter.patch(
       if (!isAdminOrGuide && dto.status) {
         return res.status(403).json({
           success: false,
-          message: 'Forbidden: Only admins and guides can change volunteer status'
+          message:
+            "Forbidden: Only admins and guides can change volunteer status",
         });
       }
 
       // Validate dates if updating
       if (dto.startDate || dto.endDate) {
-        const startDate = dto.startDate ? new Date(dto.startDate) : volunteer.startDate;
+        const startDate = dto.startDate
+          ? new Date(dto.startDate)
+          : volunteer.startDate;
         const endDate = dto.endDate ? new Date(dto.endDate) : volunteer.endDate;
 
         if (endDate && endDate <= startDate) {
           return res.status(400).json({
             success: false,
-            message: 'End date must be after start date'
+            message: "End date must be after start date",
           });
         }
       }
@@ -283,38 +311,42 @@ volunteersRouter.patch(
         req.params.id,
         {
           $set: {
-            ...(dto.startDate != null && { startDate: new Date(dto.startDate) }),
+            ...(dto.startDate != null && {
+              startDate: new Date(dto.startDate),
+            }),
             ...(dto.endDate !== undefined && {
-              endDate: dto.endDate ? new Date(dto.endDate) : null
+              endDate: dto.endDate ? new Date(dto.endDate) : null,
             }),
             ...(dto.role !== undefined && { role: dto.role }),
             ...(dto.notes !== undefined && { notes: dto.notes }),
-            ...(dto.status != null && { status: dto.status })
-          }
+            ...(dto.status != null && { status: dto.status }),
+          },
         },
-        { new: true }
+        { new: true },
       ).populate([
-        { path: 'user', select: 'name email' },
-        { path: 'museum', select: 'name city location' }
+        { path: "user", select: "name email" },
+        { path: "museum", select: "name city location" },
       ]);
 
       return res.json({ success: true, data: updated });
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // DELETE /api/volunteers/:id - cancel volunteer application (owner or Admin)
 volunteersRouter.delete(
-  '/:id',
+  "/:id",
   authenticate,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const volunteer = await VolunteerModel.findById(req.params.id);
 
       if (!volunteer) {
-        return res.status(404).json({ success: false, message: 'Volunteer record not found' });
+        return res
+          .status(404)
+          .json({ success: false, message: "Volunteer record not found" });
       }
 
       const isOwner = volunteer.user.toString() === req.user!.id;
@@ -323,25 +355,30 @@ volunteersRouter.delete(
       if (!isAdmin && !isOwner) {
         return res.status(403).json({
           success: false,
-          message: 'Forbidden: You can only cancel your own volunteer applications'
+          message:
+            "Forbidden: You can only cancel your own volunteer applications",
         });
       }
 
       // Soft delete: set status to cancelled
       const cancelled = await VolunteerModel.findByIdAndUpdate(
         req.params.id,
-        { $set: { status: 'cancelled' } },
-        { new: true }
+        { $set: { status: "cancelled" } },
+        { new: true },
       ).populate([
-        { path: 'user', select: 'name email' },
-        { path: 'museum', select: 'name city location' }
+        { path: "user", select: "name email" },
+        { path: "museum", select: "name city location" },
       ]);
 
-      return res.json({ success: true, data: cancelled, message: 'Volunteer application cancelled' });
+      return res.json({
+        success: true,
+        data: cancelled,
+        message: "Volunteer application cancelled",
+      });
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 export { volunteersRouter };

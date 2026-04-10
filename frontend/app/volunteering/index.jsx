@@ -87,7 +87,7 @@ function MetaPill({ icon, text }) {
   );
 }
 
-function VolunteerCard({ item, onPress, isJoined }) {
+function VolunteerCard({ item, onPress, isJoined, labels }) {
   return (
     <View style={styles.card}>
       <View style={styles.cardAccent} />
@@ -122,7 +122,7 @@ function VolunteerCard({ item, onPress, isJoined }) {
             />
           ) : null}
           <Text style={styles.primaryBtnText}>
-            {isJoined ? "Joined" : "Sign up"}
+            {isJoined ? labels.joined : labels.signUp}
           </Text>
         </View>
       </TouchableOpacity>
@@ -130,7 +130,7 @@ function VolunteerCard({ item, onPress, isJoined }) {
   );
 }
 
-function DonateCard({ item, onPress }) {
+function DonateCard({ item, onPress, labels }) {
   return (
     <View style={styles.card}>
       <View style={styles.cardAccent} />
@@ -146,7 +146,7 @@ function DonateCard({ item, onPress }) {
       </View>
 
       <View style={styles.donateFooter}>
-        <Text style={styles.amountLabel}>Suggested amount</Text>
+        <Text style={styles.amountLabel}>{labels.suggestedAmount}</Text>
         <Text style={styles.amountValue}>{item.amount}</Text>
       </View>
 
@@ -155,7 +155,7 @@ function DonateCard({ item, onPress }) {
         onPress={onPress}
         activeOpacity={0.9}
       >
-        <Text style={styles.primaryBtnText}>Donate now</Text>
+        <Text style={styles.primaryBtnText}>{labels.donateNow}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -163,7 +163,7 @@ function DonateCard({ item, onPress }) {
 
 export default function VolunteeringScreen() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState("volunteer");
   const [joinedIds, setJoinedIds] = useState([]);
   const [joinedHydrated, setJoinedHydrated] = useState(false);
@@ -176,6 +176,31 @@ export default function VolunteeringScreen() {
     () => (activeTab === "volunteer" ? volunteerItems : donateItems),
     [activeTab, volunteerItems, donateItems],
   );
+
+  const localizeVolunteerItem = (item) => {
+    const base = `volunteering_screen.items.volunteer.${item.id}`;
+    if (!i18n.exists(`${base}.title`)) return item;
+
+    return {
+      ...item,
+      title: t(`${base}.title`),
+      desc: t(`${base}.desc`),
+      location: t(`${base}.location`),
+      schedule: t(`${base}.schedule`),
+      duration: t(`${base}.duration`),
+    };
+  };
+
+  const localizeDonateItem = (item) => {
+    const base = `volunteering_screen.items.donate.${item.id}`;
+    if (!i18n.exists(`${base}.title`)) return item;
+
+    return {
+      ...item,
+      title: t(`${base}.title`),
+      desc: t(`${base}.desc`),
+    };
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -208,9 +233,11 @@ export default function VolunteeringScreen() {
   useEffect(() => {
     if (!joinedHydrated) return;
 
-    AsyncStorage.setItem(JOINED_STORAGE_KEY, JSON.stringify(joinedIds)).catch(() => {
-      // ignore storage write failure, UI state is still usable
-    });
+    AsyncStorage.setItem(JOINED_STORAGE_KEY, JSON.stringify(joinedIds)).catch(
+      () => {
+        // ignore storage write failure, UI state is still usable
+      },
+    );
   }, [joinedIds, joinedHydrated]);
 
   useEffect(() => {
@@ -248,7 +275,7 @@ export default function VolunteeringScreen() {
         }
       } catch {
         if (isMounted) {
-          setFeedbackMessage("Could not load live data. Showing local data.");
+          setFeedbackMessage(t("volunteering_screen.feedback.live_data_failed"));
         }
       } finally {
         if (isMounted) {
@@ -264,21 +291,25 @@ export default function VolunteeringScreen() {
     };
   }, []);
 
-  const handleAction = async (item) => {
-    try {
-      await api.contributeDonationCampaign(item.id, {
-        amount: Number.parseFloat(String(item.amount).split(" ")[0]) || 100,
-        message: "Donation from volunteering screen",
-      });
-      setFeedbackMessage(`Thanks for supporting \"${item.title}\".`);
-    } catch (error) {
-      setFeedbackMessage(error?.message || "Donation failed. Please try again.");
-    }
+  const handleAction = (item) => {
+    const parsedAmount = Number.parseFloat(String(item.amount).split(" ")[0]) || 100;
+
+    router.push({
+      pathname: "/marketplace/checkout",
+      params: {
+        source: "donation",
+        campaignId: item.id,
+        campaignTitle: item.title,
+        donationAmount: String(parsedAmount),
+      },
+    });
   };
 
   const handleVolunteerSignUp = async (item) => {
     if (joinedIds.includes(item.id)) {
-      setFeedbackMessage(`You already joined \"${item.title}\".`);
+      setFeedbackMessage(
+        t("volunteering_screen.feedback.already_joined", { title: item.title }),
+      );
       return;
     }
 
@@ -290,16 +321,24 @@ export default function VolunteeringScreen() {
       });
 
       setJoinedIds((prev) => [...prev, item.id]);
-      setFeedbackMessage(`You are now signed up for \"${item.title}\".`);
+      setFeedbackMessage(
+        t("volunteering_screen.feedback.signup_success", { title: item.title }),
+      );
     } catch (error) {
       const isConflict = error?.status === 409;
       if (isConflict) {
-        setJoinedIds((prev) => (prev.includes(item.id) ? prev : [...prev, item.id]));
-        setFeedbackMessage(`You already joined \"${item.title}\".`);
+        setJoinedIds((prev) =>
+          prev.includes(item.id) ? prev : [...prev, item.id],
+        );
+        setFeedbackMessage(
+          t("volunteering_screen.feedback.already_joined", { title: item.title }),
+        );
         return;
       }
 
-      setFeedbackMessage(error?.message || "Signup failed. Please try again.");
+      setFeedbackMessage(
+        error?.message || t("volunteering_screen.feedback.signup_failed"),
+      );
     }
   };
 
@@ -343,7 +382,7 @@ export default function VolunteeringScreen() {
                   activeTab === "donate" && styles.toggleTextActive,
                 ]}
               >
-                Donate
+                {t("volunteering_screen.tabs.donate")}
               </Text>
             </TouchableOpacity>
 
@@ -361,7 +400,7 @@ export default function VolunteeringScreen() {
                   activeTab === "volunteer" && styles.toggleTextActive,
                 ]}
               >
-                Volunteer
+                {t("volunteering_screen.tabs.volunteer")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -369,14 +408,18 @@ export default function VolunteeringScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
               {activeTab === "volunteer"
-                ? "Volunteering opportunities"
-                : "Donation campaigns"}
+                ? t("volunteering_screen.section.volunteering_opportunities")
+                : t("volunteering_screen.section.donation_campaigns")}
             </Text>
 
             {activeTab === "volunteer" ? (
               <View style={styles.countChip}>
                 <Text style={styles.countChipText}>
-                  {joinedHydrated ? `${joinedIds.length} joined` : "..."}
+                  {joinedHydrated
+                    ? t("volunteering_screen.section.joined_count", {
+                        count: joinedIds.length,
+                      })
+                    : t("volunteering_screen.section.joined_loading")}
                 </Text>
               </View>
             ) : null}
@@ -400,7 +443,9 @@ export default function VolunteeringScreen() {
             {isLoading ? (
               <View style={styles.loadingBox}>
                 <ActivityIndicator color={DARK} />
-                <Text style={styles.loadingText}>Loading opportunities...</Text>
+                <Text style={styles.loadingText}>
+                  {t("volunteering_screen.loading_opportunities")}
+                </Text>
               </View>
             ) : null}
 
@@ -408,15 +453,23 @@ export default function VolunteeringScreen() {
               activeTab === "volunteer" ? (
                 <VolunteerCard
                   key={item.id}
-                  item={item}
+                  item={localizeVolunteerItem(item)}
                   isJoined={joinedIds.includes(item.id)}
                   onPress={() => handleVolunteerSignUp(item)}
+                  labels={{
+                    joined: t("volunteering_screen.buttons.joined"),
+                    signUp: t("volunteering_screen.buttons.sign_up"),
+                  }}
                 />
               ) : (
                 <DonateCard
                   key={item.id}
-                  item={item}
+                  item={localizeDonateItem(item)}
                   onPress={() => handleAction(item)}
+                  labels={{
+                    suggestedAmount: t("volunteering_screen.suggested_amount"),
+                    donateNow: t("volunteering_screen.buttons.donate_now"),
+                  }}
                 />
               ),
             )}
@@ -437,10 +490,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 15,
+    paddingHorizontal:15,
   },
   header: {
-    marginTop: 8,
+    marginTop: 20,
     marginBottom: 16,
     flexDirection: "row",
     alignItems: "center",
@@ -573,6 +626,7 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: "row",
     alignItems: "flex-start",
+    gap: 10,
     marginBottom: 9,
   },
   iconBadge: {
@@ -584,7 +638,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(184, 150, 90, 0.16)",
     borderWidth: 1,
     borderColor: "rgba(184, 150, 90, 0.24)",
-    marginRight: 10,
   },
   titleBlock: {
     flex: 1,
@@ -597,7 +650,7 @@ const styles = StyleSheet.create({
   },
   cardDesc: {
     color: MUTED,
-    fontSize: 12,
+    fontSize: 13,
     lineHeight: 17,
   },
   metaRow: {

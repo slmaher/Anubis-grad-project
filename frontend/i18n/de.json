@@ -91,6 +91,73 @@
       "past": "Vergangen"
     }
   },
+  "volunteering_screen": {
+    "tabs": {
+      "volunteer": "Freiwillig",
+      "donate": "Spenden"
+    },
+    "section": {
+      "volunteering_opportunities": "Ehrenamtliche Möglichkeiten",
+      "donation_campaigns": "Spendenkampagnen",
+      "joined_count": "{{count}} beigetreten",
+      "joined_loading": "..."
+    },
+    "buttons": {
+      "sign_up": "Anmelden",
+      "joined": "Beigetreten",
+      "donate_now": "Jetzt spenden"
+    },
+    "suggested_amount": "Empfohlener Betrag",
+    "loading_opportunities": "Möglichkeiten werden geladen...",
+    "feedback": {
+      "live_data_failed": "Live-Daten konnten nicht geladen werden. Lokale Daten werden angezeigt.",
+      "support_thanks": "Danke für deine Unterstützung von \"{{title}}\".",
+      "donation_failed": "Spende fehlgeschlagen. Bitte versuche es erneut.",
+      "signup_success": "Du bist jetzt für \"{{title}}\" angemeldet.",
+      "already_joined": "Du bist bereits bei \"{{title}}\" angemeldet.",
+      "signup_failed": "Anmeldung fehlgeschlagen. Bitte versuche es erneut.",
+      "donation_note": "Spende vom Freiwilligenbildschirm"
+    },
+    "items": {
+      "volunteer": {
+        "v1": {
+          "title": "Museums-Tourguide",
+          "desc": "Hilf Besuchern, Artefakte zu entdecken und ägyptische Geschichten in Führungen zu teilen.",
+          "location": "Nationalmuseum",
+          "schedule": "Wochenenden",
+          "duration": "4 Std./Woche"
+        },
+        "v2": {
+          "title": "Pflege des Kulturgartens",
+          "desc": "Pflege historische Gärten und lerne traditionelle ägyptische Pflanzenkultur kennen.",
+          "location": "Botanische Gärten",
+          "schedule": "Flexibel",
+          "duration": "3 Std./Woche"
+        },
+        "v3": {
+          "title": "Assistent für Kunstworkshops",
+          "desc": "Unterstütze Kinder bei Kunst- und Handwerksworkshops mit ägyptischem kulturellem Fokus.",
+          "location": "Kulturzentrum",
+          "schedule": "Samstags",
+          "duration": "2 Std./Woche"
+        }
+      },
+      "donate": {
+        "d1": {
+          "title": "Fonds zur Artefakt-Restaurierung",
+          "desc": "Hilf, empfindliche Artefakte zu restaurieren und kulturelles Erbe für künftige Generationen zu bewahren."
+        },
+        "d2": {
+          "title": "Programm für Studentenzugang",
+          "desc": "Förder den Zugang zu Museen und Lernmaterialien für Schüler und junge Entdecker."
+        },
+        "d3": {
+          "title": "Gemeinschaftsausstellungen",
+          "desc": "Unterstütze wechselnde Ausstellungen und lokale Veranstaltungen, die Geschichte näher bringen."
+        }
+      }
+    }
+  },
   "community": {
     "title": "Gemeinschaft",
     "search_placeholder": "Suchen",
