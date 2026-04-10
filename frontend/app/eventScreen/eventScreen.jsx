@@ -35,7 +35,11 @@ export default function EventsScreen() {
       style={styles.background}
       resizeMode="cover"
     >
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
+      />
 
       <View style={styles.overlayBase} />
       <View style={styles.overlayVignette} />
@@ -63,13 +67,20 @@ export default function EventsScreen() {
           ]}
         >
           <View style={styles.heroBlock}>
-            <Text style={[styles.title, { fontSize: titleSize, lineHeight: titleLineHeight }]}> 
+            <Text
+              style={[
+                styles.title,
+                { fontSize: titleSize, lineHeight: titleLineHeight },
+              ]}
+            >
               {t("events_hero.title_line_1")}
               {"\n"}
               {t("events_hero.title_line_2")}
             </Text>
 
-            <Text style={[styles.subtitle, isSmallScreen && styles.subtitleSmall]}>
+            <Text
+              style={[styles.subtitle, isSmallScreen && styles.subtitleSmall]}
+            >
               {t("events_hero.subtitle")}
             </Text>
           </View>
@@ -78,21 +89,27 @@ export default function EventsScreen() {
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
                 <Text style={styles.statNumber}>23</Text>
-                <Text style={styles.statLabel}>{t("events_hero.stat_all")}</Text>
+                <Text style={styles.statLabel}>
+                  {t("events_hero.stat_all")}
+                </Text>
               </View>
 
               <View style={styles.statDivider} />
 
               <View style={styles.statItem}>
                 <Text style={styles.statNumber}>2</Text>
-                <Text style={styles.statLabel}>{t("events_hero.stat_active")}</Text>
+                <Text style={styles.statLabel}>
+                  {t("events_hero.stat_active")}
+                </Text>
               </View>
 
               <View style={styles.statDivider} />
 
               <View style={styles.statItem}>
                 <Text style={styles.statNumber}>17</Text>
-                <Text style={styles.statLabel}>{t("events_hero.stat_upcoming")}</Text>
+                <Text style={styles.statLabel}>
+                  {t("events_hero.stat_upcoming")}
+                </Text>
               </View>
             </View>
 
@@ -101,8 +118,14 @@ export default function EventsScreen() {
               activeOpacity={0.9}
               onPress={() => router.push("/events/eventsList")}
             >
-              <Text style={styles.findBtnTxt}>{t("events_hero.find_nearest")}</Text>
-              <MaterialCommunityIcons name="map-marker-radius" size={18} color={ACCENT} />
+              <Text style={styles.findBtnTxt}>
+                {t("events_hero.find_nearest")}
+              </Text>
+              <MaterialCommunityIcons
+                name="map-marker-radius"
+                size={18}
+                color={ACCENT}
+              />
             </TouchableOpacity>
           </View>
         </View>
