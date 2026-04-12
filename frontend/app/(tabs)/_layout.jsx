@@ -207,10 +207,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderWidth: 1.5,
     borderColor: "rgba(255,255,255,0.9)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
+    boxShadow: "0px 6px 15px rgba(0, 0, 0, 0.2)",
     elevation: 12,
 
     alignItems: "center",
@@ -226,10 +223,7 @@ const styles = StyleSheet.create({
     top: 5,
     left: -4,
 
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
+    boxShadow: "0px 3px 6px rgba(0, 0, 0, 0.12)",
     elevation: 4,
   },
 

@@ -1,4 +1,67 @@
 const API_BASE_URL = "http://localhost:4000";
+const MONGODB_OBJECT_ID_PATTERN = /^[a-fA-F0-9]{24}$/;
+
+const LEGACY_MUSEUM_ALIASES = {
+  "1": ["grand egyptian museum", "the grand egyptian museum"],
+  "2": ["egyptian museum", "the egyptian museum"],
+  "grand egyptian museum": ["grand egyptian museum", "the grand egyptian museum"],
+  "egyptian museum": ["egyptian museum", "the egyptian museum"],
+  "museum of islamic art": ["museum of islamic art, cairo", "museum of islamic art"],
+  "coptic museum": ["coptic museum"],
+  "national museum of egyptian civilization": ["national museum of egyptian civilization", "the national museum of egypt", "the national museum of egyptian civilization"],
+};
+
+function normalizeMuseumName(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function expandMuseumCandidates(values) {
+  const expanded = new Set();
+
+  values.forEach((value) => {
+    const normalized = normalizeMuseumName(value);
+    if (!normalized) {
+      return;
+    }
+
+    expanded.add(normalized);
+    const aliases = LEGACY_MUSEUM_ALIASES[normalized];
+    if (aliases) {
+      aliases.forEach((alias) => expanded.add(normalizeMuseumName(alias)));
+    }
+  });
+
+  return [...expanded];
+}
+
+async function resolveMuseumId({ museumId, museumLookupName, museumName }) {
+  const rawMuseumId = museumId == null ? "" : String(museumId).trim();
+
+  if (rawMuseumId && MONGODB_OBJECT_ID_PATTERN.test(rawMuseumId)) {
+    return rawMuseumId;
+  }
+
+  const candidateNames = expandMuseumCandidates([museumLookupName, museumName, rawMuseumId]);
+
+  if (candidateNames.length === 0) {
+    return null;
+  }
+
+  const response = await apiRequest("/api/museums");
+  const museums = response?.data || [];
+
+  const match = museums.find((museum) => {
+    const museumNameValue = normalizeMuseumName(museum?.name);
+    return candidateNames.some((candidate) => candidate === museumNameValue);
+  });
+
+  return match?._id || match?.id || null;
+}
 
 async function apiRequest(path, options = {}) {
   const { method = "GET", body, token } = options;
@@ -65,21 +128,50 @@ export const api = {
   // Reviews
   getReviews(params = {}) {
     const query = new URLSearchParams();
-    if (params.museumId) {
-      query.append("museumId", params.museumId);
+    const museumFilter = params.museumId || params.museumLookupName || params.museumName;
+
+    if (!museumFilter) {
+      if (params.limit) {
+        query.append("limit", String(params.limit));
+      }
+      const qs = query.toString();
+      const suffix = qs ? `?${qs}` : "";
+      return apiRequest(`/api/reviews${suffix}`);
     }
-    if (params.limit) {
-      query.append("limit", String(params.limit));
-    }
-    const qs = query.toString();
-    const suffix = qs ? `?${qs}` : "";
-    return apiRequest(`/api/reviews${suffix}`);
+
+    return resolveMuseumId(params).then((resolvedMuseumId) => {
+      if (!resolvedMuseumId) {
+        throw new Error("Unable to resolve the selected museum.");
+      }
+
+      query.append("museumId", resolvedMuseumId);
+      if (params.limit) {
+        query.append("limit", String(params.limit));
+      }
+      const qs = query.toString();
+      const suffix = qs ? `?${qs}` : "";
+      return apiRequest(`/api/reviews${suffix}`);
+    });
   },
   createReview(payload, token) {
-    return apiRequest("/api/reviews", {
-      method: "POST",
-      body: payload,
-      token,
+    return resolveMuseumId({
+      museumId: payload?.museum,
+      museumLookupName: payload?.museumLookupName,
+      museumName: payload?.museumName,
+    }).then((resolvedMuseumId) => {
+      if (!resolvedMuseumId) {
+        throw new Error("Unable to resolve the selected museum.");
+      }
+
+      return apiRequest("/api/reviews", {
+        method: "POST",
+        body: {
+          museum: resolvedMuseumId,
+          rating: payload.rating,
+          comment: payload.comment,
+        },
+        token,
+      });
     });
   },
 

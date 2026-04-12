@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { NextFunction, Response, Router } from 'express';
 
 import { ReviewModel } from './review.model';
@@ -20,7 +21,11 @@ reviewsRouter.get(
       const skip = Number(req.query.skip) || 0;
 
       if (museumId) {
-        filter.museum = museumId;
+        if (!mongoose.isValidObjectId(museumId)) {
+          return res.status(400).json({ success: false, message: 'Invalid museum id' });
+        }
+
+        filter.museum = new mongoose.Types.ObjectId(museumId);
       }
 
       const reviews = await ReviewModel.find(filter)
@@ -111,8 +116,14 @@ reviewsRouter.post(
       const dto = req.body as CreateReviewDto;
       const userId = req.user!.id;
 
+      if (!mongoose.isValidObjectId(dto.museum)) {
+        return res.status(400).json({ success: false, message: 'Invalid museum id' });
+      }
+
+      const museumObjectId = new mongoose.Types.ObjectId(dto.museum);
+
       // Verify museum exists
-      const museum = await MuseumModel.findById(dto.museum);
+      const museum = await MuseumModel.findById(museumObjectId);
       if (!museum) {
         return res.status(400).json({ success: false, message: 'Museum not found' });
       }
@@ -120,7 +131,7 @@ reviewsRouter.post(
       // Check if user already reviewed this museum
       const existingReview = await ReviewModel.findOne({
         user: userId,
-        museum: dto.museum
+        museum: museumObjectId
       });
 
       if (existingReview) {
@@ -132,7 +143,7 @@ reviewsRouter.post(
 
       const review = await ReviewModel.create({
         user: userId,
-        museum: dto.museum,
+        museum: museumObjectId,
         rating: dto.rating,
         comment: dto.comment
       });

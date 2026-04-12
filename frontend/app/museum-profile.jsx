@@ -62,10 +62,20 @@ export default function MuseumProfile() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [imageError, setImageError] = useState(false);
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/(tabs)/home");
+  };
+
   // Museum data
   const museum = {
     id: params.id,
     name: params.name || "Grand Egyptian Museum",
+    lookupName: params.museumLookupName || params.name || "Grand Egyptian Museum",
     price: "120 LE/ Person",
     rating: 4.6,
     imageUrl: params.imageUrl,
@@ -162,7 +172,7 @@ export default function MuseumProfile() {
           {/* Back Button */}
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => router.back()}
+              onPress={handleBack}
           >
             <Text style={styles.backIcon}>{t("common.back_arrow")}</Text>
           </TouchableOpacity>
@@ -220,6 +230,7 @@ export default function MuseumProfile() {
                       params: {
                         museumId: museum.id,
                         museumName: museum.name,
+                        museumLookupName: museum.lookupName,
                       },
                     });
                   } else if (tab === "Artifacts") {
@@ -229,6 +240,7 @@ export default function MuseumProfile() {
                       params: {
                         museumId: museum.id,
                         museumName: museum.name,
+                        museumLookupName: museum.lookupName,
                       },
                     });
                   } else if (tab === "Nearby") {

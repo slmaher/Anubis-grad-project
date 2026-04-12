@@ -168,7 +168,11 @@ export default function Home() {
                   onPress={() =>
                     router.push({
                       pathname: "/museum-profile",
-                      params: { id: 1, name: t("home.grand_museum") },
+                      params: {
+                        id: 1,
+                        name: t("home.grand_museum"),
+                        museumLookupName: "Grand Egyptian Museum",
+                      },
                     })
                   }
                 >
@@ -192,7 +196,11 @@ export default function Home() {
                   onPress={() =>
                     router.push({
                       pathname: "/museum-profile",
-                      params: { id: 2, name: t("home.egyptian_museum") },
+                      params: {
+                        id: 2,
+                        name: t("home.egyptian_museum"),
+                        museumLookupName: "Egyptian Museum",
+                      },
                     })
                   }
                 >
