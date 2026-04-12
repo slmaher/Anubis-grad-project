@@ -27,7 +27,8 @@ export default function ReviewSuccess() {
       <View style={styles.content}>
         <Text style={styles.thankYouTitle}>Thank you for your review!</Text>
         <Text style={styles.thankYouSubtitle}>
-          You help fellow travelers find what's good out there in discovering the best experiences.
+          You help fellow travelers find what's good out there in discovering
+          the best experiences.
         </Text>
       </View>
 

@@ -1,15 +1,25 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, Dimensions, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  ImageBackground,
+  Dimensions,
+  Alert,
+} from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import * as Sharing from 'expo-sharing';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import AntDesign from '@expo/vector-icons/AntDesign';
+import * as Sharing from "expo-sharing";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import AntDesign from "@expo/vector-icons/AntDesign";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 const MUSEUM_LOCAL_IMAGES = [
   require("../assets/images/Grand-Egyptian-Museum.png"),
@@ -49,8 +59,11 @@ const MUSEUM_NAME_TO_IMAGE = {
 
 function getLocalImageForMuseum(name) {
   const trimmed = name?.trim?.();
-  if (trimmed && MUSEUM_NAME_TO_IMAGE[trimmed]) return MUSEUM_NAME_TO_IMAGE[trimmed];
-  const index = (trimmed || "").split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  if (trimmed && MUSEUM_NAME_TO_IMAGE[trimmed])
+    return MUSEUM_NAME_TO_IMAGE[trimmed];
+  const index = (trimmed || "")
+    .split("")
+    .reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return MUSEUM_LOCAL_IMAGES[Math.abs(index) % MUSEUM_LOCAL_IMAGES.length];
 }
 
@@ -75,7 +88,8 @@ export default function MuseumProfile() {
   const museum = {
     id: params.id,
     name: params.name || "Grand Egyptian Museum",
-    lookupName: params.museumLookupName || params.name || "Grand Egyptian Museum",
+    lookupName:
+      params.museumLookupName || params.name || "Grand Egyptian Museum",
     price: "120 LE/ Person",
     rating: 4.6,
     imageUrl: params.imageUrl,
@@ -91,36 +105,40 @@ export default function MuseumProfile() {
   const handleShare = async () => {
     try {
       const isAvailable = await Sharing.isAvailableAsync();
-      
+
       if (!isAvailable) {
-        Alert.alert('Error', 'Sharing is not available on this device');
+        Alert.alert("Error", "Sharing is not available on this device");
         return;
       }
 
       const shareText = `Check out ${museum.name}!\n\nPrice: ${museum.price}\nRating: ⭐ ${museum.rating}\n\n${museum.description}\n\nDiscover more amazing museums in Egypt with Anubis app!`;
-      
-      const Share = require('react-native').Share;
+
+      const Share = require("react-native").Share;
       await Share.share({
         message: shareText,
         title: museum.name,
       });
     } catch (error) {
-      console.error('Error sharing:', error);
-      Alert.alert('Error', 'Failed to share museum profile');
+      console.error("Error sharing:", error);
+      Alert.alert("Error", "Failed to share museum profile");
     }
   };
 
   const handleFavorite = async () => {
     try {
-      const existingFavorites = await AsyncStorage.getItem('favorites');
-      let favoritesArray = existingFavorites ? JSON.parse(existingFavorites) : [];
+      const existingFavorites = await AsyncStorage.getItem("favorites");
+      let favoritesArray = existingFavorites
+        ? JSON.parse(existingFavorites)
+        : [];
 
-      const alreadyFavorite = favoritesArray.some(fav => fav.id === museum.id);
+      const alreadyFavorite = favoritesArray.some(
+        (fav) => fav.id === museum.id,
+      );
 
       if (alreadyFavorite) {
-        favoritesArray = favoritesArray.filter(fav => fav.id !== museum.id);
+        favoritesArray = favoritesArray.filter((fav) => fav.id !== museum.id);
         setIsFavorite(false);
-        Alert.alert('Removed', 'Removed from your favorites');
+        Alert.alert("Removed", "Removed from your favorites");
       } else {
         const favoriteItem = {
           id: museum.id,
@@ -132,17 +150,17 @@ export default function MuseumProfile() {
         };
         favoritesArray.push(favoriteItem);
         setIsFavorite(true);
-        
-        await AsyncStorage.setItem('favorites', JSON.stringify(favoritesArray));
-        
-        Alert.alert('Success', 'Added to your favorites!', [
-          { text: 'View Favorites', onPress: () => router.push('/favorites') },
-          { text: 'OK' }
+
+        await AsyncStorage.setItem("favorites", JSON.stringify(favoritesArray));
+
+        Alert.alert("Success", "Added to your favorites!", [
+          { text: "View Favorites", onPress: () => router.push("/favorites") },
+          { text: "OK" },
         ]);
       }
     } catch (error) {
-      console.error('Error adding to favorites:', error);
-      Alert.alert('Error', 'Failed to add to favorites');
+      console.error("Error adding to favorites:", error);
+      Alert.alert("Error", "Failed to add to favorites");
     }
   };
 
@@ -165,23 +183,17 @@ export default function MuseumProfile() {
             resizeMode="cover"
             onError={() => setImageError(true)}
           />
-          
+
           {/* Shadow Layer under image */}
           <View style={styles.imageShadow} />
-          
+
           {/* Back Button */}
-          <TouchableOpacity 
-            style={styles.backButton}
-              onPress={handleBack}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
             <Text style={styles.backIcon}>{t("common.back_arrow")}</Text>
           </TouchableOpacity>
 
           {/* Share Button */}
-          <TouchableOpacity 
-            style={styles.shareButton}
-            onPress={handleShare}
-          >
+          <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
             <Text style={styles.shareIcon}>↗</Text>
           </TouchableOpacity>
 
@@ -199,14 +211,14 @@ export default function MuseumProfile() {
           {/* Bookmark Button with Glassy Bubble */}
           <View style={styles.bookmarkContainer}>
             <View style={styles.bookmarkBubble} />
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.bookmarkButton}
               onPress={handleFavorite}
             >
-              <FontAwesome6 
-                name={isFavorite ? "bookmark" : "bookmark"} 
-                size={24} 
-                color="#333" 
+              <FontAwesome6
+                name={isFavorite ? "bookmark" : "bookmark"}
+                size={24}
+                color="#333"
               />
             </TouchableOpacity>
           </View>
@@ -214,8 +226,8 @@ export default function MuseumProfile() {
 
         {/* Tabs */}
         <View style={styles.tabsContainer}>
-          <ScrollView 
-            horizontal 
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.tabsContent}
           >
@@ -250,7 +262,12 @@ export default function MuseumProfile() {
                   }
                 }}
               >
-                <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === tab && styles.activeTabText,
+                  ]}
+                >
                   {t(`museum.tabs.${tab.toLowerCase()}`)}
                 </Text>
               </TouchableOpacity>
@@ -258,7 +275,7 @@ export default function MuseumProfile() {
           </ScrollView>
         </View>
 
-        <ScrollView 
+        <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
         >
@@ -269,7 +286,11 @@ export default function MuseumProfile() {
               <Text style={styles.infoText}>{museum.hours}</Text>
             </View>
             <View style={styles.infoCard}>
-              <MaterialCommunityIcons name="account-group" size={20} color="#666" />
+              <MaterialCommunityIcons
+                name="account-group"
+                size={20}
+                color="#666"
+              />
               <Text style={styles.infoText}>{museum.capacity}</Text>
             </View>
             <View style={styles.infoCard}>
