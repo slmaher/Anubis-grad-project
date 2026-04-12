@@ -4,9 +4,11 @@ import { PostModel } from "./post.model";
 import { CreatePostDto } from "./post.dto";
 import {
   authenticate,
+  authorizeRoles,
   AuthenticatedRequest,
 } from "../../common/middleware/auth";
 import { validateBody } from "../../common/middleware/validationMiddleware";
+import { UserRole } from "../users/user.roles";
 
 const postsRouter = Router();
 
@@ -149,6 +151,40 @@ postsRouter.post(
       }
 
       return res.status(201).json({ success: true, data: updatedPost });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// DELETE /api/posts/:postId - delete post (Admin or owner)
+postsRouter.delete(
+  "/:postId",
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { postId } = req.params;
+      const post = await PostModel.findById(postId);
+
+      if (!post) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Post not found" });
+      }
+
+      const isOwner = post.user.toString() === req.user!.id;
+      const isAdmin = req.user!.role === UserRole.Admin;
+
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: You can only delete your own posts",
+        });
+      }
+
+      await PostModel.findByIdAndDelete(postId);
+
+      return res.json({ success: true, message: "Post deleted successfully" });
     } catch (err) {
       next(err);
     }
