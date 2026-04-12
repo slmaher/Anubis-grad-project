@@ -359,11 +359,30 @@
     "dashboard": {
       "welcome": "مرحباً بك مجدداً أيها المدير",
       "overview": "إليك ما يحدث على المنصة اليوم.",
+      "overview_title": "نظرة عامة على لوحة التحكم",
+      "quick_actions": "إجراءات سريعة",
+      "recent_activity": "النشاط الأخير",
+      "auth_required": "يرجى تسجيل الدخول مرة أخرى لتحميل بيانات لوحة التحكم.",
+      "load_failed": "تعذر تحميل بيانات لوحة التحكم.",
       "stats": {
         "users": "إجمالي المستخدمين",
         "museums": "المتاحف",
         "artifacts": "القطع الأثرية",
-        "events": "الفعاليات"
+        "events": "الفعاليات",
+        "pending_volunteers": "طلبات التطوع المعلقة"
+      },
+      "actions": {
+        "add_museum": "إضافة متحف",
+        "add_artifact": "إضافة قطعة أثرية",
+        "new_event": "فعالية جديدة",
+        "create_campaign": "إنشاء حملة"
+      },
+      "activity": {
+        "empty": "لا يوجد نشاط حديث حتى الآن.",
+        "new_user": "مستخدم جديد انضم: {{name}}",
+        "new_artifact": "تمت إضافة قطعة أثرية: {{name}}",
+        "unknown_user": "مستخدم غير معروف",
+        "unknown_artifact": "قطعة أثرية غير معروفة"
       }
     }
   }

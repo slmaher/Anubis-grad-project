@@ -1,11 +1,21 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import { api } from "../api/client";
 import { saveAuthSession } from "../api/authStorage";
 import { useTranslation } from "react-i18next";
-import Ionicons from '@expo/vector-icons/Ionicons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 export default function Login() {
   const router = useRouter();
@@ -39,7 +49,7 @@ export default function Login() {
       console.error("Login failed", error);
       Alert.alert(
         "Login failed",
-        error?.message || "Please check your credentials and try again."
+        error?.message || "Please check your credentials and try again.",
       );
     } finally {
       setLoading(false);
@@ -56,7 +66,7 @@ export default function Login() {
       />
 
       {/* Close Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.closeButton}
         onPress={() => router.back()}
       >
@@ -70,7 +80,7 @@ export default function Login() {
 
       {/* Dark Overlay - Only bottom half */}
       <View style={styles.overlay}>
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
@@ -78,15 +88,17 @@ export default function Login() {
           <View style={styles.content}>
             {/* Tab Buttons */}
             <View style={styles.tabs}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.tab}
                 onPress={() => router.replace("/auth/signup")}
               >
                 <Text style={styles.tabText}>{t("auth.login.sign_up")}</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity style={[styles.tab, styles.activeTab]}>
-                <Text style={[styles.tabText, styles.activeTabText]}>{t("auth.login.log_in")}</Text>
+                <Text style={[styles.tabText, styles.activeTabText]}>
+                  {t("auth.login.log_in")}
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -114,14 +126,22 @@ export default function Login() {
                   placeholderTextColor="rgba(255, 255, 255, 0.8)"
                   secureTextEntry={!showPassword}
                 />
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.eyeButton}
                 >
                   {showPassword ? (
-                    <Ionicons name="eye-outline" size={24} color="rgba(255, 255, 255, 0.9)" />
+                    <Ionicons
+                      name="eye-outline"
+                      size={24}
+                      color="rgba(255, 255, 255, 0.9)"
+                    />
                   ) : (
-                    <MaterialCommunityIcons name="eye-closed" size={24} color="rgba(255, 255, 255, 0.9)" />
+                    <MaterialCommunityIcons
+                      name="eye-closed"
+                      size={24}
+                      color="rgba(255, 255, 255, 0.9)"
+                    />
                   )}
                 </TouchableOpacity>
               </View>
@@ -129,11 +149,13 @@ export default function Login() {
 
             {/* Forgot Password */}
             <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>{t("auth.login.forgot_password")}</Text>
+              <Text style={styles.forgotPasswordText}>
+                {t("auth.login.forgot_password")}
+              </Text>
             </TouchableOpacity>
 
             {/* Log in Button */}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.loginButton}
               onPress={handleLogin}
               disabled={loading}
@@ -141,7 +163,9 @@ export default function Login() {
               {loading ? (
                 <ActivityIndicator color="#333" />
               ) : (
-                <Text style={styles.loginButtonText}>{t("auth.login.button")}</Text>
+                <Text style={styles.loginButtonText}>
+                  {t("auth.login.button")}
+                </Text>
               )}
             </TouchableOpacity>
 
@@ -154,7 +178,7 @@ export default function Login() {
                   resizeMode="contain"
                 />
               </TouchableOpacity>
-              
+
               <TouchableOpacity style={styles.socialButton}>
                 <Image
                   source={require("../../assets/images/apple_icon.png")}
@@ -162,7 +186,7 @@ export default function Login() {
                   resizeMode="contain"
                 />
               </TouchableOpacity>
-              
+
               <TouchableOpacity style={styles.socialButton}>
                 <Image
                   source={require("../../assets/images/windows-logo.png")}

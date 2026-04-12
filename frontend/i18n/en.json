@@ -359,11 +359,30 @@
     "dashboard": {
       "welcome": "Welcome back, Admin",
       "overview": "Here is what's happening with the platform today.",
+      "overview_title": "Dashboard Overview",
+      "quick_actions": "Quick Actions",
+      "recent_activity": "Recent Activity",
+      "auth_required": "Please log in again to load dashboard data.",
+      "load_failed": "Could not load dashboard data.",
       "stats": {
         "users": "Total Users",
         "museums": "Museums",
         "artifacts": "Artifacts",
-        "events": "Events"
+        "events": "Events",
+        "pending_volunteers": "Pending Volunteers"
+      },
+      "actions": {
+        "add_museum": "Add Museum",
+        "add_artifact": "Add Artifact",
+        "new_event": "New Event",
+        "create_campaign": "Create Campaign"
+      },
+      "activity": {
+        "empty": "No recent activity yet.",
+        "new_user": "New user joined: {{name}}",
+        "new_artifact": "New artifact added: {{name}}",
+        "unknown_user": "Unknown user",
+        "unknown_artifact": "Unknown artifact"
       }
     }
   }
