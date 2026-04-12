@@ -259,4 +259,131 @@ export const api = {
       body: payload,
     });
   },
+
+  // --- ADMIN APIs ---
+  admin: {
+    // Users
+    getUsers(token) {
+      return apiRequest("/api/users", { token });
+    },
+    updateUserRole(userId, role, token) {
+      return apiRequest(`/api/users/${userId}/role`, {
+        method: "PATCH",
+        body: { role },
+        token,
+      });
+    },
+    deleteUser(userId, token) {
+      return apiRequest(`/api/users/${userId}`, {
+        method: "DELETE",
+        token,
+      });
+    },
+
+    // Museums
+    createMuseum(payload, token) {
+      return apiRequest("/api/museums", {
+        method: "POST",
+        body: payload,
+        token,
+      });
+    },
+    deleteMuseum(id, token) {
+      return apiRequest(`/api/museums/${id}`, {
+        method: "DELETE",
+        token,
+      });
+    },
+
+    // Artifacts
+    getArtifacts(token) {
+      return apiRequest("/api/artifacts", { token });
+    },
+    createArtifact(payload, token) {
+      return apiRequest("/api/artifacts", {
+        method: "POST",
+        body: payload,
+        token,
+      });
+    },
+    deleteArtifact(id, token) {
+      return apiRequest(`/api/artifacts/${id}`, {
+        method: "DELETE",
+        token,
+      });
+    },
+
+    // Marketplace
+    getMarketplace(token) {
+      return apiRequest("/api/marketplace", { token });
+    },
+    createProduct(payload, token) {
+      return apiRequest("/api/marketplace", {
+        method: "POST",
+        body: payload,
+        token,
+      });
+    },
+    updateProduct(id, payload, token) {
+      return apiRequest(`/api/marketplace/${id}`, {
+        method: "PATCH",
+        body: payload,
+        token,
+      });
+    },
+    deleteProduct(id, token) {
+      return apiRequest(`/api/marketplace/${id}`, {
+        method: "DELETE",
+        token,
+      });
+    },
+
+    // Volunteering
+    createOpportunity(payload, token) {
+      return apiRequest("/api/volunteers/opportunities", {
+        method: "POST",
+        body: payload,
+        token,
+      });
+    },
+    updateOpportunity(id, payload, token) {
+      return apiRequest(`/api/volunteers/opportunities/${id}`, {
+        method: "PATCH",
+        body: payload,
+        token,
+      });
+    },
+    deleteOpportunity(id, token) {
+      return apiRequest(`/api/volunteers/opportunities/${id}`, {
+        method: "DELETE",
+        token,
+      });
+    },
+    getApplications(token) {
+      return apiRequest("/api/volunteers", { token });
+    },
+    updateApplicationStatus(id, status, token) {
+      return apiRequest(`/api/volunteers/${id}`, {
+        method: "PATCH",
+        body: { status },
+        token,
+      });
+    },
+
+    // Posts
+    deletePost(id, token) {
+      return apiRequest(`/api/posts/${id}`, {
+        method: "DELETE",
+        token,
+      });
+    },
+
+    // Reviews
+    deleteReview(id, token) {
+      return apiRequest(`/api/reviews/${id}`, {
+        method: "DELETE",
+        token,
+      });
+    },
+  },
 };

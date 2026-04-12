@@ -3,8 +3,9 @@ import { NextFunction, Response, Router } from 'express';
 import { ReviewModel } from './review.model';
 import { MuseumModel } from '../museums/museum.model';
 import { CreateReviewDto, UpdateReviewDto } from './review.dto';
-import { authenticate, AuthenticatedRequest } from '../../common/middleware/auth';
+import { authenticate, authorizeRoles, AuthenticatedRequest } from '../../common/middleware/auth';
 import { validateBody } from '../../common/middleware/validationMiddleware';
+import { UserRole } from '../users/user.roles';
 
 const reviewsRouter = Router();
 
@@ -43,6 +44,36 @@ reviewsRouter.get(
         data: reviews,
         pagination: { limit, skip, total },
         averageRating: avgRating ? Number(avgRating.toFixed(2)) : 0
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// GET /api/reviews/admin/list - list all reviews with more details (Admin only)
+reviewsRouter.get(
+  '/admin/list',
+  authenticate,
+  authorizeRoles(UserRole.Admin),
+  async (req, res: Response, next: NextFunction) => {
+    try {
+      const limit = Number(req.query.limit) || 100;
+      const skip = Number(req.query.skip) || 0;
+
+      const reviews = await ReviewModel.find()
+        .populate('user', 'name email avatar')
+        .populate('museum', 'name city')
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(skip);
+
+      const total = await ReviewModel.countDocuments();
+
+      return res.json({
+        success: true,
+        data: reviews,
+        pagination: { limit, skip, total }
       });
     } catch (err) {
       next(err);
@@ -161,7 +192,7 @@ reviewsRouter.patch(
   }
 );
 
-// DELETE /api/reviews/:id - delete review (owner only)
+// DELETE /api/reviews/:id - delete review (owner or Admin)
 reviewsRouter.delete(
   '/:id',
   authenticate,
@@ -173,11 +204,14 @@ reviewsRouter.delete(
         return res.status(404).json({ success: false, message: 'Review not found' });
       }
 
-      // Only owner can delete
-      if (review.user.toString() !== req.user!.id) {
+      const isOwner = review.user.toString() === req.user!.id;
+      const isAdmin = req.user!.role === UserRole.Admin;
+
+      // Only owner or Admin can delete
+      if (!isOwner && !isAdmin) {
         return res.status(403).json({
           success: false,
-          message: 'Forbidden: You can only delete your own reviews'
+          message: 'Forbidden: You can only delete your own reviews or be an admin'
         });
       }
 
