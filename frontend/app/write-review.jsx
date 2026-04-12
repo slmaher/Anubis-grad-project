@@ -19,6 +19,7 @@ export default function WriteReview() {
   const params = useLocalSearchParams();
   const museumId = params.museumId;
   const museumName = params.museumName || "Grand Egyptian Museum";
+  const museumLookupName = params.museumLookupName;
   const [overallRating, setOverallRating] = useState(0);
   const [recommend, setRecommend] = useState(false);
   const [easeRating, setEaseRating] = useState(0);
@@ -27,6 +28,15 @@ export default function WriteReview() {
   const [title, setTitle] = useState("");
   const [photos, setPhotos] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/(tabs)/home");
+  };
 
   const handlePickPhoto = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -50,7 +60,7 @@ export default function WriteReview() {
       return;
     }
 
-    if (!museumId) {
+    if (!museumId && !museumName && !museumLookupName) {
       Alert.alert(
         "Missing museum",
         "We couldn't identify which museum you're reviewing. Please go back and try again."
@@ -79,6 +89,8 @@ export default function WriteReview() {
 
       const payload = {
         museum: museumId,
+        museumName,
+        museumLookupName,
         rating: overallRating,
         comment: reviewText || title || undefined,
       };
@@ -146,7 +158,7 @@ export default function WriteReview() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.closeButton} onPress={handleBack}>
           <Text style={styles.closeIcon}>✕</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Reviews and Ratings</Text>

@@ -8,10 +8,20 @@ export default function Reviews() {
   const params = useLocalSearchParams();
   const museumId = params.museumId;
   const museumName = params.museumName;
+  const museumLookupName = params.museumLookupName;
 
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/(tabs)/home");
+  };
 
   const renderStars = (rating) => {
     return "⭐".repeat(rating);
@@ -24,7 +34,9 @@ export default function Reviews() {
       try {
         setLoading(true);
         const result = await api.getReviews(
-          museumId ? { museumId } : {}
+          museumId || museumName || museumLookupName
+            ? { museumId, museumName, museumLookupName }
+            : {}
         );
         const list = result?.data || [];
         if (isMounted) {
@@ -53,7 +65,7 @@ export default function Reviews() {
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={handleBack}
         >
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
@@ -122,7 +134,7 @@ export default function Reviews() {
         onPress={() =>
           router.push({
             pathname: "/write-review",
-            params: { museumId, museumName },
+              params: { museumId, museumName, museumLookupName },
           })
         }
       >
