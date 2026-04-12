@@ -338,5 +338,33 @@
       "nearby": "Nearby"
     },
     "book_ticket": "Book Ticket"
+  },
+  "admin": {
+    "title": "Revive Egypt Admin",
+    "mobile_title": "Admin Panel",
+    "exit": "Exit Admin",
+    "menu": {
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "museums": "Museums",
+      "artifacts": "Artifacts",
+      "events": "Events",
+      "posts": "Posts",
+      "donations": "Donations",
+      "volunteering": "Volunteering",
+      "marketplace": "Marketplace",
+      "tour_guides": "Tour Guides",
+      "reviews": "Reviews"
+    },
+    "dashboard": {
+      "welcome": "Welcome back, Admin",
+      "overview": "Here is what's happening with the platform today.",
+      "stats": {
+        "users": "Total Users",
+        "museums": "Museums",
+        "artifacts": "Artifacts",
+        "events": "Events"
+      }
+    }
   }
 }

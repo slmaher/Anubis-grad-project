@@ -1,8 +1,10 @@
 import { NextFunction, Response, Router } from "express";
 
 import { VolunteerModel } from "./volunteer.model";
+import { OpportunityModel } from "./opportunity.model";
 import { MuseumModel } from "../museums/museum.model";
 import { CreateVolunteerDto, UpdateVolunteerDto } from "./volunteer.dto";
+import { CreateOpportunityDto, UpdateOpportunityDto } from "./opportunity.dto";
 import {
   authenticate,
   authorizeRoles,
@@ -13,106 +15,81 @@ import { UserRole } from "../users/user.roles";
 
 const volunteersRouter = Router();
 
-const volunteerOpportunities = [
-  {
-    id: "v1",
-    title: "Museum Tour Guide",
-    desc: "Help visitors discover artifacts and share Egyptian stories through guided tours.",
-    location: "National Museum",
-    schedule: "Weekends",
-    duration: "4 hrs/week",
-    icon: "account-tie-outline",
-  },
-  {
-    id: "v2",
-    title: "Heritage Garden Care",
-    desc: "Maintain heritage gardens and learn about native Egyptian botanical traditions.",
-    location: "Botanical Gardens",
-    schedule: "Flexible",
-    duration: "3 hrs/week",
-    icon: "sprout-outline",
-  },
-  {
-    id: "v3",
-    title: "Art Workshop Assistant",
-    desc: "Support children in hands-on art and craft workshops inspired by Egyptian culture.",
-    location: "Cultural Center",
-    schedule: "Saturdays",
-    duration: "2 hrs/week",
-    icon: "palette-outline",
-  },
-];
+// --- OPPORTUNITIES (Public / Admin) ---
 
-const opportunitySignups: Array<{
-  signupId: string;
-  opportunityId: string;
-  applicantName?: string;
-  applicantEmail?: string;
-  createdAt: string;
-}> = [];
-
-// GET /api/volunteers/opportunities - list screen opportunities (public)
-volunteersRouter.get("/opportunities", (_req, res: Response) => {
-  return res.json({
-    success: true,
-    data: volunteerOpportunities,
-    total: volunteerOpportunities.length,
-  });
+// GET /api/volunteers/opportunities - list all active opportunities (public)
+volunteersRouter.get("/opportunities", async (_req, res: Response, next: NextFunction) => {
+  try {
+    const opportunities = await OpportunityModel.find({ isActive: true }).sort({ createdAt: -1 });
+    return res.json({
+      success: true,
+      data: opportunities,
+      total: opportunities.length,
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
-// POST /api/volunteers/opportunities/:opportunityId/signup - screen sign up action (public)
+// POST /api/volunteers/opportunities - Create a new opportunity (Admin only)
 volunteersRouter.post(
-  "/opportunities/:opportunityId/signup",
-  (req, res: Response) => {
-    const { opportunityId } = req.params;
-    const { applicantName, applicantEmail } = req.body as {
-      applicantName?: string;
-      applicantEmail?: string;
-    };
-
-    const opportunity = volunteerOpportunities.find(
-      (item) => item.id === opportunityId,
-    );
-    if (!opportunity) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Opportunity not found" });
+  "/opportunities",
+  authenticate,
+  authorizeRoles(UserRole.Admin),
+  validateBody(CreateOpportunityDto),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const dto = req.body as CreateOpportunityDto;
+      const opportunity = await OpportunityModel.create(dto);
+      return res.status(201).json({ success: true, data: opportunity });
+    } catch (err) {
+      next(err);
     }
-
-    if (applicantEmail) {
-      const alreadyJoined = opportunitySignups.some(
-        (entry) =>
-          entry.opportunityId === opportunityId &&
-          entry.applicantEmail?.toLowerCase() === applicantEmail.toLowerCase(),
-      );
-
-      if (alreadyJoined) {
-        return res
-          .status(409)
-          .json({
-            success: false,
-            message: "You already signed up for this opportunity",
-          });
-      }
-    }
-
-    const signup = {
-      signupId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      opportunityId,
-      applicantName,
-      applicantEmail,
-      createdAt: new Date().toISOString(),
-    };
-
-    opportunitySignups.push(signup);
-
-    return res.status(201).json({
-      success: true,
-      message: `Signed up for ${opportunity.title}`,
-      data: signup,
-    });
-  },
+  }
 );
+
+// PATCH /api/volunteers/opportunities/:id - Update an opportunity (Admin only)
+volunteersRouter.patch(
+  "/opportunities/:id",
+  authenticate,
+  authorizeRoles(UserRole.Admin),
+  validateBody(UpdateOpportunityDto),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const opportunity = await OpportunityModel.findByIdAndUpdate(
+        req.params.id,
+        { $set: req.body },
+        { new: true }
+      );
+      if (!opportunity) {
+        return res.status(404).json({ success: false, message: "Opportunity not found" });
+      }
+      return res.json({ success: true, data: opportunity });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// DELETE /api/volunteers/opportunities/:id - Delete an opportunity (Admin only)
+volunteersRouter.delete(
+  "/opportunities/:id",
+  authenticate,
+  authorizeRoles(UserRole.Admin),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const opportunity = await OpportunityModel.findByIdAndDelete(req.params.id);
+      if (!opportunity) {
+        return res.status(404).json({ success: false, message: "Opportunity not found" });
+      }
+      return res.json({ success: true, message: "Opportunity deleted" });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// --- VOLUNTEER APPLICATIONS (Authenticated / Admin) ---
 
 // GET /api/volunteers - list volunteers (users see their own, Admin/Guide see all)
 volunteersRouter.get(

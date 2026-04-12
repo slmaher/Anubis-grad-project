@@ -1,8 +1,10 @@
 import { NextFunction, Response, Router } from "express";
 
 import { DonationModel } from "./donation.model";
+import { CampaignModel } from "./campaign.model";
 import { MuseumModel } from "../museums/museum.model";
 import { CreateDonationDto, UpdateDonationDto } from "./donation.dto";
+import { CreateCampaignDto, UpdateCampaignDto } from "./campaign.dto";
 import {
   authenticate,
   authorizeRoles,
@@ -13,97 +15,91 @@ import { UserRole } from "../users/user.roles";
 
 const donationsRouter = Router();
 
-const donationCampaigns = [
-  {
-    id: "d1",
-    title: "Artifact Restoration Fund",
-    desc: "Help restore fragile artifacts and preserve cultural heritage for future generations.",
-    amount: 150,
-    currency: "EGP",
-    icon: "hammer-wrench",
-  },
-  {
-    id: "d2",
-    title: "Student Access Program",
-    desc: "Sponsor museum access and educational materials for students and young explorers.",
-    amount: 100,
-    currency: "EGP",
-    icon: "school-outline",
-  },
-  {
-    id: "d3",
-    title: "Community Exhibits",
-    desc: "Support rotating exhibits and local events that bring history closer to communities.",
-    amount: 200,
-    currency: "EGP",
-    icon: "image-filter-hdr",
-  },
-];
-
-const campaignContributions: Array<{
-  contributionId: string;
-  campaignId: string;
-  amount: number;
-  currency: string;
-  donorName?: string;
-  message?: string;
-  createdAt: string;
-}> = [];
-
-// GET /api/donations/campaigns - list screen campaigns (public)
-donationsRouter.get("/campaigns", (_req, res: Response) => {
-  return res.json({
-    success: true,
-    data: donationCampaigns,
-    total: donationCampaigns.length,
-  });
+// GET /api/donations/campaigns - list campaigns (public)
+donationsRouter.get("/campaigns", async (_req, res: Response, next: NextFunction) => {
+  try {
+    const campaigns = await CampaignModel.find({ isActive: true }).sort({ createdAt: -1 });
+    return res.json({
+      success: true,
+      data: campaigns,
+      total: campaigns.length,
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
-// POST /api/donations/campaigns/:campaignId/contribute - screen donate action (public)
+// GET /api/donations/campaigns/:id - get campaign details (public)
+donationsRouter.get("/campaigns/:id", async (req, res: Response, next: NextFunction) => {
+  try {
+    const campaign = await CampaignModel.findById(req.params.id);
+    if (!campaign || !campaign.isActive) {
+      return res.status(404).json({ success: false, message: "Campaign not found" });
+    }
+    return res.json({ success: true, data: campaign });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ADMIN: CRUD for Campaigns
 donationsRouter.post(
-  "/campaigns/:campaignId/contribute",
-  (req, res: Response) => {
-    const { campaignId } = req.params;
-    const campaign = donationCampaigns.find((item) => item.id === campaignId);
-
-    if (!campaign) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Campaign not found" });
+  "/campaigns",
+  authenticate,
+  authorizeRoles(UserRole.Admin),
+  validateBody(CreateCampaignDto),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const dto = req.body as CreateCampaignDto;
+      const campaign = await CampaignModel.create(dto);
+      return res.status(201).json({ success: true, data: campaign });
+    } catch (err) {
+      next(err);
     }
+  }
+);
 
-    const payload = req.body as {
-      amount?: number;
-      currency?: string;
-      donorName?: string;
-      message?: string;
-    };
-
-    const amount = Number(payload.amount ?? campaign.amount);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Amount must be greater than zero" });
+donationsRouter.patch(
+  "/campaigns/:id",
+  authenticate,
+  authorizeRoles(UserRole.Admin),
+  validateBody(UpdateCampaignDto),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const campaign = await CampaignModel.findByIdAndUpdate(
+        req.params.id,
+        { $set: req.body },
+        { new: true }
+      );
+      if (!campaign) {
+        return res.status(404).json({ success: false, message: "Campaign not found" });
+      }
+      return res.json({ success: true, data: campaign });
+    } catch (err) {
+      next(err);
     }
+  }
+);
 
-    const contribution = {
-      contributionId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      campaignId,
-      amount,
-      currency: (payload.currency || campaign.currency || "EGP").toUpperCase(),
-      donorName: payload.donorName,
-      message: payload.message,
-      createdAt: new Date().toISOString(),
-    };
-
-    campaignContributions.push(contribution);
-
-    return res.status(201).json({
-      success: true,
-      message: `Contribution received for ${campaign.title}`,
-      data: contribution,
-    });
-  },
+donationsRouter.delete(
+  "/campaigns/:id",
+  authenticate,
+  authorizeRoles(UserRole.Admin),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const campaign = await CampaignModel.findByIdAndUpdate(
+        req.params.id,
+        { $set: { isActive: false } },
+        { new: true }
+      );
+      if (!campaign) {
+        return res.status(404).json({ success: false, message: "Campaign not found" });
+      }
+      return res.json({ success: true, message: "Campaign deactivated" });
+    } catch (err) {
+      next(err);
+    }
+  }
 );
 
 // GET /api/donations - list donations (users see their own, Admin sees all)
