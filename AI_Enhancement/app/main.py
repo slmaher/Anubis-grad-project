@@ -1,4 +1,7 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
+import os
+
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, Request
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.deps import (
@@ -14,6 +17,7 @@ from app.schemas import (
     RestorationResponse,
     ScanResponse,
     HieroglyphResponse,
+    AnalyzeArtifactResponse,
 )
 from app.services.image_utils import read_image_bytes, resize_keep_ratio
 from app.services.metadata_service import MetadataService
@@ -21,9 +25,20 @@ from app.services.recognition_service import RecognitionService
 from app.services.restoration_service import RestorationService
 from app.services.audio_service import AudioService
 from app.services.hieroglyph_service import HieroglyphService
+from app.services.analyze_service import AnalyzeService
 
+
+os.makedirs(settings.TMP_DIR, exist_ok=True)
+os.makedirs(settings.RESTORATION_RESULTS_DIR, exist_ok=True)
 
 app = FastAPI(title=settings.APP_NAME)
+analyze_service = AnalyzeService()
+
+app.mount(
+    "/static/restoration",
+    StaticFiles(directory=settings.RESTORATION_RESULTS_DIR),
+    name="restoration_static",
+)
 
 
 @app.get("/")
@@ -36,6 +51,7 @@ def health():
     return {"status": "ok"}
 
 
+# OLD ROUTES - kept
 @app.post("/recognize", response_model=RecognitionResponse)
 async def recognize_artifact(
     file: UploadFile = File(...),
@@ -120,3 +136,24 @@ def hieroglyph_demo(
     hieroglyph_service: HieroglyphService = Depends(get_hieroglyph_service),
 ):
     return hieroglyph_service.translate_known_sequence(symbols)
+
+
+# NEW ROUTE - added
+@app.post("/analyze-artifact", response_model=AnalyzeArtifactResponse)
+async def analyze_artifact(
+    request: Request,
+    file: UploadFile = File(...),
+):
+    try:
+        file_bytes = await file.read()
+        image_bgr = read_image_bytes(file_bytes)
+        image_bgr = resize_keep_ratio(image_bgr, 1024)
+
+        result = analyze_service.analyze_image(
+            image_bgr=image_bgr,
+            scanned_filename=file.filename or "uploaded_image.jpg",
+            base_url=str(request.base_url),
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
