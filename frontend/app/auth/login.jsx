@@ -25,7 +25,16 @@ export default function Login() {
       setLoading(true);
       const result = await api.login(email.trim(), password);
       await saveAuthSession(result);
-      router.replace("/(tabs)/home");
+
+      const role = String(result?.data?.user?.role || "")
+        .trim()
+        .toLowerCase();
+
+      if (role === "admin") {
+        router.replace("/admin");
+      } else {
+        router.replace("/(tabs)/home");
+      }
     } catch (error) {
       console.error("Login failed", error);
       Alert.alert(

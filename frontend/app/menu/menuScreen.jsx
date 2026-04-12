@@ -33,6 +33,7 @@ export default function MenuScreen({ onClose }) {
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const [languageMenuVisible, setLanguageMenuVisible] = useState(false);
+  const [authUser, setAuthUser] = useState(null);
   const isRTL = i18n.dir(i18n.language) === "rtl";
 
   const menuItems = [
@@ -81,6 +82,12 @@ export default function MenuScreen({ onClose }) {
       countKey: "messages",
     },
     {
+      id: "logout",
+      label: t("menu.logout"),
+      iconLib: "ion",
+      iconName: "log-out-outline",
+    },
+    {
       id: "friends",
       label: t("menu.friends"),
       iconLib: "material",
@@ -102,13 +109,6 @@ export default function MenuScreen({ onClose }) {
       iconName: "location-outline",
       route: "/Map",
     },
-
-    {
-      id: "logout",
-      label: t("menu.logout"),
-      iconLib: "ion",
-      iconName: "log-out-outline",
-    },
   ];
 
   const [counts, setCounts] = React.useState({
@@ -116,6 +116,23 @@ export default function MenuScreen({ onClose }) {
     friendRequests: 0,
     messages: 0,
   });
+
+  const isAdmin = String(authUser?.role || "")
+    .trim()
+    .toLowerCase() === "admin";
+
+  const renderedMenuItems = isAdmin
+    ? [
+        {
+          id: "admin_dashboard",
+          label: t("admin.menu.dashboard"),
+          iconLib: "material",
+          iconName: "shield-crown-outline",
+          route: "/admin",
+        },
+        ...menuItems,
+      ]
+    : menuItems;
 
   const loadCounts = React.useCallback(async () => {
     try {
@@ -206,6 +223,12 @@ export default function MenuScreen({ onClose }) {
     loadCounts();
   }, []);
 
+  React.useEffect(() => {
+    getAuthUser()
+      .then((user) => setAuthUser(user))
+      .catch(() => setAuthUser(null));
+  }, []);
+
   return (
     <View style={styles.container}>
       {/* DARK OVERLAY */}
@@ -246,7 +269,7 @@ export default function MenuScreen({ onClose }) {
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.menuListContent}
             >
-              {menuItems.map((item, index) => (
+              {renderedMenuItems.map((item, index) => (
                 <React.Fragment key={item.id || item.label}>
                   <TouchableOpacity
                     style={styles.menuRow}
