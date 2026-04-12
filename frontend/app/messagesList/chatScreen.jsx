@@ -249,74 +249,77 @@ export default function ChatScreen() {
             const translationError = translationErrors[msg.id];
 
             return (
-            <View key={msg.id} style={styles.messageWrapper}>
-              {msg.images ? (
-                <View style={[styles.messageBubble, styles.receivedBubble]}>
-                  <View style={styles.imagesContainer}>
-                    {msg.images.map((img, index) => (
-                      <Image
-                        key={index}
-                        source={img}
-                        style={styles.chatImage}
-                      />
-                    ))}
+              <View key={msg.id} style={styles.messageWrapper}>
+                {msg.images ? (
+                  <View style={[styles.messageBubble, styles.receivedBubble]}>
+                    <View style={styles.imagesContainer}>
+                      {msg.images.map((img, index) => (
+                        <Image
+                          key={index}
+                          source={img}
+                          style={styles.chatImage}
+                        />
+                      ))}
+                    </View>
+                    <Text style={styles.messageTime}>{msg.time}</Text>
                   </View>
-                  <Text style={styles.messageTime}>{msg.time}</Text>
-                </View>
-              ) : (
-                <View
-                  style={[
-                    styles.messageBubble,
-                    msg.isSent ? styles.sentBubble : styles.receivedBubble,
-                  ]}
-                >
-                  <Text
+                ) : (
+                  <View
                     style={[
-                      styles.messageText,
-                      msg.isSent ? styles.sentText : styles.receivedText,
+                      styles.messageBubble,
+                      msg.isSent ? styles.sentBubble : styles.receivedBubble,
                     ]}
                   >
-                    {displayText}
-                  </Text>
-                  <View style={styles.messageFooter}>
                     <Text
                       style={[
-                        styles.messageTime,
-                        msg.isSent && styles.sentTime,
+                        styles.messageText,
+                        msg.isSent ? styles.sentText : styles.receivedText,
                       ]}
                     >
-                      {msg.time}
+                      {displayText}
                     </Text>
-                    {msg.hasCheckmark && (
-                      <Text style={styles.checkmark}>✓</Text>
-                    )}
-                  </View>
-                  <View style={styles.translationRow}>
-                    <TouchableOpacity
-                      onPress={() => handleTranslateMessage(msg)}
-                      disabled={isTranslating}
-                    >
+                    <View style={styles.messageFooter}>
                       <Text
                         style={[
-                          styles.translationAction,
-                          msg.isSent && styles.translationActionSent,
+                          styles.messageTime,
+                          msg.isSent && styles.sentTime,
                         ]}
                       >
-                        {isTranslating
-                          ? t("chat_pages.translating")
-                          : isTranslated
-                            ? t("chat_pages.show_original")
-                            : t("chat_pages.translate")}
+                        {msg.time}
                       </Text>
-                    </TouchableOpacity>
-                    {!!translationError && (
-                      <Text style={styles.translationError}>{translationError}</Text>
-                    )}
+                      {msg.hasCheckmark && (
+                        <Text style={styles.checkmark}>✓</Text>
+                      )}
+                    </View>
+                    <View style={styles.translationRow}>
+                      <TouchableOpacity
+                        onPress={() => handleTranslateMessage(msg)}
+                        disabled={isTranslating}
+                      >
+                        <Text
+                          style={[
+                            styles.translationAction,
+                            msg.isSent && styles.translationActionSent,
+                          ]}
+                        >
+                          {isTranslating
+                            ? t("chat_pages.translating")
+                            : isTranslated
+                              ? t("chat_pages.show_original")
+                              : t("chat_pages.translate")}
+                        </Text>
+                      </TouchableOpacity>
+                      {!!translationError && (
+                        <Text style={styles.translationError}>
+                          {translationError}
+                        </Text>
+                      )}
+                    </View>
                   </View>
-                </View>
-              )}
-            </View>
-          )})
+                )}
+              </View>
+            );
+          })
         )}
       </ScrollView>
 

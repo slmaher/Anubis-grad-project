@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Platform, Dimensions, I18Manager } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Platform, Dimensions } from 'react-native';
 import { Slot, useRouter, usePathname } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -19,7 +19,8 @@ export default function AdminLayout() {
   useEffect(() => {
     async function checkAdmin() {
       const user = await getAuthUser();
-      if (!user || user.role !== 'Admin') {
+      const normalizedRole = String(user?.role || '').trim().toLowerCase();
+      if (!user || normalizedRole !== 'admin') {
         setIsAdmin(false);
         router.replace('/auth/login');
       } else {

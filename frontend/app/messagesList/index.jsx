@@ -230,7 +230,9 @@ export default function MessagesList() {
           contentContainerStyle={styles.messagesContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>{t("chat_pages.no_conversations")}</Text>
+              <Text style={styles.emptyText}>
+                {t("chat_pages.no_conversations")}
+              </Text>
             </View>
           }
         />
