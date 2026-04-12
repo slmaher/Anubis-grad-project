@@ -338,5 +338,33 @@
       "nearby": "بالقرب"
     },
     "book_ticket": "حجز تذكرة"
+  },
+  "admin": {
+    "title": "إدارة إحياء مصر",
+    "mobile_title": "لوحة التحكم",
+    "exit": "الخروج من الإدارة",
+    "menu": {
+      "dashboard": "لوحة القيادة",
+      "users": "المستخدمين",
+      "museums": "المتاحف",
+      "artifacts": "القطع الأثرية",
+      "events": "الفعاليات",
+      "posts": "المنشورات",
+      "donations": "التبرعات",
+      "volunteering": "التطوع",
+      "marketplace": "المتجر",
+      "tour_guides": "المرشدين",
+      "reviews": "التقييمات"
+    },
+    "dashboard": {
+      "welcome": "مرحباً بك مجدداً أيها المدير",
+      "overview": "إليك ما يحدث على المنصة اليوم.",
+      "stats": {
+        "users": "إجمالي المستخدمين",
+        "museums": "المتاحف",
+        "artifacts": "القطع الأثرية",
+        "events": "الفعاليات"
+      }
+    }
   }
 }
