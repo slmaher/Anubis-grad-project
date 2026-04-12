@@ -41,7 +41,10 @@ export default function WriteReview() {
   const handlePickPhoto = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Permission Required", "Please allow access to your photo library");
+      Alert.alert(
+        "Permission Required",
+        "Please allow access to your photo library",
+      );
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -63,7 +66,7 @@ export default function WriteReview() {
     if (!museumId && !museumName && !museumLookupName) {
       Alert.alert(
         "Missing museum",
-        "We couldn't identify which museum you're reviewing. Please go back and try again."
+        "We couldn't identify which museum you're reviewing. Please go back and try again.",
       );
       return;
     }
@@ -82,7 +85,7 @@ export default function WriteReview() {
               onPress: () => router.replace("/auth/login"),
             },
             { text: "Cancel", style: "cancel" },
-          ]
+          ],
         );
         return;
       }
@@ -101,7 +104,7 @@ export default function WriteReview() {
       console.error("Failed to submit review", error);
       Alert.alert(
         "Submission failed",
-        error?.message || "Unable to submit your review. Please try again."
+        error?.message || "Unable to submit your review. Please try again.",
       );
     } finally {
       setSubmitting(false);
@@ -186,19 +189,23 @@ export default function WriteReview() {
         {/* Overall Rating */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>How was the trip?</Text>
-          <StarRating rating={overallRating} onRate={setOverallRating} size={44} />
+          <StarRating
+            rating={overallRating}
+            onRate={setOverallRating}
+            size={44}
+          />
           <Text style={styles.ratingLabel}>
             {overallRating === 5
               ? "Amazing! Can't get any better than that!"
               : overallRating === 4
-              ? "Good! Really enjoyed it!"
-              : overallRating === 3
-              ? "Average. It was okay!"
-              : overallRating === 2
-              ? "Poor. Could have been better."
-              : overallRating === 1
-              ? "Bad. Not recommended."
-              : "Tap a star to rate"}
+                ? "Good! Really enjoyed it!"
+                : overallRating === 3
+                  ? "Average. It was okay!"
+                  : overallRating === 2
+                    ? "Poor. Could have been better."
+                    : overallRating === 1
+                      ? "Bad. Not recommended."
+                      : "Tap a star to rate"}
           </Text>
 
           {/* Recommend */}
@@ -209,7 +216,9 @@ export default function WriteReview() {
             <View style={[styles.checkbox, recommend && styles.checkboxActive]}>
               {recommend && <Text style={styles.checkmark}>✓</Text>}
             </View>
-            <Text style={styles.recommendText}>I recommend this attraction</Text>
+            <Text style={styles.recommendText}>
+              I recommend this attraction
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -218,7 +227,9 @@ export default function WriteReview() {
 
         {/* Aspect Ratings */}
         <View style={styles.section}>
-          <Text style={styles.sectionSubTitle}>How would you rate the following aspects?</Text>
+          <Text style={styles.sectionSubTitle}>
+            How would you rate the following aspects?
+          </Text>
           <AspectRating
             label="Ease of access"
             rating={easeRating}
@@ -251,7 +262,9 @@ export default function WriteReview() {
 
         {/* Summarize */}
         <View style={styles.section}>
-          <Text style={styles.sectionSubTitle}>Summarize your visit in a few words</Text>
+          <Text style={styles.sectionSubTitle}>
+            Summarize your visit in a few words
+          </Text>
           <TextInput
             style={styles.titleInput}
             placeholder="Title"
@@ -263,7 +276,9 @@ export default function WriteReview() {
 
         {/* Photos */}
         <View style={styles.section}>
-          <Text style={styles.sectionSubTitle}>Share some photos of your visit</Text>
+          <Text style={styles.sectionSubTitle}>
+            Share some photos of your visit
+          </Text>
           <View style={styles.photosRow}>
             {photos.map((uri, index) => (
               <Image
@@ -274,7 +289,10 @@ export default function WriteReview() {
               />
             ))}
             {photos.length < 4 && (
-              <TouchableOpacity style={styles.addPhotoButton} onPress={handlePickPhoto}>
+              <TouchableOpacity
+                style={styles.addPhotoButton}
+                onPress={handlePickPhoto}
+              >
                 <Text style={styles.addPhotoIcon}>+</Text>
               </TouchableOpacity>
             )}

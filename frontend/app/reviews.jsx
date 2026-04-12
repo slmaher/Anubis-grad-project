@@ -1,4 +1,11 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { api } from "./api/client";
@@ -36,7 +43,7 @@ export default function Reviews() {
         const result = await api.getReviews(
           museumId || museumName || museumLookupName
             ? { museumId, museumName, museumLookupName }
-            : {}
+            : {},
         );
         const list = result?.data || [];
         if (isMounted) {
@@ -63,10 +70,7 @@ export default function Reviews() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={handleBack}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
@@ -75,7 +79,7 @@ export default function Reviews() {
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -94,47 +98,53 @@ export default function Reviews() {
 
         {!loading && !error && reviews.length === 0 && (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No reviews yet. Be the first to write one!</Text>
+            <Text style={styles.emptyText}>
+              No reviews yet. Be the first to write one!
+            </Text>
           </View>
         )}
 
         {/* Reviews List */}
-        {!loading && !error && reviews.map((review, index) => (
-          <View key={review._id || index}>
-            <View style={styles.reviewCard}>
-              {/* Avatar and Name */}
-              <View style={styles.reviewHeader}>
-                <View style={styles.avatarContainer}>
-                  <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>👤</Text>
+        {!loading &&
+          !error &&
+          reviews.map((review, index) => (
+            <View key={review._id || index}>
+              <View style={styles.reviewCard}>
+                {/* Avatar and Name */}
+                <View style={styles.reviewHeader}>
+                  <View style={styles.avatarContainer}>
+                    <View style={styles.avatar}>
+                      <Text style={styles.avatarText}>👤</Text>
+                    </View>
+                    <Text style={styles.reviewerName}>
+                      {review.user?.name || "Visitor"}
+                    </Text>
                   </View>
-                  <Text style={styles.reviewerName}>
-                    {review.user?.name || "Visitor"}
+                  {/* Stars */}
+                  <Text style={styles.stars}>
+                    {renderStars(review.rating || 0)}
                   </Text>
                 </View>
-                {/* Stars */}
-                <Text style={styles.stars}>{renderStars(review.rating || 0)}</Text>
+
+                {/* Comment */}
+                <Text style={styles.comment}>{review.comment}</Text>
               </View>
 
-              {/* Comment */}
-              <Text style={styles.comment}>{review.comment}</Text>
+              {/* Divider - Don't show after last item */}
+              {index < reviews.length - 1 && <View style={styles.divider} />}
             </View>
-
-            {/* Divider - Don't show after last item */}
-            {index < reviews.length - 1 && <View style={styles.divider} />}
-          </View>
-        ))}
+          ))}
 
         <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* Floating Add Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.addButton}
         onPress={() =>
           router.push({
             pathname: "/write-review",
-              params: { museumId, museumName, museumLookupName },
+            params: { museumId, museumName, museumLookupName },
           })
         }
       >

@@ -2,13 +2,23 @@ const API_BASE_URL = "http://localhost:4000";
 const MONGODB_OBJECT_ID_PATTERN = /^[a-fA-F0-9]{24}$/;
 
 const LEGACY_MUSEUM_ALIASES = {
-  "1": ["grand egyptian museum", "the grand egyptian museum"],
-  "2": ["egyptian museum", "the egyptian museum"],
-  "grand egyptian museum": ["grand egyptian museum", "the grand egyptian museum"],
+  1: ["grand egyptian museum", "the grand egyptian museum"],
+  2: ["egyptian museum", "the egyptian museum"],
+  "grand egyptian museum": [
+    "grand egyptian museum",
+    "the grand egyptian museum",
+  ],
   "egyptian museum": ["egyptian museum", "the egyptian museum"],
-  "museum of islamic art": ["museum of islamic art, cairo", "museum of islamic art"],
+  "museum of islamic art": [
+    "museum of islamic art, cairo",
+    "museum of islamic art",
+  ],
   "coptic museum": ["coptic museum"],
-  "national museum of egyptian civilization": ["national museum of egyptian civilization", "the national museum of egypt", "the national museum of egyptian civilization"],
+  "national museum of egyptian civilization": [
+    "national museum of egyptian civilization",
+    "the national museum of egypt",
+    "the national museum of egyptian civilization",
+  ],
 };
 
 function normalizeMuseumName(value) {
@@ -46,7 +56,11 @@ async function resolveMuseumId({ museumId, museumLookupName, museumName }) {
     return rawMuseumId;
   }
 
-  const candidateNames = expandMuseumCandidates([museumLookupName, museumName, rawMuseumId]);
+  const candidateNames = expandMuseumCandidates([
+    museumLookupName,
+    museumName,
+    rawMuseumId,
+  ]);
 
   if (candidateNames.length === 0) {
     return null;
@@ -128,7 +142,8 @@ export const api = {
   // Reviews
   getReviews(params = {}) {
     const query = new URLSearchParams();
-    const museumFilter = params.museumId || params.museumLookupName || params.museumName;
+    const museumFilter =
+      params.museumId || params.museumLookupName || params.museumName;
 
     if (!museumFilter) {
       if (params.limit) {
