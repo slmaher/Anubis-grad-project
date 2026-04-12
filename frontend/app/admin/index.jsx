@@ -1,28 +1,150 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { api } from '../api/client';
+import { getAuthToken } from '../api/authStorage';
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const { t, i18n } = useTranslation();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [statsValues, setStatsValues] = useState({
+    users: 0,
+    museums: 0,
+    artifacts: 0,
+    pendingVolunteers: 0,
+  });
+  const [recentActivity, setRecentActivity] = useState([]);
 
-  const stats = [
-    { label: 'Total Users', value: '1,240', icon: 'account-group', color: '#4A90E2' },
-    { label: 'Museums', value: '12', icon: 'bank', color: '#50C878' },
-    { label: 'Artifacts', value: '450', icon: 'amphora', color: '#D9A441' },
-    { label: 'Pending Volunteers', value: '28', icon: 'account-heart', color: '#FF6B6B' },
-  ];
+  const isRTL = i18n.dir(i18n.language) === 'rtl';
+
+  const toArray = (response) => {
+    const data = response?.data;
+    return Array.isArray(data) ? data : [];
+  };
+
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      setLoading(true);
+      setError('');
+
+      try {
+        const token = await getAuthToken();
+        if (!token) {
+          setError(t('admin.dashboard.auth_required'));
+          return;
+        }
+
+        const [usersRes, museumsRes, artifactsRes, applicationsRes] = await Promise.all([
+          api.admin.getUsers(token),
+          api.getMuseums(),
+          api.admin.getArtifacts(token),
+          api.admin.getApplications(token),
+        ]);
+
+        const users = toArray(usersRes);
+        const museums = toArray(museumsRes);
+        const artifacts = toArray(artifactsRes);
+        const applications = toArray(applicationsRes);
+
+        const pendingVolunteers = applications.filter(
+          (application) => String(application?.status || '').toLowerCase() === 'pending',
+        ).length;
+
+        setStatsValues({
+          users: users.length,
+          museums: museums.length,
+          artifacts: artifacts.length,
+          pendingVolunteers,
+        });
+
+        const activity = [
+          ...users.slice(0, 3).map((user) => ({
+            id: `u-${user._id || user.id || Math.random()}`,
+            text: t('admin.dashboard.activity.new_user', {
+              name: user?.name || t('admin.dashboard.activity.unknown_user'),
+            }),
+            createdAt: user?.createdAt,
+          })),
+          ...artifacts.slice(0, 3).map((artifact) => ({
+            id: `a-${artifact._id || artifact.id || Math.random()}`,
+            text: t('admin.dashboard.activity.new_artifact', {
+              name:
+                artifact?.name ||
+                artifact?.title ||
+                t('admin.dashboard.activity.unknown_artifact'),
+            }),
+            createdAt: artifact?.createdAt,
+          })),
+        ]
+          .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+          .slice(0, 6);
+
+        setRecentActivity(activity);
+      } catch (e) {
+        setError(t('admin.dashboard.load_failed'));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, [t]);
+
+  const stats = useMemo(
+    () => [
+      {
+        label: t('admin.dashboard.stats.users'),
+        value: Number(statsValues.users || 0).toLocaleString(),
+        icon: 'account-group',
+        color: '#4A90E2',
+      },
+      {
+        label: t('admin.dashboard.stats.museums'),
+        value: Number(statsValues.museums || 0).toLocaleString(),
+        icon: 'bank',
+        color: '#50C878',
+      },
+      {
+        label: t('admin.dashboard.stats.artifacts'),
+        value: Number(statsValues.artifacts || 0).toLocaleString(),
+        icon: 'amphora',
+        color: '#D9A441',
+      },
+      {
+        label: t('admin.dashboard.stats.pending_volunteers'),
+        value: Number(statsValues.pendingVolunteers || 0).toLocaleString(),
+        icon: 'account-heart',
+        color: '#FF6B6B',
+      },
+    ],
+    [statsValues, t],
+  );
 
   const quickActions = [
-    { name: 'Add Museum', icon: 'bank-plus', path: '/admin/museums' },
-    { name: 'Add Artifact', icon: 'plus-circle-outline', path: '/admin/artifacts' },
-    { name: 'New Event', icon: 'calendar-plus', path: '/admin/events' },
-    { name: 'Create Campaign', icon: 'hand-heart', path: '/admin/donations' },
+    { name: t('admin.dashboard.actions.add_museum'), icon: 'bank-plus', path: '/admin/museums' },
+    { name: t('admin.dashboard.actions.add_artifact'), icon: 'plus-circle-outline', path: '/admin/artifacts' },
+    { name: t('admin.dashboard.actions.new_event'), icon: 'calendar-plus', path: '/admin/events' },
+    { name: t('admin.dashboard.actions.create_campaign'), icon: 'hand-heart', path: '/admin/donations' },
   ];
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Dashboard Overview</Text>
+      <Text style={[styles.title, isRTL && styles.textRight]}>{t('admin.dashboard.overview_title')}</Text>
+
+      {loading && (
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator size="small" color="#D9A441" />
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
+        </View>
+      )}
+
+      {!loading && !!error && (
+        <Text style={[styles.errorText, isRTL && styles.textRight]}>{error}</Text>
+      )}
 
       <View style={styles.statsGrid}>
         {stats.map((stat, index) => (
@@ -32,13 +154,13 @@ export default function AdminDashboard() {
             </View>
             <View>
               <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
+              <Text style={[styles.statLabel, isRTL && styles.textRight]}>{stat.label}</Text>
             </View>
           </View>
         ))}
       </View>
 
-      <Text style={styles.subtitle}>Quick Actions</Text>
+      <Text style={[styles.subtitle, isRTL && styles.textRight]}>{t('admin.dashboard.quick_actions')}</Text>
       <View style={styles.actionsGrid}>
         {quickActions.map((action, index) => (
           <TouchableOpacity
@@ -47,14 +169,25 @@ export default function AdminDashboard() {
             onPress={() => router.push(action.path)}
           >
             <MaterialCommunityIcons name={action.icon} size={30} color="#D9A441" />
-            <Text style={styles.actionName}>{action.name}</Text>
+            <Text style={[styles.actionName, isRTL && styles.textRight]}>{action.name}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <Text style={styles.subtitle}>Recent Activity</Text>
+      <Text style={[styles.subtitle, isRTL && styles.textRight]}>{t('admin.dashboard.recent_activity')}</Text>
       <View style={styles.recentActivity}>
-        <Text style={styles.placeholderText}>Activity log will be displayed here.</Text>
+        {recentActivity.length === 0 ? (
+          <Text style={[styles.placeholderText, isRTL && styles.textRight]}>
+            {t('admin.dashboard.activity.empty')}
+          </Text>
+        ) : (
+          recentActivity.map((item) => (
+            <View key={item.id} style={styles.activityRow}>
+              <MaterialCommunityIcons name="circle-medium" size={20} color="#D9A441" />
+              <Text style={[styles.activityText, isRTL && styles.textRight]}>{item.text}</Text>
+            </View>
+          ))
+        )}
       </View>
     </ScrollView>
   );
@@ -72,6 +205,25 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#2C2010',
     marginBottom: 24,
+  },
+  textRight: {
+    textAlign: 'right',
+  },
+  loadingWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 14,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#8B7B6C',
+  },
+  errorText: {
+    color: '#B54747',
+    fontSize: 14,
+    marginBottom: 12,
+    fontWeight: '600',
   },
   subtitle: {
     fontSize: 18,
@@ -142,13 +294,22 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 24,
     minHeight: 150,
-    justifyContent: 'center',
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',
+  },
+  activityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  activityText: {
+    color: '#6B5B4F',
+    fontSize: 14,
+    flexShrink: 1,
   },
   placeholderText: {
     color: '#8B7B6C',
     fontSize: 14,
+    textAlign: 'center',
   }
 });

@@ -117,9 +117,10 @@ export default function MenuScreen({ onClose }) {
     messages: 0,
   });
 
-  const isAdmin = String(authUser?.role || "")
-    .trim()
-    .toLowerCase() === "admin";
+  const isAdmin =
+    String(authUser?.role || "")
+      .trim()
+      .toLowerCase() === "admin";
 
   const renderedMenuItems = isAdmin
     ? [
