@@ -345,6 +345,18 @@ export const api = {
     });
   },
 
+  // Events
+  getEvents(params = {}) {
+    const query = new URLSearchParams();
+
+    if (params.museumId) {
+      query.append("museumId", String(params.museumId));
+    }
+
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return apiRequest(`/api/events${suffix}`);
+  },
+
   // Volunteering screen APIs
   getVolunteerOpportunities() {
     return apiRequest("/api/volunteers/opportunities");

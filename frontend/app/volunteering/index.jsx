@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   ActivityIndicator,
   SafeAreaView,
@@ -290,6 +291,59 @@ export default function VolunteeringScreen() {
       isMounted = false;
     };
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      let isMounted = true;
+
+      const refreshScreenData = async () => {
+        setIsLoading(true);
+        try {
+          const [volunteerRes, donationRes] = await Promise.allSettled([
+            api.getVolunteerOpportunities(),
+            api.getDonationCampaigns(),
+          ]);
+
+          if (!isMounted) return;
+
+          if (
+            volunteerRes.status === "fulfilled" &&
+            Array.isArray(volunteerRes.value?.data)
+          ) {
+            setVolunteerItems(
+              volunteerRes.value.data.length > 0
+                ? volunteerRes.value.data
+                : fallbackVolunteerItems,
+            );
+          }
+
+          if (
+            donationRes.status === "fulfilled" &&
+            Array.isArray(donationRes.value?.data)
+          ) {
+            setDonateItems(
+              donationRes.value.data.length > 0
+                ? donationRes.value.data.map((item) => ({
+                    ...item,
+                    amount: `${item.amount || item.goalAmount || 0} ${item.currency || "EGP"}`,
+                  }))
+                : fallbackDonateItems,
+            );
+          }
+        } finally {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        }
+      };
+
+      refreshScreenData();
+
+      return () => {
+        isMounted = false;
+      };
+    }, []),
+  );
 
   const handleAction = async (item) => {
     try {
