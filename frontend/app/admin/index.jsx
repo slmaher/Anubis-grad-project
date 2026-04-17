@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { getAuthToken } from "../api/authStorage";
@@ -33,77 +34,82 @@ export default function AdminDashboard() {
     return Array.isArray(data) ? data : [];
   };
 
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      setLoading(true);
-      setError("");
+  const loadDashboardData = useCallback(async () => {
+    setLoading(true);
+    setError("");
 
-      try {
-        const token = await getAuthToken();
-        if (!token) {
-          setError(t("admin.dashboard.auth_required"));
-          return;
-        }
-
-        const [usersRes, museumsRes, artifactsRes, applicationsRes] =
-          await Promise.all([
-            api.admin.getUsers(token),
-            api.getMuseums(),
-            api.admin.getArtifacts(token),
-            api.admin.getApplications(token),
-          ]);
-
-        const users = toArray(usersRes);
-        const museums = toArray(museumsRes);
-        const artifacts = toArray(artifactsRes);
-        const applications = toArray(applicationsRes);
-
-        const pendingVolunteers = applications.filter(
-          (application) =>
-            String(application?.status || "").toLowerCase() === "pending",
-        ).length;
-
-        setStatsValues({
-          users: users.length,
-          museums: museums.length,
-          artifacts: artifacts.length,
-          pendingVolunteers,
-        });
-
-        const activity = [
-          ...users.slice(0, 3).map((user) => ({
-            id: `u-${user._id || user.id || Math.random()}`,
-            text: t("admin.dashboard.activity.new_user", {
-              name: user?.name || t("admin.dashboard.activity.unknown_user"),
-            }),
-            createdAt: user?.createdAt,
-          })),
-          ...artifacts.slice(0, 3).map((artifact) => ({
-            id: `a-${artifact._id || artifact.id || Math.random()}`,
-            text: t("admin.dashboard.activity.new_artifact", {
-              name:
-                artifact?.name ||
-                artifact?.title ||
-                t("admin.dashboard.activity.unknown_artifact"),
-            }),
-            createdAt: artifact?.createdAt,
-          })),
-        ]
-          .sort(
-            (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
-          )
-          .slice(0, 6);
-
-        setRecentActivity(activity);
-      } catch (e) {
-        setError(t("admin.dashboard.load_failed"));
-      } finally {
-        setLoading(false);
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        setError(t("admin.dashboard.auth_required"));
+        return;
       }
-    };
 
-    loadDashboardData();
+      const [usersRes, museumsRes, artifactsRes, applicationsRes] =
+        await Promise.all([
+          api.admin.getUsers(token),
+          api.getMuseums(),
+          api.admin.getArtifacts(token),
+          api.admin.getApplications(token),
+        ]);
+
+      const users = toArray(usersRes);
+      const museums = toArray(museumsRes);
+      const artifacts = toArray(artifactsRes);
+      const applications = toArray(applicationsRes);
+
+      const pendingVolunteers = applications.filter(
+        (application) =>
+          String(application?.status || "").toLowerCase() === "pending",
+      ).length;
+
+      setStatsValues({
+        users: users.length,
+        museums: museums.length,
+        artifacts: artifacts.length,
+        pendingVolunteers,
+      });
+
+      const activity = [
+        ...users.slice(0, 3).map((user) => ({
+          id: `u-${user._id || user.id || Math.random()}`,
+          text: t("admin.dashboard.activity.new_user", {
+            name: user?.name || t("admin.dashboard.activity.unknown_user"),
+          }),
+          createdAt: user?.createdAt,
+        })),
+        ...museums.slice(0, 3).map((museum) => ({
+          id: `m-${museum._id || museum.id || Math.random()}`,
+          text: `${museum?.name || "Museum"} ${t("admin.dashboard.actions.add_museum")}`,
+          createdAt: museum?.createdAt,
+        })),
+        ...artifacts.slice(0, 3).map((artifact) => ({
+          id: `a-${artifact._id || artifact.id || Math.random()}`,
+          text: t("admin.dashboard.activity.new_artifact", {
+            name:
+              artifact?.name ||
+              artifact?.title ||
+              t("admin.dashboard.activity.unknown_artifact"),
+          }),
+          createdAt: artifact?.createdAt,
+        })),
+      ]
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        .slice(0, 6);
+
+      setRecentActivity(activity);
+    } catch (e) {
+      setError(t("admin.dashboard.load_failed"));
+    } finally {
+      setLoading(false);
+    }
   }, [t]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadDashboardData();
+    }, [loadDashboardData]),
+  );
 
   const stats = useMemo(
     () => [
@@ -140,21 +146,25 @@ export default function AdminDashboard() {
       name: t("admin.dashboard.actions.add_museum"),
       icon: "bank-plus",
       path: "/admin/museums",
+      params: { action: "create" },
     },
     {
       name: t("admin.dashboard.actions.add_artifact"),
       icon: "plus-circle-outline",
       path: "/admin/artifacts",
+      params: { action: "create" },
     },
     {
       name: t("admin.dashboard.actions.new_event"),
       icon: "calendar-plus",
       path: "/admin/events",
+      params: { action: "create" },
     },
     {
       name: t("admin.dashboard.actions.create_campaign"),
       icon: "hand-heart",
       path: "/admin/donations",
+      params: { action: "create" },
     },
   ];
 
@@ -210,7 +220,12 @@ export default function AdminDashboard() {
           <TouchableOpacity
             key={index}
             style={styles.actionCard}
-            onPress={() => router.push(action.path)}
+            onPress={() =>
+              router.push({
+                pathname: action.path,
+                params: action.params,
+              })
+            }
           >
             <MaterialCommunityIcons
               name={action.icon}
