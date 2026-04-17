@@ -1,6 +1,6 @@
 {
-  "total_images": 82,
-  "top1_accuracy": 0.975609756097561,
+  "total_images": 83,
+  "top1_accuracy": 0.9879518072289156,
   "top3_accuracy": 1.0,
   "details": [
     {
@@ -105,7 +105,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3462
+      "confidence": 0.3455
     },
     {
       "image": "app/data/artifacts/images\\artifact_002\\515f57400e784ef09c01f5ee239e325a.jpg",
@@ -118,7 +118,20 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3793
+      "confidence": 0.38
+    },
+    {
+      "image": "app/data/artifacts/images\\artifact_002\\7058312.jpg",
+      "expected": "artifact_002",
+      "predicted_top1": "artifact_002",
+      "top3_ids": [
+        "artifact_002",
+        "artifact_009",
+        "artifact_003"
+      ],
+      "top1_correct": true,
+      "top3_correct": true,
+      "confidence": 0.3752
     },
     {
       "image": "app/data/artifacts/images\\artifact_002\\720X720-03eb67c3-083e-40da-8816-c24a2ecef6e2.jpg",
@@ -131,7 +144,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3644
+      "confidence": 0.3628
     },
     {
       "image": "app/data/artifacts/images\\artifact_002\\720X720-smk-kas37-king-khafre.jpg",
@@ -144,7 +157,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3652
+      "confidence": 0.3639
     },
     {
       "image": "app/data/artifacts/images\\artifact_002\\Chephren_CG_14.jpg",
@@ -157,7 +170,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3794
+      "confidence": 0.3776
     },
     {
       "image": "app/data/artifacts/images\\artifact_002\\e2491ab0-3c71-4a8e-a26f-321048754c30_900x1000.jpg",
@@ -170,7 +183,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3816
+      "confidence": 0.3802
     },
     {
       "image": "app/data/artifacts/images\\artifact_002\\f918d282045614b9828c99ccdeb4ed7f.jpg",
@@ -183,7 +196,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3857
+      "confidence": 0.3861
     },
     {
       "image": "app/data/artifacts/images\\artifact_002\\Kairo_Museum_Sitzstatue_Chephren_06.jpg",
@@ -196,7 +209,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3729
+      "confidence": 0.3754
     },
     {
       "image": "app/data/artifacts/images\\artifact_002\\Khafre_Enthroned,_side_view.jpg",
@@ -209,7 +222,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3518
+      "confidence": 0.3525
     },
     {
       "image": "app/data/artifacts/images\\artifact_002\\tumblr_47fb79c1bfe085b670d3d53b1f1536bf_70e567db_250.jpg",
@@ -222,7 +235,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.378
+      "confidence": 0.3777
     },
     {
       "image": "app/data/artifacts/images\\artifact_003\\960px-Grand_Egyptian_Museum_2019-11-07d.jpg",
@@ -261,7 +274,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3554
+      "confidence": 0.3561
     },
     {
       "image": "app/data/artifacts/images\\artifact_003\\RamsesII.webp",
@@ -287,7 +300,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3458
+      "confidence": 0.3449
     },
     {
       "image": "app/data/artifacts/images\\artifact_003\\uy.jpg",
@@ -295,12 +308,12 @@
       "predicted_top1": "artifact_003",
       "top3_ids": [
         "artifact_003",
-        "artifact_008",
-        "artifact_002"
+        "artifact_002",
+        "artifact_008"
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3839
+      "confidence": 0.3833
     },
     {
       "image": "app/data/artifacts/images\\artifact_004\\712PiIud6kL.jpg",
@@ -339,7 +352,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.362
+      "confidence": 0.3628
     },
     {
       "image": "app/data/artifacts/images\\artifact_004\\Anubis Shrine (Jackal Statue).jpg",
@@ -352,7 +365,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.4026
+      "confidence": 0.4028
     },
     {
       "image": "app/data/artifacts/images\\artifact_004\\gf.jpg",
@@ -391,7 +404,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3663
+      "confidence": 0.3667
     },
     {
       "image": "app/data/artifacts/images\\artifact_004\\il_fullxfull.6057437378_d0um.webp",
@@ -456,7 +469,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.4323
+      "confidence": 0.4329
     },
     {
       "image": "app/data/artifacts/images\\artifact_005\\gouden-troon-toetanchamon.webp",
@@ -469,7 +482,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.4555
+      "confidence": 0.4556
     },
     {
       "image": "app/data/artifacts/images\\artifact_005\\King Tut on Throne in Amarna Style.jpg",
@@ -586,7 +599,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.4097
+      "confidence": 0.4095
     },
     {
       "image": "app/data/artifacts/images\\artifact_006\\jk.jpg",
@@ -612,7 +625,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3645
+      "confidence": 0.3649
     },
     {
       "image": "app/data/artifacts/images\\artifact_006\\s-l400.jpg",
@@ -625,7 +638,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3987
+      "confidence": 0.3985
     },
     {
       "image": "app/data/artifacts/images\\artifact_007\\161215173607-tutankhamun-death-mask.jpg",
@@ -768,7 +781,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3518
+      "confidence": 0.3524
     },
     {
       "image": "app/data/artifacts/images\\artifact_008\\73604_v0_large.jpg",
@@ -820,7 +833,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3444
+      "confidence": 0.3446
     },
     {
       "image": "app/data/artifacts/images\\artifact_008\\sothebys-com.brightspotcdn.jpg",
@@ -859,7 +872,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3827
+      "confidence": 0.3829
     },
     {
       "image": "app/data/artifacts/images\\artifact_008\\ump.webp",
@@ -877,15 +890,15 @@
     {
       "image": "app/data/artifacts/images\\artifact_009\\40.523_view1_SL1.webp",
       "expected": "artifact_009",
-      "predicted_top1": "artifact_002",
+      "predicted_top1": "artifact_009",
       "top3_ids": [
-        "artifact_002",
         "artifact_009",
+        "artifact_002",
         "artifact_006"
       ],
-      "top1_correct": false,
+      "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3436
+      "confidence": 0.3422
     },
     {
       "image": "app/data/artifacts/images\\artifact_009\\Amenhotep_III_statue_in_Egyptian_Museum_of_Cairo_Egypt.jpg",
@@ -898,7 +911,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3649
+      "confidence": 0.3645
     },
     {
       "image": "app/data/artifacts/images\\artifact_009\\Colossal-seated-statue-of-Amenhotep-III-and-Queen-Tiye.png",
@@ -911,7 +924,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3643
+      "confidence": 0.364
     },
     {
       "image": "app/data/artifacts/images\\artifact_009\\Colossal_Amenhotep_III_statue.jpg",
@@ -924,7 +937,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.392
+      "confidence": 0.3921
     },
     {
       "image": "app/data/artifacts/images\\artifact_009\\Colossal_statue_of_Amenhotep_III_and_Queen_Tiye,_1387-1350_BCE;_Egyptian_Museum,_Cairo_(4).jpg",
@@ -950,7 +963,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3541
+      "confidence": 0.3533
     },
     {
       "image": "app/data/artifacts/images\\artifact_009\\tumblr_73219c75435c6fbf4507c3e4871b9e24_e1bf0c37_540.jpg",
@@ -963,7 +976,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3801
+      "confidence": 0.3806
     },
     {
       "image": "app/data/artifacts/images\\artifact_009\\tye3.jpg",
@@ -976,7 +989,7 @@
       ],
       "top1_correct": true,
       "top3_correct": true,
-      "confidence": 0.3889
+      "confidence": 0.3887
     },
     {
       "image": "app/data/artifacts/images\\artifact_010\\AEMP_Nofretete_Bueste_Augen.jpg",

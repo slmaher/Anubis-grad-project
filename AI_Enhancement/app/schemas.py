@@ -1,5 +1,5 @@
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel
+from typing import Any, Dict, List, Optional
+from pydantic import BaseModel, Field
 
 
 class SimilarArtifact(BaseModel):
@@ -11,16 +11,16 @@ class SimilarArtifact(BaseModel):
 
 
 class RecognitionResponse(BaseModel):
-    artifact_id: Optional[str]
-    name: Optional[str]
-    artifact_type: Optional[str]
-    museum: Optional[str]
-    era: Optional[str]
-    dynasty: Optional[str]
-    material: Optional[str]
-    confidence: float
-    similar_artifacts: List[SimilarArtifact]
-    raw_scores: List[Dict[str, Any]]
+    artifact_id: Optional[str] = None
+    name: Optional[str] = None
+    artifact_type: Optional[str] = None
+    museum: Optional[str] = None
+    era: Optional[str] = None
+    dynasty: Optional[str] = None
+    material: Optional[str] = None
+    confidence: float = 0.0
+    similar_artifacts: List[SimilarArtifact] = Field(default_factory=list)
+    raw_scores: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 class KnowledgeResponse(BaseModel):
@@ -50,7 +50,7 @@ class RestorationResponse(BaseModel):
 
 class ScanResponse(BaseModel):
     recognition: RecognitionResponse
-    knowledge: Optional[KnowledgeResponse]
+    knowledge: Optional[KnowledgeResponse] = None
     restoration: RestorationResponse
 
 
@@ -60,3 +60,53 @@ class HieroglyphResponse(BaseModel):
     translated_en: str
     translated_ar: str
     note: str
+
+
+# New models for the combined analyze-artifact flow
+class AnalyzeRecognitionData(BaseModel):
+    artifact_id: Optional[str] = None
+    name: Optional[str] = None
+    artifact_type: Optional[str] = None
+    museum: Optional[str] = None
+    era: Optional[str] = None
+    dynasty: Optional[str] = None
+    material: Optional[str] = None
+    confidence: float = 0.0
+    similar_artifacts: List[Dict[str, Any]] = Field(default_factory=list)
+    raw_scores: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class AnalyzeMetadataData(BaseModel):
+    artifact_id: Optional[str] = None
+    name: Optional[str] = None
+    artifact_type: Optional[str] = None
+    museum: Optional[str] = None
+    era: Optional[str] = None
+    dynasty: Optional[str] = None
+    material: Optional[str] = None
+    location: Optional[str] = None
+    description_en: Optional[str] = None
+    description_ar: Optional[str] = None
+    story_en: Optional[str] = None
+    story_ar: Optional[str] = None
+    audio_script_en: Optional[str] = None
+    audio_script_ar: Optional[str] = None
+
+
+class AnalyzeRestorationData(BaseModel):
+    available: bool = False
+    artifact_id: Optional[str] = None
+    artifact_name: Optional[str] = None
+    final_image_path: Optional[str] = None
+    final_image_url: Optional[str] = None
+    bundle_path: Optional[str] = None
+    workspace_path: Optional[str] = None
+
+
+class AnalyzeArtifactResponse(BaseModel):
+    success: bool
+    scanned_filename: str
+    recognition: AnalyzeRecognitionData
+    metadata: AnalyzeMetadataData
+    restoration: AnalyzeRestorationData
+    debug: Optional[Any] = None
