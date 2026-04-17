@@ -19,6 +19,7 @@ import {
   TouchableOpacity,
   View,
   Animated,
+  PanResponder,
 } from "react-native";
 
 const languages = [
@@ -210,15 +211,28 @@ export default function MenuScreen({ onClose }) {
 
   const hiddenOffset = isRTL ? 300 : -300;
   const slideAnim = React.useRef(new Animated.Value(hiddenOffset)).current;
+  const dragAnim = React.useRef(new Animated.Value(0)).current;
+
+  const closeMenu = React.useCallback(() => {
+    Animated.timing(slideAnim, {
+      toValue: hiddenOffset,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      onClose && onClose();
+      dragAnim.setValue(0);
+    });
+  }, [dragAnim, hiddenOffset, onClose, slideAnim]);
 
   React.useEffect(() => {
     slideAnim.setValue(hiddenOffset);
+    dragAnim.setValue(0);
     Animated.timing(slideAnim, {
       toValue: 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
-  }, [hiddenOffset, slideAnim]);
+  }, [hiddenOffset, slideAnim, dragAnim]);
 
   React.useEffect(() => {
     loadCounts();
@@ -230,21 +244,64 @@ export default function MenuScreen({ onClose }) {
       .catch(() => setAuthUser(null));
   }, []);
 
+  const panResponder = React.useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) =>
+          Math.abs(gestureState.dx) > 20 &&
+          Math.abs(gestureState.dx) > Math.abs(gestureState.dy),
+
+        onPanResponderMove: (_, gestureState) => {
+          if (!isRTL && gestureState.dx < 0) {
+            dragAnim.setValue(gestureState.dx);
+          } else if (isRTL && gestureState.dx > 0) {
+            dragAnim.setValue(gestureState.dx);
+          } else {
+            dragAnim.setValue(0);
+          }
+        },
+
+        onPanResponderRelease: (_, gestureState) => {
+          const shouldClose =
+            (!isRTL && gestureState.dx < -80) ||
+            (isRTL && gestureState.dx > 80);
+
+          if (shouldClose) {
+            closeMenu();
+          } else {
+            Animated.spring(dragAnim, {
+              toValue: 0,
+              useNativeDriver: true,
+            }).start();
+          }
+        },
+
+        onPanResponderTerminate: () => {
+          Animated.spring(dragAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        },
+      }),
+    [isRTL, dragAnim, closeMenu]
+  );
+
   return (
     <View style={styles.container}>
       {/* DARK OVERLAY */}
       <TouchableOpacity
         style={styles.overlay}
         activeOpacity={1}
-        onPress={onClose}
+        onPress={closeMenu}
       />
 
       {/* SLIDING MENU */}
       <Animated.View
+        {...panResponder.panHandlers}
         style={[
           styles.background,
           isRTL ? styles.backgroundRtl : styles.backgroundLtr,
-          { transform: [{ translateX: slideAnim }] },
+          { transform: [{ translateX: Animated.add(slideAnim, dragAnim) }] },
         ]}
       >
         <ImageBackground
@@ -256,7 +313,7 @@ export default function MenuScreen({ onClose }) {
             <View style={styles.header}>
               <TouchableOpacity
                 style={styles.headerButton}
-                onPress={onClose}
+                onPress={closeMenu}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Ionicons name="close" size={24} color={MUTED} />
@@ -363,7 +420,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     bottom: 0,
-    width: 350, // drawer width
+    width: 350,
     backgroundColor: "transparent",
     zIndex: 2,
     elevation: 20,
