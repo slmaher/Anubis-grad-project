@@ -1,10 +1,11 @@
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 import cv2
 import numpy as np
 
 from app.services.enhancement_service import EnhancementService
 from app.services.image_utils import ensure_uint8, np_image_to_base64_jpeg
+from app.services.restoration_results_service import RestorationResultsService
 
 
 class RestorationService:
@@ -12,6 +13,7 @@ class RestorationService:
         self.lama_available = False
         self.realesrgan_available = False
         self.enhancement_service = EnhancementService()
+        self.results_service = RestorationResultsService()
 
     def _build_damage_mask(self, image_bgr: np.ndarray) -> Tuple[np.ndarray, float]:
         gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
@@ -60,6 +62,7 @@ class RestorationService:
         blended = cv2.addWeighted(image_bgr, 0.85, bilateral, 0.15, 0)
         return ensure_uint8(blended)
 
+    # Old functionality remains exactly here
     def restore(self, image_bgr: np.ndarray, use_super_resolution: bool = False) -> Dict:
         enhanced = self.enhancement_service.enhance(image_bgr)
         mask, damage_ratio = self._build_damage_mask(image_bgr)
@@ -80,6 +83,7 @@ class RestorationService:
             "output_image_base64": result_base64,
         }
 
+    # Old functionality remains exactly here
     def debug_restore(self, image_bgr: np.ndarray) -> Dict:
         enhanced = self.enhancement_service.enhance(image_bgr)
         mask, damage_ratio = self._build_damage_mask(image_bgr)
@@ -98,3 +102,7 @@ class RestorationService:
             "restored": ensure_uint8(restored),
             "damage_ratio": round(damage_ratio, 6),
         }
+
+    # New functionality
+    def get_saved_restoration(self, artifact_id: Optional[str]) -> Dict:
+        return self.results_service.get_result_info(artifact_id)

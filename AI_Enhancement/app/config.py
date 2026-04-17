@@ -2,10 +2,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
     APP_NAME: str = "Anubis AI Service"
     APP_ENV: str = "development"
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8000
+    DEBUG: bool = True
 
     DATA_DIR: str = "app/data"
     ARTIFACTS_DIR: str = "app/data/artifacts"
@@ -14,7 +21,8 @@ class Settings(BaseSettings):
     ARTIFACT_EMBEDDINGS_PATH: str = "app/data/artifacts/embeddings.npy"
     ARTIFACT_IDS_PATH: str = "app/data/artifacts/artifact_ids.json"
 
-    RECONSTRUCTION_PAIRS_DIR: str = "app/data/reconstruction_pairs"
+    # Match your project structure
+    RECONSTRUCTION_PAIRS_DIR: str = "app/data/artifacts/reconstruction_pairs"
     RECONSTRUCTION_EXPERIMENTS_DIR: str = "app/data/experiments/reconstruction"
     RECONSTRUCTION_TRACKING_CSV: str = "app/data/experiments/reconstruction/tracking.csv"
 
@@ -28,7 +36,9 @@ class Settings(BaseSettings):
     OPENAI_TTS_MODEL: str = "gpt-4o-mini-tts"
     OPENAI_TTS_VOICE: str = "alloy"
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    HIEROGLYPHS_DIR: str = "app/data/hieroglyphs"
+    TMP_DIR: str = "app/data/tmp"
+    RESTORATION_RESULTS_DIR: str = "app/data/restoration_results"
 
 
 settings = Settings()

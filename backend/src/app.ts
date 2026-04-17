@@ -21,6 +21,7 @@ import { tourGuidesRouter } from "./modules/tour-guides/tourGuides.routes";
 import { postsRouter } from "./modules/posts/posts.routes";
 import { marketplaceRouter } from "./modules/marketplace/marketplace.routes";
 import { friendsRouter } from "./modules/friends";
+import { aiRouter } from "./modules/ai/ai.routes";
 
 const app = express();
 
@@ -51,6 +52,7 @@ app.use("/api/tour-guides", tourGuidesRouter);
 app.use("/api/posts", postsRouter);
 app.use("/api/marketplace", marketplaceRouter);
 app.use("/api/friends", friendsRouter);
+app.use("/api/ai", aiRouter);
 
 // 404 + error handlers
 app.use(notFoundHandler);
