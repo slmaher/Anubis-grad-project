@@ -196,7 +196,7 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   tabBarContainer: {
     position: "absolute",
-    bottom: 20,
+    bottom: 35,
     alignSelf: "center",
   },
 
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "rgba(255, 255, 255, 0.90)",
     borderRadius: 30,
-    paddingVertical: 3,
+    paddingVertical: 5,
     borderWidth: 1.5,
     borderColor: "rgba(255,255,255,0.9)",
     boxShadow: "0px 6px 15px rgba(0, 0, 0, 0.2)",
@@ -212,16 +212,17 @@ const styles = StyleSheet.create({
 
     alignItems: "center",
     overflow: "hidden",
+    justifyContent: "space-between",
   },
 
   activeBubble: {
     position: "absolute",
-    height: 62,
+    height: 60,
     borderRadius: 35,
     backgroundColor: "rgba(255,255,255,0.9)",
 
-    top: 5,
-    left: -4,
+    top: 1,
+    left: 2,
 
     boxShadow: "0px 3px 6px rgba(0, 0, 0, 0.12)",
     elevation: 4,

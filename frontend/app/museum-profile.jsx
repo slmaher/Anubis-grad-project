@@ -85,11 +85,18 @@ export default function MuseumProfile() {
   };
 
   // Museum data
-  const museum = {
-    id: params.id,
-    name: params.name || "Grand Egyptian Museum",
-    lookupName:
-      params.museumLookupName || params.name || "Grand Egyptian Museum",
+const rawMuseumId = params.id;
+const museumId =
+  typeof rawMuseumId === "string" &&
+  /^[a-f\d]{24}$/i.test(rawMuseumId)
+    ? rawMuseumId
+    : undefined;
+
+const museum = {
+  id: museumId,
+  name: params.name || "Grand Egyptian Museum",
+  lookupName:
+    params.museumLookupName || params.name || "Grand Egyptian Museum",
     price: "120 LE/ Person",
     rating: 4.6,
     imageUrl: params.imageUrl,
@@ -238,13 +245,13 @@ export default function MuseumProfile() {
                 onPress={() => {
                   if (tab === "Reviews") {
                     router.push({
-                      pathname: "/reviews",
-                      params: {
-                        museumId: museum.id,
-                        museumName: museum.name,
-                        museumLookupName: museum.lookupName,
-                      },
-                    });
+  pathname: "/reviews",
+  params: {
+    ...(museum.id ? { museumId: museum.id } : {}),
+    museumName: museum.name,
+    museumLookupName: museum.lookupName,
+  },
+});
                   } else if (tab === "Artifacts") {
                     // Navigate to Artifacts Screen
                     router.push({
