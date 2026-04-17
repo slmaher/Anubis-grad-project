@@ -2,7 +2,9 @@ import { useRouter } from "expo-router";
 import React from "react";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTranslation } from "react-i18next";
+import { useFocusEffect } from "@react-navigation/native";
 import {
+  ActivityIndicator,
   ImageBackground,
   SafeAreaView,
   StyleSheet,
@@ -12,6 +14,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { api } from "../api/client";
 
 const DARK = "#2C2010";
 const MUTED = "#9A8C7A";
@@ -22,12 +25,46 @@ export default function EventsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const { width, height } = useWindowDimensions();
+  const [stats, setStats] = React.useState({ all: 0, active: 0, upcoming: 0 });
+  const [loadingStats, setLoadingStats] = React.useState(false);
 
   const isSmallScreen = width < 370;
   const horizontalPadding = width > 600 ? 32 : 22;
   const titleSize = Math.max(31, Math.min(42, width * 0.105));
   const titleLineHeight = Math.round(titleSize * 1.16);
   const bodyBottomPadding = Math.max(28, Math.min(56, height * 0.055));
+
+  const loadStats = React.useCallback(async () => {
+    setLoadingStats(true);
+    try {
+      const res = await api.getEvents();
+      const data = Array.isArray(res?.data) ? res.data : [];
+      const now = Date.now();
+
+      const active = data.filter((event) => {
+        const start = new Date(event?.startDate).getTime();
+        const end = new Date(event?.endDate).getTime();
+        return !Number.isNaN(start) && !Number.isNaN(end) && start <= now && end >= now;
+      }).length;
+
+      const upcoming = data.filter((event) => {
+        const start = new Date(event?.startDate).getTime();
+        return !Number.isNaN(start) && start > now;
+      }).length;
+
+      setStats({ all: data.length, active, upcoming });
+    } catch {
+      setStats({ all: 0, active: 0, upcoming: 0 });
+    } finally {
+      setLoadingStats(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadStats();
+    }, [loadStats]),
+  );
 
   return (
     <ImageBackground
@@ -88,7 +125,7 @@ export default function EventsScreen() {
           <View style={styles.footerBlock}>
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>23</Text>
+                <Text style={styles.statNumber}>{stats.all}</Text>
                 <Text style={styles.statLabel}>
                   {t("events_hero.stat_all")}
                 </Text>
@@ -97,7 +134,7 @@ export default function EventsScreen() {
               <View style={styles.statDivider} />
 
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>2</Text>
+                <Text style={styles.statNumber}>{stats.active}</Text>
                 <Text style={styles.statLabel}>
                   {t("events_hero.stat_active")}
                 </Text>
@@ -106,12 +143,18 @@ export default function EventsScreen() {
               <View style={styles.statDivider} />
 
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>17</Text>
+                <Text style={styles.statNumber}>{stats.upcoming}</Text>
                 <Text style={styles.statLabel}>
                   {t("events_hero.stat_upcoming")}
                 </Text>
               </View>
             </View>
+
+            {loadingStats ? (
+              <View style={styles.statsLoadingWrap}>
+                <ActivityIndicator size="small" color="#E7D6BD" />
+              </View>
+            ) : null}
 
             <TouchableOpacity
               style={[styles.findBtn, isSmallScreen && styles.findBtnSmall]}
@@ -254,6 +297,10 @@ const styles = StyleSheet.create({
     width: 1,
     height: 40,
     backgroundColor: "rgba(227, 203, 169, 0.35)",
+  },
+  statsLoadingWrap: {
+    alignItems: "center",
+    marginBottom: 10,
   },
 
   findBtn: {

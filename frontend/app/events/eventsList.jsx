@@ -1,7 +1,10 @@
+import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTranslation } from "react-i18next";
+import { useFocusEffect } from "@react-navigation/native";
 import {
+  ActivityIndicator,
   ImageBackground,
   SafeAreaView,
   ScrollView,
@@ -12,6 +15,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import { api } from "../api/client";
 
 const DARK = "#2C2010";
 const MUTED = "#8B7B6C";
@@ -23,24 +27,6 @@ const ACCENT = "#B8965A";
 const EVENT_IMAGE = {
   uri: "https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?w=1200&q=80",
 };
-
-const EVENTS = [
-  {
-    id: "e1",
-    museumKey: "grand_egyptian_museum",
-    startsAt: "2026-08-17T17:00:00",
-  },
-  {
-    id: "e2",
-    museumKey: "grand_egyptian_museum",
-    startsAt: "2026-08-23T17:00:00",
-  },
-  {
-    id: "e3",
-    museumKey: "grand_egyptian_museum",
-    startsAt: "2026-09-02T17:00:00",
-  },
-];
 
 function EventCard({ title, time, cardHeight, buyTicketLabel }) {
   return (
@@ -77,13 +63,38 @@ export default function EventsListScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const { width } = useWindowDimensions();
+  const [events, setEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("all");
 
   const horizontalPadding = width > 600 ? 28 : 16;
   const cardHeight = width < 380 ? 142 : 160;
   const locale = i18n.language || "en";
 
+  const loadEvents = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await api.getEvents();
+      const data = Array.isArray(response?.data) ? response.data : [];
+      setEvents(data);
+    } catch {
+      setEvents([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadEvents();
+    }, [loadEvents]),
+  );
+
   const formatEventDate = (isoDate) => {
     const date = new Date(isoDate);
+    if (Number.isNaN(date.getTime())) {
+      return "-";
+    }
     return new Intl.DateTimeFormat(locale, {
       day: "numeric",
       month: "short",
@@ -92,6 +103,9 @@ export default function EventsListScreen() {
 
   const formatEventTime = (isoDate) => {
     const date = new Date(isoDate);
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
     return new Intl.DateTimeFormat(locale, {
       hour: "2-digit",
       minute: "2-digit",
@@ -100,11 +114,37 @@ export default function EventsListScreen() {
   };
 
   const tabs = [
-    t("events_list.tabs.all"),
-    t("events_list.tabs.now"),
-    t("events_list.tabs.upcoming"),
-    t("events_list.tabs.past"),
+    { key: "all", label: t("events_list.tabs.all") },
+    { key: "now", label: t("events_list.tabs.now") },
+    { key: "upcoming", label: t("events_list.tabs.upcoming") },
+    { key: "past", label: t("events_list.tabs.past") },
   ];
+
+  const filteredEvents = useMemo(() => {
+    const now = Date.now();
+    return events.filter((item) => {
+      const start = new Date(item?.startDate).getTime();
+      const end = new Date(item?.endDate).getTime();
+
+      if (Number.isNaN(start) || Number.isNaN(end)) {
+        return activeFilter === "all";
+      }
+
+      if (activeFilter === "now") {
+        return start <= now && end >= now;
+      }
+
+      if (activeFilter === "upcoming") {
+        return start > now;
+      }
+
+      if (activeFilter === "past") {
+        return end < now;
+      }
+
+      return true;
+    });
+  }, [events, activeFilter]);
 
   return (
     <View style={styles.container}>
@@ -130,15 +170,22 @@ export default function EventsListScreen() {
           </View>
 
           <View style={styles.tabs}>
-            {tabs.map((label, index) => (
+            {tabs.map((tab) => (
               <TouchableOpacity
-                key={label}
-                style={[styles.tabItem, index === 0 && styles.tabItemActive]}
+                key={tab.key}
+                style={[
+                  styles.tabItem,
+                  activeFilter === tab.key && styles.tabItemActive,
+                ]}
+                onPress={() => setActiveFilter(tab.key)}
               >
                 <Text
-                  style={[styles.tabText, index === 0 && styles.tabTextActive]}
+                  style={[
+                    styles.tabText,
+                    activeFilter === tab.key && styles.tabTextActive,
+                  ]}
                 >
-                  {label}
+                  {tab.label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -151,30 +198,45 @@ export default function EventsListScreen() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-          >
-            {EVENTS.map((item) => (
-              <View key={item.id} style={styles.timelineItem}>
-                <View style={styles.dateRail}>
-                  <Text style={styles.date}>
-                    {formatEventDate(item.startsAt)}
-                  </Text>
-                  <View style={styles.line} />
-                </View>
+          {isLoading ? (
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator size="small" color={ACCENT} />
+              <Text style={styles.loadingText}>
+                {t("common.loading")}
+              </Text>
+            </View>
+          ) : (
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+            >
+              {filteredEvents.length === 0 ? (
+                <Text style={styles.emptyText}>
+                  {t("events_list.empty", { defaultValue: "No events found" })}
+                </Text>
+              ) : (
+                filteredEvents.map((item) => (
+                  <View key={item._id || item.id} style={styles.timelineItem}>
+                    <View style={styles.dateRail}>
+                      <Text style={styles.date}>
+                        {formatEventDate(item.startDate)}
+                      </Text>
+                      <View style={styles.line} />
+                    </View>
 
-                <View style={styles.cardContainer}>
-                  <EventCard
-                    title={t(`tickets.museums.${item.museumKey}`)}
-                    time={formatEventTime(item.startsAt)}
-                    cardHeight={cardHeight}
-                    buyTicketLabel={t("events_list.buy_ticket")}
-                  />
-                </View>
-              </View>
-            ))}
-          </ScrollView>
+                    <View style={styles.cardContainer}>
+                      <EventCard
+                        title={item.title || t("events_list.title")}
+                        time={formatEventTime(item.startDate)}
+                        cardHeight={cardHeight}
+                        buyTicketLabel={t("events_list.buy_ticket")}
+                      />
+                    </View>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+          )}
         </View>
       </SafeAreaView>
     </View>
@@ -259,6 +321,23 @@ const styles = StyleSheet.create({
     color: ACCENT,
     fontSize: 13,
     fontWeight: "700",
+  },
+  loadingWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 20,
+  },
+  loadingText: {
+    color: MUTED,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  emptyText: {
+    color: MUTED,
+    fontSize: 14,
+    textAlign: "center",
+    paddingVertical: 18,
   },
   scrollContent: {
     paddingBottom: 24,
