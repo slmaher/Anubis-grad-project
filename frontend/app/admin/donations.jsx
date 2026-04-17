@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
 import { getAuthToken } from '../api/authStorage';
 
 const API_URL = 'http://localhost:4000/api';
 
 export default function DonationManagement() {
+  const params = useLocalSearchParams();
+  const actionParam = Array.isArray(params?.action) ? params.action[0] : params?.action;
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -15,6 +18,14 @@ export default function DonationManagement() {
   useEffect(() => {
     fetchCampaigns();
   }, []);
+
+  useEffect(() => {
+    if (actionParam !== 'create') return;
+
+    setEditingCampaign(null);
+    setFormData({ title: '', description: '', goalAmount: '' });
+    setModalVisible(true);
+  }, [actionParam]);
 
   const fetchCampaigns = async () => {
     try {

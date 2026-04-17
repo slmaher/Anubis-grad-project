@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
 import { getAuthToken } from '../api/authStorage';
 
 const API_URL = 'http://localhost:4000/api';
 
 export default function EventManagement() {
+  const params = useLocalSearchParams();
+  const actionParam = Array.isArray(params?.action) ? params.action[0] : params?.action;
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -15,6 +18,14 @@ export default function EventManagement() {
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  useEffect(() => {
+    if (actionParam !== 'create') return;
+
+    setEditingEvent(null);
+    setFormData({ title: '', description: '', museum: '', startDate: '', endDate: '', location: '' });
+    setModalVisible(true);
+  }, [actionParam]);
 
   const fetchEvents = async () => {
     try {

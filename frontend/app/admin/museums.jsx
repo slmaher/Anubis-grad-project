@@ -1,20 +1,66 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal, TextInput, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal, TextInput, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { getAuthToken } from '../api/authStorage';
 
 const API_URL = 'http://localhost:4000/api';
 
 export default function MuseumManagement() {
+  const params = useLocalSearchParams();
+  const actionParam = Array.isArray(params?.action) ? params.action[0] : params?.action;
   const [museums, setMuseums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingMuseum, setEditingMuseum] = useState(null);
-  const [formData, setFormData] = useState({ name: '', description: '', location: '', city: '' });
+  const [formData, setFormData] = useState({ name: '', description: '', location: '', city: '', imageUrl: '' });
 
   useEffect(() => {
     fetchMuseums();
   }, []);
+
+  useEffect(() => {
+    if (actionParam !== 'create') return;
+
+    setEditingMuseum(null);
+    setFormData({ name: '', description: '', location: '', city: '', imageUrl: '' });
+    setModalVisible(true);
+  }, [actionParam]);
+
+  const pickImage = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permission.status !== 'granted') {
+        Alert.alert('Permission needed', 'Please allow gallery access to choose a museum image.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.7,
+        base64: true,
+      });
+
+      if (result.canceled || !result.assets?.length) {
+        return;
+      }
+
+      const selected = result.assets[0];
+      if (!selected.base64) {
+        Alert.alert('Error', 'Failed to read image data. Please try again.');
+        return;
+      }
+
+      const mimeType = selected.mimeType || 'image/jpeg';
+      setFormData((prev) => ({
+        ...prev,
+        imageUrl: `data:${mimeType};base64,${selected.base64}`,
+      }));
+    } catch (error) {
+      Alert.alert('Error', 'Unable to pick image right now.');
+    }
+  };
 
   const fetchMuseums = async () => {
     try {
@@ -43,7 +89,7 @@ export default function MuseumManagement() {
       if (res.success) {
         setModalVisible(false);
         setEditingMuseum(null);
-        setFormData({ name: '', description: '', location: '', city: '' });
+        setFormData({ name: '', description: '', location: '', city: '', imageUrl: '' });
         fetchMuseums();
       } else {
         Alert.alert('Error', res.message);
@@ -66,7 +112,13 @@ export default function MuseumManagement() {
 
   const openEdit = (museum) => {
     setEditingMuseum(museum);
-    setFormData({ name: museum.name, description: museum.description, location: museum.location, city: museum.city });
+    setFormData({
+      name: museum.name || '',
+      description: museum.description || '',
+      location: museum.location || '',
+      city: museum.city || '',
+      imageUrl: museum.imageUrl || '',
+    });
     setModalVisible(true);
   };
 
@@ -89,7 +141,7 @@ export default function MuseumManagement() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Museums</Text>
-        <TouchableOpacity style={styles.addBtn} onPress={() => { setEditingMuseum(null); setFormData({ name: '', description: '', location: '', city: '' }); setModalVisible(true); }}>
+        <TouchableOpacity style={styles.addBtn} onPress={() => { setEditingMuseum(null); setFormData({ name: '', description: '', location: '', city: '', imageUrl: '' }); setModalVisible(true); }}>
           <MaterialCommunityIcons name="plus" size={24} color="#fff" />
           <Text style={styles.addBtnText}>Add Museum</Text>
         </TouchableOpacity>
@@ -105,6 +157,21 @@ export default function MuseumManagement() {
               <TextInput style={styles.input} placeholder="Name" value={formData.name} onChangeText={t => setFormData({...formData, name: t})} />
               <TextInput style={styles.input} placeholder="City" value={formData.city} onChangeText={t => setFormData({...formData, city: t})} />
               <TextInput style={styles.input} placeholder="Location" value={formData.location} onChangeText={t => setFormData({...formData, location: t})} />
+              <TextInput style={styles.input} placeholder="Image URL (optional)" value={formData.imageUrl} onChangeText={t => setFormData({...formData, imageUrl: t})} />
+              <View style={styles.imageActionsRow}>
+                <TouchableOpacity style={styles.pickImageBtn} onPress={pickImage}>
+                  <MaterialCommunityIcons name="image-plus" size={18} color="#D9A441" />
+                  <Text style={styles.pickImageText}>Choose Image</Text>
+                </TouchableOpacity>
+                {!!formData.imageUrl && (
+                  <TouchableOpacity style={styles.clearImageBtn} onPress={() => setFormData({ ...formData, imageUrl: '' })}>
+                    <Text style={styles.clearImageText}>Remove</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              {!!formData.imageUrl && (
+                <Image source={{ uri: formData.imageUrl }} style={styles.imagePreview} resizeMode="cover" />
+              )}
               <TextInput style={[styles.input, { height: 100 }]} placeholder="Description" multiline value={formData.description} onChangeText={t => setFormData({...formData, description: t})} />
             </ScrollView>
             <View style={styles.modalButtons}>
@@ -133,6 +200,12 @@ const styles = StyleSheet.create({
   modalContent: { backgroundColor: '#fff', width: '90%', maxWidth: 500, borderRadius: 16, padding: 24, maxHeight: '80%' },
   modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 20 },
   input: { borderWidth: 1, borderColor: '#ECE5DE', borderRadius: 8, padding: 12, marginBottom: 16 },
+  imageActionsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  pickImageBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: '#D9A44120', backgroundColor: '#D9A44110' },
+  pickImageText: { color: '#8B6A1E', fontWeight: '600' },
+  clearImageBtn: { paddingVertical: 8, paddingHorizontal: 12 },
+  clearImageText: { color: '#B54747', fontWeight: '600' },
+  imagePreview: { width: '100%', height: 160, borderRadius: 10, marginBottom: 16, backgroundColor: '#F5F0EA' },
   modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 10 },
   cancelBtn: { paddingHorizontal: 20, paddingVertical: 10 },
   saveBtn: { backgroundColor: '#D9A441', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },

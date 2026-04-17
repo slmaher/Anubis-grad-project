@@ -3,6 +3,7 @@ import React from "react";
 import {
   ImageBackground,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -44,40 +45,46 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Avatar & Info */}
-        <View style={styles.avatarSection}>
-          <View style={styles.avatarRing}>
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarEmoji}>👩</Text>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Avatar & Info */}
+          <View style={styles.avatarSection}>
+            <View style={styles.avatarRing}>
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarEmoji}>👩</Text>
+              </View>
+            </View>
+            <Text style={styles.userName}>Melissa peters</Text>
+            <Text style={styles.userRole}>Interior designer</Text>
+            <View style={styles.locationRow}>
+              <Text style={styles.locationIcon}>📍</Text>
+              <Text style={styles.locationText}>Lagos, Nigeria</Text>
             </View>
           </View>
-          <Text style={styles.userName}>Melissa peters</Text>
-          <Text style={styles.userRole}>Interior designer</Text>
-          <View style={styles.locationRow}>
-            <Text style={styles.locationIcon}>📍</Text>
-            <Text style={styles.locationText}>Lagos, Nigeria</Text>
-          </View>
-        </View>
 
-        {/* Profile Menu Items */}
-        <View style={styles.itemsList}>
-          {profileItems.map((item) => (
-            <TouchableOpacity
-              key={item.label}
-              style={styles.itemRow}
-              activeOpacity={0.7}
-            >
-              <View style={styles.itemIconBox}>
-                <Text style={styles.itemIcon}>{item.icon}</Text>
-              </View>
-              <View style={styles.itemTextBlock}>
-                <Text style={styles.itemLabel}>{item.label}</Text>
-                <Text style={styles.itemSub}>{item.sub}</Text>
-              </View>
-              <Text style={styles.chevron}>›</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+          {/* Profile Menu Items */}
+          <View style={styles.itemsList}>
+            {profileItems.map((item) => (
+              <TouchableOpacity
+                key={item.label}
+                style={styles.itemRow}
+                activeOpacity={0.7}
+              >
+                <View style={styles.itemIconBox}>
+                  <Text style={styles.itemIcon}>{item.icon}</Text>
+                </View>
+                <View style={styles.itemTextBlock}>
+                  <Text style={styles.itemLabel}>{item.label}</Text>
+                  <Text style={styles.itemSub}>{item.sub}</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
       </SafeAreaView>
     </ImageBackground>
   );
@@ -91,6 +98,8 @@ const CARD = "rgba(235, 220, 190, 0.45)";
 const styles = StyleSheet.create({
   background: { flex: 1, width: "100%", height: "100%" },
   safeArea: { flex: 1 },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingBottom: 24 },
   header: {
     flexDirection: "row",
     alignItems: "center",
