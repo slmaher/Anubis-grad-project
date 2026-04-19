@@ -23,3 +23,7 @@ export function createHomeStyles() {
     },
   });
 }
+
+export default function HomeStylesRouteStub() {
+  return null;
+}

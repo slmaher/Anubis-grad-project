@@ -96,3 +96,7 @@ export function getCartTotals(items) {
     totalPrice,
   };
 }
+
+export default function CartStorageRouteStub() {
+  return null;
+}

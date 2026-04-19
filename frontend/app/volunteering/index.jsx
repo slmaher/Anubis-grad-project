@@ -276,7 +276,9 @@ export default function VolunteeringScreen() {
         }
       } catch {
         if (isMounted) {
-          setFeedbackMessage(t("volunteering_screen.feedback.live_data_failed"));
+          setFeedbackMessage(
+            t("volunteering_screen.feedback.live_data_failed"),
+          );
         }
       } finally {
         if (isMounted) {
@@ -387,7 +389,9 @@ export default function VolunteeringScreen() {
           prev.includes(item.id) ? prev : [...prev, item.id],
         );
         setFeedbackMessage(
-          t("volunteering_screen.feedback.already_joined", { title: item.title }),
+          t("volunteering_screen.feedback.already_joined", {
+            title: item.title,
+          }),
         );
         return;
       }

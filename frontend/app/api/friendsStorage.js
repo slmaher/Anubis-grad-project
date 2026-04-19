@@ -36,3 +36,7 @@ export async function addFriendToList(friend) {
     return false;
   }
 }
+
+export default function FriendsStorageRouteStub() {
+  return null;
+}

@@ -10,9 +10,11 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import { getAuthToken } from "../api/authStorage";
 
 const API_URL = "http://localhost:4000/api";
@@ -33,6 +35,7 @@ export default function EventManagement() {
     startDate: "",
     endDate: "",
     location: "",
+    imageUrl: "",
   });
 
   useEffect(() => {
@@ -50,9 +53,47 @@ export default function EventManagement() {
       startDate: "",
       endDate: "",
       location: "",
+      imageUrl: "",
     });
     setModalVisible(true);
   }, [actionParam]);
+
+  const pickImage = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permission.status !== "granted") {
+        Alert.alert(
+          "Permission needed",
+          "Please allow gallery access to choose an event photo."
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.7,
+        base64: true,
+      });
+
+      if (result.canceled || !result.assets?.length) {
+        return;
+      }
+
+      const selected = result.assets[0];
+      if (!selected.base64) {
+        Alert.alert("Error", "Failed to read image data. Please try again.");
+        return;
+      }
+
+      const mimeType = selected.mimeType || "image/jpeg";
+      setFormData((prev) => ({
+        ...prev,
+        imageUrl: `data:${mimeType};base64,${selected.base64}`,
+      }));
+    } catch (error) {
+      Alert.alert("Error", "Unable to pick image right now.");
+    }
+  };
 
   const fetchEvents = async () => {
     try {
@@ -72,6 +113,10 @@ export default function EventManagement() {
     const url = editingEvent
       ? `${API_URL}/events/${editingEvent._id}`
       : `${API_URL}/events`;
+    const payload = {
+      ...formData,
+      imageUrl: formData.imageUrl?.trim() || undefined,
+    };
 
     try {
       const response = await fetch(url, {
@@ -80,7 +125,7 @@ export default function EventManagement() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
       const res = await response.json();
       if (res.success) {
@@ -172,6 +217,8 @@ export default function EventManagement() {
               startDate: "",
               endDate: "",
               location: "",
+              imageUrl: "",
+              imageUrl: "",
             });
             setModalVisible(true);
           }}
@@ -225,6 +272,37 @@ export default function EventManagement() {
                 value={formData.location}
                 onChangeText={(t) => setFormData({ ...formData, location: t })}
               />
+              <TextInput
+                style={styles.input}
+                placeholder="Image URL (optional)"
+                value={formData.imageUrl}
+                onChangeText={(t) => setFormData({ ...formData, imageUrl: t })}
+              />
+              <View style={styles.imageActionsRow}>
+                <TouchableOpacity style={styles.pickImageBtn} onPress={pickImage}>
+                  <MaterialCommunityIcons
+                    name="image-plus"
+                    size={18}
+                    color="#D9A441"
+                  />
+                  <Text style={styles.pickImageText}>Choose Photo</Text>
+                </TouchableOpacity>
+                {!!formData.imageUrl && (
+                  <TouchableOpacity
+                    style={styles.clearImageBtn}
+                    onPress={() => setFormData({ ...formData, imageUrl: "" })}
+                  >
+                    <Text style={styles.clearImageText}>Remove</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              {!!formData.imageUrl && (
+                <Image
+                  source={{ uri: formData.imageUrl }}
+                  style={styles.imagePreview}
+                  resizeMode="cover"
+                />
+              )}
               <TextInput
                 style={[styles.input, { height: 80 }]}
                 placeholder="Description"
@@ -306,6 +384,44 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
+  },
+  imageActionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 16,
+  },
+  pickImageBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#D9A441",
+    backgroundColor: "#FFF8E9",
+  },
+  pickImageText: {
+    color: "#B8860B",
+    fontWeight: "600",
+  },
+  clearImageBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: "#F5EFE7",
+  },
+  clearImageText: {
+    color: "#6E6257",
+    fontWeight: "600",
+  },
+  imagePreview: {
+    width: "100%",
+    height: 180,
+    borderRadius: 12,
+    marginBottom: 16,
+    backgroundColor: "#F3F0EB",
   },
   modalButtons: { flexDirection: "row", justifyContent: "flex-end", gap: 12 },
   cancelBtn: { paddingHorizontal: 20, paddingVertical: 10 },

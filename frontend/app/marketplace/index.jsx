@@ -38,7 +38,7 @@ export default function Marketplace() {
     {
       id: "artifact",
       labelKey: "marketplace.categories.artifact",
-      icon: "amphora",
+      icon: "treasure-chest",
     },
     {
       id: "books",
@@ -136,7 +136,7 @@ export default function Marketplace() {
       return;
     }
 
-    router.replace("/(tabs)/home");
+    router.replace("/home");
   };
 
   const filteredProducts = products.filter((product) => {

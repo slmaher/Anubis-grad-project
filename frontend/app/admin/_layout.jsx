@@ -54,7 +54,7 @@ export default function AdminLayout() {
     { name: t("admin.menu.museums"), icon: "bank", path: "/admin/museums" },
     {
       name: t("admin.menu.artifacts"),
-      icon: "amphora",
+      icon: "treasure-chest",
       path: "/admin/artifacts",
     },
     {
@@ -141,7 +141,7 @@ export default function AdminLayout() {
       </ScrollView>
       <TouchableOpacity
         style={[styles.backHome, isRTL && { flexDirection: "row-reverse" }]}
-        onPress={() => router.replace("/(tabs)/home")}
+        onPress={() => router.replace("/home")}
       >
         <MaterialCommunityIcons name="home-outline" size={20} color="#6B5B4F" />
         <Text style={styles.backHomeText}>{t("admin.exit")}</Text>
@@ -161,7 +161,7 @@ export default function AdminLayout() {
                 isRTL && { flexDirection: "row-reverse" },
               ]}
             >
-              <TouchableOpacity onPress={() => router.replace("/(tabs)/home")}>
+              <TouchableOpacity onPress={() => router.replace("/home")}>
                 <MaterialCommunityIcons
                   name="home-outline"
                   size={24}

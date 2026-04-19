@@ -87,11 +87,11 @@ const CommunityIcon = () => (
 );
 
 const tabs = [
-  { label: "Home", Icon: HomeIcon, route: "/(tabs)/home" },
-  { label: "Explore", Icon: ExploreIcon, route: "/(tabs)/explore" },
-  { label: "Scan", Icon: ScanIcon, route: "/(tabs)/scan" },
+  { label: "Home", Icon: HomeIcon, route: "/home" },
+  { label: "Explore", Icon: ExploreIcon, route: "/explore" },
+  { label: "Scan", Icon: ScanIcon, route: "/scan" },
   { label: "Events", Icon: EventsIcon, route: "/EventsScreen" },
-  { label: "Community", Icon: CommunityIcon, route: "/(tabs)/community" },
+  { label: "Community", Icon: CommunityIcon, route: "/community" },
 ];
 
 export default function ArtifactsScreen() {

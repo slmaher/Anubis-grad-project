@@ -9,7 +9,7 @@ export default function ReviewSuccess() {
       {/* Close Button */}
       <TouchableOpacity
         style={styles.closeButton}
-        onPress={() => router.push("/(tabs)/home")}
+        onPress={() => router.push("/home")}
       >
         <Text style={styles.closeIcon}>✕</Text>
       </TouchableOpacity>
@@ -63,7 +63,7 @@ export default function ReviewSuccess() {
       {/* See All Button */}
       <TouchableOpacity
         style={styles.seeAllButton}
-        onPress={() => router.push("/(tabs)/home")}
+        onPress={() => router.push("/home")}
       >
         <Text style={styles.seeAllButtonText}>Go Home</Text>
       </TouchableOpacity>

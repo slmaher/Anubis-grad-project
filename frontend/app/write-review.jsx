@@ -35,7 +35,7 @@ export default function WriteReview() {
       return;
     }
 
-    router.replace("/(tabs)/home");
+    router.replace("/home");
   };
 
   const handlePickPhoto = async () => {

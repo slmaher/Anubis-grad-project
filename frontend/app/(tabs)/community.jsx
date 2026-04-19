@@ -264,7 +264,7 @@ export default function Community() {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.push("/(tabs)/home")}
+          onPress={() => router.push("/home")}
         >
           <MaterialCommunityIcons name="chevron-left" size={28} color="#000" />
         </TouchableOpacity>

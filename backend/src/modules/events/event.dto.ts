@@ -1,4 +1,7 @@
-import { IsDateString, IsInt, IsMongoId, IsOptional, IsString, IsUrl, Min, MinLength } from 'class-validator';
+import { IsDateString, IsInt, IsMongoId, IsOptional, IsString, Matches, Min, MinLength } from 'class-validator';
+
+const IMAGE_URL_OR_DATA_URL_PATTERN =
+  /^(https?:\/\/[^\s]+|data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=\r\n]+)$/;
 
 export class CreateEventDto {
   @IsString()
@@ -24,7 +27,9 @@ export class CreateEventDto {
 
   @IsOptional()
   @IsString()
-  @IsUrl()
+  @Matches(IMAGE_URL_OR_DATA_URL_PATTERN, {
+    message: 'imageUrl must be an http(s) URL or a base64 data URL',
+  })
   imageUrl?: string;
 
   @IsOptional()
@@ -62,7 +67,9 @@ export class UpdateEventDto {
 
   @IsOptional()
   @IsString()
-  @IsUrl()
+  @Matches(IMAGE_URL_OR_DATA_URL_PATTERN, {
+    message: 'imageUrl must be an http(s) URL or a base64 data URL',
+  })
   imageUrl?: string;
 
   @IsOptional()

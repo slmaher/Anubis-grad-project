@@ -47,3 +47,7 @@ export const useChatSocket = (onNewMessage) => {
 
   return socketRef.current;
 };
+
+export default function UseChatSocketRouteStub() {
+  return null;
+}

@@ -44,7 +44,12 @@ export default function EventsScreen() {
       const active = data.filter((event) => {
         const start = new Date(event?.startDate).getTime();
         const end = new Date(event?.endDate).getTime();
-        return !Number.isNaN(start) && !Number.isNaN(end) && start <= now && end >= now;
+        return (
+          !Number.isNaN(start) &&
+          !Number.isNaN(end) &&
+          start <= now &&
+          end >= now
+        );
       }).length;
 
       const upcoming = data.filter((event) => {

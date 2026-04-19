@@ -81,7 +81,7 @@ export default function MuseumProfile() {
       return;
     }
 
-    router.replace("/(tabs)/home");
+    router.replace("/home");
   };
 
   // Museum data

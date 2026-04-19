@@ -60,3 +60,7 @@ export async function clearLocalNotifications() {
     // ignore
   }
 }
+
+export default function NotificationsStorageRouteStub() {
+  return null;
+}

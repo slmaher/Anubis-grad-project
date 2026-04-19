@@ -43,7 +43,7 @@ export default function Login() {
       if (role === "admin") {
         router.replace("/admin");
       } else {
-        router.replace("/(tabs)/home");
+        router.replace("/home");
       }
     } catch (error) {
       console.error("Login failed", error);
