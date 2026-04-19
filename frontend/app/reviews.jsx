@@ -13,9 +13,15 @@ import { api } from "./api/client";
 export default function Reviews() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const museumId = params.museumId;
-  const museumName = params.museumName;
-  const museumLookupName = params.museumLookupName;
+const rawMuseumId = params.museumId;
+const museumId =
+  typeof rawMuseumId === "string" &&
+  /^[a-f\d]{24}$/i.test(rawMuseumId)
+    ? rawMuseumId
+    : undefined;
+
+const museumName = params.museumName;
+const museumLookupName = params.museumLookupName;
 
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,11 +46,15 @@ export default function Reviews() {
     (async () => {
       try {
         setLoading(true);
-        const result = await api.getReviews(
-          museumId || museumName || museumLookupName
-            ? { museumId, museumName, museumLookupName }
-            : {},
-        );
+const query = {
+  ...(museumId ? { museumId } : {}),
+  ...(museumName ? { museumName } : {}),
+  ...(museumLookupName ? { museumLookupName } : {}),
+};
+
+const result = await api.getReviews(
+  Object.keys(query).length > 0 ? query : {},
+);
         const list = result?.data || [];
         if (isMounted) {
           setReviews(list);
@@ -163,7 +173,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 50,
+    paddingTop: 75,
     paddingHorizontal: 20,
     paddingBottom: 15,
     backgroundColor: "#E8DDD0",

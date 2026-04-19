@@ -1,4 +1,4 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert, ActivityIndicator } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import { api } from "../api/client";
@@ -73,10 +73,10 @@ export default function Signup() {
       />
 
       {/* Close Button */}
-      <TouchableOpacity 
-        style={styles.closeButton}
-        onPress={() => router.back()}
-      >
+<TouchableOpacity 
+  style={styles.closeButton}
+  onPress={() => router.replace("/auth/register")}
+>
         <Text style={styles.closeText}>✕</Text>
       </TouchableOpacity>
 
@@ -85,132 +85,139 @@ export default function Signup() {
         <Text style={styles.title}>Welcome</Text>
       </View>
 
-      {/* Dark Overlay - Only bottom half */}
-      <View style={styles.overlay}>
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Content */}
-          <View style={styles.content}>
-            <Text style={styles.subtitle}>New to us?</Text>
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={0}
+      >
+        {/* Dark Overlay - Only bottom half */}
+        <View style={styles.overlay}>
+          <ScrollView 
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Content */}
+            <View style={styles.content}>
+              <Text style={styles.subtitle}>New to us?</Text>
 
-            {/* Tab Buttons */}
-            <View style={styles.tabs}>
-              <TouchableOpacity style={[styles.tab, styles.activeTab]}>
-                <Text style={[styles.tabText, styles.activeTabText]}>Sign Up</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.tab}
-                onPress={() => router.replace("/auth/login")}
-              >
-                <Text style={styles.tabText}>Log in</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* First Name and Last Name Row */}
-            <View style={styles.nameRow}>
-              <View style={styles.nameInputContainer}>
-                <TextInput
-                  style={styles.inputUnderline}
-                  value={firstName}
-                  onChangeText={setFirstName}
-                  placeholder="First Name"
-                  placeholderTextColor="rgba(255, 255, 255, 0.8)"
-                />
-              </View>
-
-              <View style={styles.nameInputContainer}>
-                <TextInput
-                  style={styles.inputUnderline}
-                  value={lastName}
-                  onChangeText={setLastName}
-                  placeholder="Last Name"
-                  placeholderTextColor="rgba(255, 255, 255, 0.8)"
-                />
-              </View>
-            </View>
-
-            {/* Email Input */}
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.inputUnderline}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="E-mail"
-                placeholderTextColor="rgba(255, 255, 255, 0.8)"
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-
-            {/* Password Input */}
-            <View style={styles.inputContainer}>
-              <View style={styles.passwordRow}>
-                <TextInput
-                  style={styles.passwordInputUnderline}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Password"
-                  placeholderTextColor="rgba(255, 255, 255, 0.8)"
-                  secureTextEntry={!showPassword}
-                />
+              {/* Tab Buttons */}
+              <View style={styles.tabs}>
+                <TouchableOpacity style={[styles.tab, styles.activeTab]}>
+                  <Text style={[styles.tabText, styles.activeTabText]}>Sign Up</Text>
+                </TouchableOpacity>
+                
                 <TouchableOpacity 
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={styles.eyeButton}
+                  style={styles.tab}
+                  onPress={() => router.replace("/auth/login")}
                 >
-                  {showPassword ? (
-                    <Ionicons name="eye-outline" size={24} color="rgba(255, 255, 255, 0.9)" />
-                  ) : (
-                    <MaterialCommunityIcons name="eye-closed" size={24} color="rgba(255, 255, 255, 0.9)" />
-                  )}
+                  <Text style={styles.tabText}>Log in</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* First Name and Last Name Row */}
+              <View style={styles.nameRow}>
+                <View style={styles.nameInputContainer}>
+                  <TextInput
+                    style={styles.inputUnderline}
+                    value={firstName}
+                    onChangeText={setFirstName}
+                    placeholder="First Name"
+                    placeholderTextColor="rgba(255, 255, 255, 0.8)"
+                  />
+                </View>
+
+                <View style={styles.nameInputContainer}>
+                  <TextInput
+                    style={styles.inputUnderline}
+                    value={lastName}
+                    onChangeText={setLastName}
+                    placeholder="Last Name"
+                    placeholderTextColor="rgba(255, 255, 255, 0.8)"
+                  />
+                </View>
+              </View>
+
+              {/* Email Input */}
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.inputUnderline}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="E-mail"
+                  placeholderTextColor="rgba(255, 255, 255, 0.8)"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              {/* Password Input */}
+              <View style={styles.inputContainer}>
+                <View style={styles.passwordRow}>
+                  <TextInput
+                    style={styles.passwordInputUnderline}
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Password"
+                    placeholderTextColor="rgba(255, 255, 255, 0.8)"
+                    secureTextEntry={!showPassword}
+                  />
+                  <TouchableOpacity 
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeButton}
+                  >
+                    {showPassword ? (
+                      <Ionicons name="eye-outline" size={24} color="rgba(255, 255, 255, 0.9)" />
+                    ) : (
+                      <MaterialCommunityIcons name="eye-closed" size={24} color="rgba(255, 255, 255, 0.9)" />
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Sign up Button */}
+              <TouchableOpacity 
+                style={styles.signupButton}
+                onPress={handleSignup}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#333" />
+                ) : (
+                  <Text style={styles.signupButtonText}>Sign up</Text>
+                )}
+              </TouchableOpacity>
+
+              {/* Social Login */}
+              <View style={styles.socialContainer}>
+                <TouchableOpacity style={styles.socialButton}>
+                  <Image
+                    source={require("../../assets/images/google_black.png")}
+                    style={styles.socialIcon}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.socialButton}>
+                  <Image
+                    source={require("../../assets/images/apple_icon.png")}
+                    style={styles.socialIcon}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.socialButton}>
+                  <Image
+                    source={require("../../assets/images/windows-logo.png")}
+                    style={styles.socialIcon}
+                    resizeMode="contain"
+                  />
                 </TouchableOpacity>
               </View>
             </View>
-
-            {/* Sign up Button */}
-            <TouchableOpacity 
-              style={styles.signupButton}
-              onPress={handleSignup}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#333" />
-              ) : (
-                <Text style={styles.signupButtonText}>Sign up</Text>
-              )}
-            </TouchableOpacity>
-
-            {/* Social Login */}
-            <View style={styles.socialContainer}>
-              <TouchableOpacity style={styles.socialButton}>
-                <Image
-                  source={require("../../assets/images/google_black.png")}
-                  style={styles.socialIcon}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.socialButton}>
-                <Image
-                  source={require("../../assets/images/apple_icon.png")}
-                  style={styles.socialIcon}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.socialButton}>
-                <Image
-                  source={require("../../assets/images/windows-logo.png")}
-                  style={styles.socialIcon}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </ScrollView>
-      </View>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -257,9 +264,11 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
+  keyboardContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
   overlay: {
-    position: "absolute",
-    bottom: 0,
     left: 0,
     right: 0,
     height: "65%",
