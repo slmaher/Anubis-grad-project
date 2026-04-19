@@ -1,4 +1,5 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useMemo } from "react";
+import { View, Text, Image, StyleSheet, TouchableOpacity, PanResponder } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
@@ -6,8 +7,24 @@ export default function OnboardingTwo() {
   const router = useRouter();
   const { t } = useTranslation();
 
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) =>
+          Math.abs(gestureState.dx) > 20 && Math.abs(gestureState.dy) < 20,
+        onPanResponderRelease: (_, gestureState) => {
+          if (gestureState.dx < -50) {
+            router.push("/onboarding/three");
+          } else if (gestureState.dx > 50) {
+            router.replace("/onboarding/one");
+          }
+        },
+      }),
+    [router]
+  );
+
   return (
-    <View style={styles.container}>
+    <View style={styles.container} {...panResponder.panHandlers}>
       {/* Background Image */}
       <Image
         source={require("../../assets/images/onboarding2.png")}
@@ -24,7 +41,7 @@ export default function OnboardingTwo() {
         <View style={styles.topButtons}>
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => router.back()}
+            onPress={() => router.replace("/onboarding/one")}
           >
             <Text style={styles.backText}>← {t("common.back")}</Text>
           </TouchableOpacity>
@@ -94,25 +111,25 @@ const styles = StyleSheet.create({
   },
   backButton: {
     paddingHorizontal: 15,
-    paddingVertical: 8,
+    paddingVertical: 30,
   },
   backText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "500",
   },
   skipButton: {
     paddingHorizontal: 15,
-    paddingVertical: 8,
+    paddingVertical: 30,
   },
   skipText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "500",
   },
   bottomSection: {
     paddingHorizontal: 25,
-    paddingBottom: 80,
+    paddingBottom: 100,
   },
   textBackground: {
     backgroundColor: "rgba(0, 0, 0, 0.4)",

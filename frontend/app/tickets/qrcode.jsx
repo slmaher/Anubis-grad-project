@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 55,
+    paddingTop: 75,
     paddingHorizontal: 20,
     paddingBottom: 20,
     backgroundColor: "transparent",
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 23,
     fontWeight: "600",
     color: "#8B7B6C",
   },

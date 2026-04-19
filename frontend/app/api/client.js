@@ -139,6 +139,11 @@ export const api = {
     return apiRequest(`/api/museums/${id}`);
   },
 
+   // Volunteers
+  getVolunteerOpportunities() {
+    return apiRequest("/api/volunteers/opportunities");
+  },
+
   // Reviews
   getReviews(params = {}) {
     const query = new URLSearchParams();
@@ -506,7 +511,3 @@ export const api = {
     },
   },
 };
-
-export default function ApiClientRouteStub() {
-  return null;
-}
