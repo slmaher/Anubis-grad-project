@@ -38,7 +38,7 @@ export default function Scan() {
         setIsScanning(false);
         // Pass the photo URI to scan-result screen
         router.push({
-          pathname: "/(tabs)/scan-result",
+          pathname: "/scan-result",
           params: { photoUri: photo.uri }
         });
       }, 2000);
@@ -50,7 +50,7 @@ export default function Scan() {
   };
 
   const handleBack = () => {
-    router.push("/(tabs)/home");
+    router.push("/home");
   };
 
   const toggleCameraFacing = () => {
@@ -80,7 +80,7 @@ export default function Scan() {
         
         // Navigate to scan-result with selected image
         router.push({
-          pathname: "/(tabs)/scan-result",
+          pathname: "/scan-result",
           params: { photoUri: selectedImage.uri }
         });
       }

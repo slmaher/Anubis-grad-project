@@ -8,7 +8,6 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useEffect, useRef } from "react";
-import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -20,7 +19,6 @@ const TAB_COUNT = 5;
 
 function CustomTabBar({ state, descriptors, navigation }) {
   const bubblePosition = useRef(new Animated.Value(0)).current;
-  const router = useRouter();
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
 
@@ -138,9 +136,13 @@ function CustomTabBar({ state, descriptors, navigation }) {
           if (options.href === null) return null;
 
           const onPress = () => {
-            if (route.name === "events") {
-              router.push("/eventScreen/eventScreen"); // <- navigate to event screen
-            } else if (!isFocused) {
+            const event = navigation.emit({
+              type: "tabPress",
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
               navigation.navigate(route.name);
             }
           };

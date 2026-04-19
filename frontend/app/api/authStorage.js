@@ -44,3 +44,7 @@ export async function clearAuthSession() {
   }
 }
 
+export default function AuthStorageRouteStub() {
+  return null;
+}
+

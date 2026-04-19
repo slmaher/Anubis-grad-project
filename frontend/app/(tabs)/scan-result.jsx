@@ -66,7 +66,7 @@ export default function ScanResult() {
   }, [photoUri]);
 
   const handleBack = () => {
-    router.push("/(tabs)/scan");
+    router.push("/scan");
   };
 
   const handleSave = async () => {

@@ -206,7 +206,7 @@ export default function MessagesList() {
         {/* Back Button */}
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.push("/(tabs)/community")}
+          onPress={() => router.push("/community")}
         >
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>

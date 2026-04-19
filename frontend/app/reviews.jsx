@@ -27,7 +27,7 @@ export default function Reviews() {
       return;
     }
 
-    router.replace("/(tabs)/home");
+    router.replace("/home");
   };
 
   const renderStars = (rating) => {

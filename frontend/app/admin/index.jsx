@@ -128,7 +128,7 @@ export default function AdminDashboard() {
       {
         label: t("admin.dashboard.stats.artifacts"),
         value: Number(statsValues.artifacts || 0).toLocaleString(),
-        icon: "amphora",
+        icon: "treasure-chest",
         color: "#D9A441",
       },
       {

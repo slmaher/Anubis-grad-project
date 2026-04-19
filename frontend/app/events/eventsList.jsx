@@ -28,11 +28,13 @@ const EVENT_IMAGE = {
   uri: "https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?w=1200&q=80",
 };
 
-function EventCard({ title, time, cardHeight, buyTicketLabel }) {
+function EventCard({ title, time, cardHeight, buyTicketLabel, imageUrl }) {
+  const eventImage = imageUrl ? { uri: imageUrl } : EVENT_IMAGE;
+
   return (
     <View style={styles.card}>
       <ImageBackground
-        source={EVENT_IMAGE}
+        source={eventImage}
         style={[styles.cardImage, { height: cardHeight }]}
         resizeMode="cover"
       >
@@ -201,9 +203,7 @@ export default function EventsListScreen() {
           {isLoading ? (
             <View style={styles.loadingWrap}>
               <ActivityIndicator size="small" color={ACCENT} />
-              <Text style={styles.loadingText}>
-                {t("common.loading")}
-              </Text>
+              <Text style={styles.loadingText}>{t("common.loading")}</Text>
             </View>
           ) : (
             <ScrollView
@@ -230,6 +230,7 @@ export default function EventsListScreen() {
                         time={formatEventTime(item.startDate)}
                         cardHeight={cardHeight}
                         buyTicketLabel={t("events_list.buy_ticket")}
+                        imageUrl={item.imageUrl}
                       />
                     </View>
                   </View>

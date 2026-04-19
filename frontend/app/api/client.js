@@ -506,3 +506,7 @@ export const api = {
     },
   },
 };
+
+export default function ApiClientRouteStub() {
+  return null;
+}

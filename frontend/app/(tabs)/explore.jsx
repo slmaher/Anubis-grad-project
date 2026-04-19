@@ -69,6 +69,13 @@ function normalizeText(text) {
     .trim();
 }
 
+function getMuseumKey(museum, index = 0) {
+  if (museum?._id) return String(museum._id);
+  if (museum?.id) return String(museum.id);
+  if (museum?.name) return `${museum.name}-${index}`;
+  return `museum-${index}`;
+}
+
 export default function Explore() {
   const router = useRouter();
   const { t } = useTranslation();
@@ -162,15 +169,17 @@ export default function Explore() {
     });
   }, [activeFilter, museumCards, searchQuery]);
 
-  const getImageSource = (museum) => {
-    const useRemote = museum.imageUrl && !failedImageIds[museum._id];
+  const getImageSource = (museum, index = 0) => {
+    const museumKey = getMuseumKey(museum, index);
+    const useRemote = museum.imageUrl && !failedImageIds[museumKey];
     return useRemote
       ? { uri: museum.imageUrl }
       : getLocalImageForMuseum(museum);
   };
 
-  const handleImageError = (museumId) => {
-    setFailedImageIds((prev) => ({ ...prev, [museumId]: true }));
+  const handleImageError = (museum, index = 0) => {
+    const museumKey = getMuseumKey(museum, index);
+    setFailedImageIds((prev) => ({ ...prev, [museumKey]: true }));
   };
 
   return (
@@ -272,10 +281,10 @@ export default function Explore() {
                   activeOpacity={0.88}
                 >
                   <Image
-                    source={getImageSource(filteredMuseums[0])}
+                    source={getImageSource(filteredMuseums[0], 0)}
                     style={styles.heroImage}
                     resizeMode="cover"
-                    onError={() => handleImageError(filteredMuseums[0]._id)}
+                    onError={() => handleImageError(filteredMuseums[0], 0)}
                   />
                   <View style={styles.heroOverlay}>
                     <View style={styles.heroBadge}>
@@ -309,15 +318,15 @@ export default function Explore() {
                 <View style={styles.recentSearchGrid}>
                   {filteredMuseums.slice(1, 3).map((museum, index) => (
                     <TouchableOpacity
-                      key={museum._id || `${museum.name}-${index}`}
+                      key={getMuseumKey(museum, index + 1)}
                       style={styles.recentCard}
                       onPress={() => handleMuseumPress(museum)}
                     >
                       <Image
-                        source={getImageSource(museum)}
+                        source={getImageSource(museum, index + 1)}
                         style={styles.recentImageFull}
                         resizeMode="cover"
-                        onError={() => handleImageError(museum._id)}
+                        onError={() => handleImageError(museum, index + 1)}
                       />
                       <View style={styles.recentOverlay}>
                         <View style={styles.glassyBubble}>
@@ -344,17 +353,17 @@ export default function Explore() {
 
               {/* Featured Museums */}
               <View style={styles.section}>
-                {filteredMuseums.map((museum) => (
+                {filteredMuseums.map((museum, index) => (
                   <TouchableOpacity
-                    key={museum._id}
+                    key={getMuseumKey(museum, index)}
                     style={styles.featuredCard}
                     onPress={() => handleMuseumPress(museum)}
                   >
                     <Image
-                      source={getImageSource(museum)}
+                      source={getImageSource(museum, index)}
                       style={styles.featuredImage}
                       resizeMode="cover"
-                      onError={() => handleImageError(museum._id)}
+                      onError={() => handleImageError(museum, index)}
                     />
                     <View style={styles.featuredOverlay}>
                       <Text style={styles.featuredName}>{museum.name}</Text>

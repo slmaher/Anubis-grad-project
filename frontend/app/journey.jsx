@@ -116,7 +116,7 @@ export default function Journey() {
               </Text>
               <TouchableOpacity 
                 style={styles.scanButton}
-                onPress={() => router.push("/(tabs)/scan")}
+                onPress={() => router.push("/scan")}
               >
                 <Text style={styles.scanButtonText}>Scan Artifact</Text>
               </TouchableOpacity>
