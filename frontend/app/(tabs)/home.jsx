@@ -86,7 +86,7 @@ export default function Home() {
               {/* Museums Card */}
               <TouchableOpacity
                 style={styles.navCard}
-                onPress={() => router.navigate("/explore")}
+                onPress={() => router.push("/explore")}
               >
                 <View style={styles.navIconContainer}>
                   <MaterialCommunityIcons
@@ -146,7 +146,7 @@ export default function Home() {
                 <Text style={styles.featuredTitle}>{t("home.featured")}</Text>
                 <TouchableOpacity
                   style={styles.seeAllButton}
-                  onPress={() => router.navigate("/explore")}
+                  onPress={() => router.push("/explore")}
                 >
                   <Text style={styles.seeAll}>{t("home.see_all")}</Text>
                   <MaterialCommunityIcons
