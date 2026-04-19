@@ -1,8 +1,15 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Favorites() {
   const router = useRouter();
@@ -16,12 +23,12 @@ export default function Favorites() {
 
   const loadFavorites = async () => {
     try {
-      const existingFavorites = await AsyncStorage.getItem('favorites');
+      const existingFavorites = await AsyncStorage.getItem("favorites");
       if (existingFavorites) {
         setFavorites(JSON.parse(existingFavorites));
       }
     } catch (error) {
-      console.error('Error loading favorites:', error);
+      console.error("Error loading favorites:", error);
     } finally {
       setLoading(false);
     }
@@ -29,21 +36,21 @@ export default function Favorites() {
 
   const handleRemoveFavorite = async (id) => {
     try {
-      const updatedFavorites = favorites.filter(fav => fav.id !== id);
+      const updatedFavorites = favorites.filter((fav) => fav.id !== id);
       setFavorites(updatedFavorites);
-      await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+      await AsyncStorage.setItem("favorites", JSON.stringify(updatedFavorites));
     } catch (error) {
-      console.error('Error removing favorite:', error);
+      console.error("Error removing favorite:", error);
     }
   };
 
   const handleMuseumPress = (museum) => {
     router.push({
       pathname: "/museum-profile",
-      params: { 
+      params: {
         id: museum.id,
         name: museum.name,
-      }
+      },
     });
   };
 
@@ -51,7 +58,7 @@ export default function Favorites() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
@@ -61,7 +68,7 @@ export default function Favorites() {
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -74,23 +81,28 @@ export default function Favorites() {
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>🔖</Text>
             <Text style={styles.emptyTitle}>{t("favorites.empty_title")}</Text>
-            <Text style={styles.emptyText}>
-              {t("favorites.empty_text")}
-            </Text>
-            <TouchableOpacity 
+            <Text style={styles.emptyText}>{t("favorites.empty_text")}</Text>
+            <TouchableOpacity
               style={styles.exploreButton}
               onPress={() => router.push("/explore")}
             >
-              <Text style={styles.exploreButtonText}>{t("favorites.explore_button")}</Text>
+              <Text style={styles.exploreButtonText}>
+                {t("favorites.explore_button")}
+              </Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
-            <Text style={styles.count}>{favorites.length} {favorites.length === 1 ? t("favorites.museum_single") : t("favorites.museum_plural")}</Text>
-            
+            <Text style={styles.count}>
+              {favorites.length}{" "}
+              {favorites.length === 1
+                ? t("favorites.museum_single")
+                : t("favorites.museum_plural")}
+            </Text>
+
             {favorites.map((museum) => (
               <View key={museum.id} style={styles.favoriteCard}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.cardContent}
                   onPress={() => handleMuseumPress(museum)}
                 >
@@ -107,12 +119,14 @@ export default function Favorites() {
                     <View style={styles.priceRatingRow}>
                       <Text style={styles.price}>{museum.price}</Text>
                       <View style={styles.ratingBadge}>
-                        <Text style={styles.ratingText}>⭐ {museum.rating}</Text>
+                        <Text style={styles.ratingText}>
+                          ⭐ {museum.rating}
+                        </Text>
                       </View>
                     </View>
                   </View>
                 </TouchableOpacity>
-                
+
                 {/* Remove Button */}
                 <TouchableOpacity
                   style={styles.removeButton}

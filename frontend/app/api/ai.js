@@ -2,7 +2,7 @@ const API_BASE_URL = "http://192.168.1.7:4000"; // replace with your laptop IP w
 
 export async function analyzeArtifactImage(imageUri) {
   const formData = new FormData();
- 
+
   formData.append("image", {
     uri: imageUri,
     name: "scan.jpg",

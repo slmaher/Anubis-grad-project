@@ -60,11 +60,12 @@ export default function EventManagement() {
 
   const pickImage = async () => {
     try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (permission.status !== "granted") {
         Alert.alert(
           "Permission needed",
-          "Please allow gallery access to choose an event photo."
+          "Please allow gallery access to choose an event photo.",
         );
         return;
       }
@@ -279,7 +280,10 @@ export default function EventManagement() {
                 onChangeText={(t) => setFormData({ ...formData, imageUrl: t })}
               />
               <View style={styles.imageActionsRow}>
-                <TouchableOpacity style={styles.pickImageBtn} onPress={pickImage}>
+                <TouchableOpacity
+                  style={styles.pickImageBtn}
+                  onPress={pickImage}
+                >
                   <MaterialCommunityIcons
                     name="image-plus"
                     size={18}

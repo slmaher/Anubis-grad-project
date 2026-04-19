@@ -79,15 +79,15 @@
 
 //       {/* Header */}
 //       <View style={styles.header}>
-//         <TouchableOpacity 
+//         <TouchableOpacity
 //           style={styles.backButton}
 //           onPress={() => router.back()}
 //         >
 //           <Text style={styles.backIcon}>←</Text>
 //         </TouchableOpacity>
-        
+
 //         <Text style={styles.headerTitle}>Map View</Text>
-        
+
 //         <View style={styles.placeholder} />
 //       </View>
 
@@ -106,7 +106,7 @@
 //             placeholderTextColor="#999"
 //           />
 //         </View>
-        
+
 //         <TouchableOpacity style={styles.settingsButton}>
 //           <Image
 //             source={require("../../assets/images/settings.png")}
@@ -117,14 +117,14 @@
 
 //       {/* Floating Bottom Museum Cards */}
 //       <View style={styles.floatingBottomSection}>
-//         <ScrollView 
+//         <ScrollView
 //           horizontal
 //           showsHorizontalScrollIndicator={false}
 //           contentContainerStyle={styles.cardsScroll}
 //         >
 //           {museums.map((museum) => (
-//             <TouchableOpacity 
-//               key={museum.id} 
+//             <TouchableOpacity
+//               key={museum.id}
 //               style={styles.museumCard}
 //               activeOpacity={0.9}
 //             >
@@ -133,7 +133,7 @@
 //                 style={styles.museumImage}
 //                 resizeMode="cover"
 //               />
-              
+
 //               <View style={styles.museumInfo}>
 //                 <View style={styles.museumHeader}>
 //                   <Text style={styles.museumName} numberOfLines={1}>
@@ -141,7 +141,7 @@
 //                   </Text>
 //                   <Text style={styles.museumDistance}>{museum.distance}</Text>
 //                 </View>
-                
+
 //                 <View style={styles.museumAddressRow}>
 //                   <Image
 //                     source={require("../../assets/images/location.png")}
@@ -151,7 +151,7 @@
 //                     {museum.address}
 //                   </Text>
 //                 </View>
-                
+
 //                 <View style={styles.museumRatingRow}>
 //                   <Text style={styles.starIcon}>⭐</Text>
 //                   <Text style={styles.ratingText}>

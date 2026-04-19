@@ -20,14 +20,16 @@ const featuredArtifacts = [
   {
     id: 1,
     title: "Anubis statue",
-    description: "Ancient Egyptian god of mummification and the afterlife, depicted with a jackal head and human body. This exquisite replica captures the mysterious essence of one of Egypt's most iconic deities.",
+    description:
+      "Ancient Egyptian god of mummification and the afterlife, depicted with a jackal head and human body. This exquisite replica captures the mysterious essence of one of Egypt's most iconic deities.",
     image: require("../../assets/images/Anubis-Statue.png"),
     imageKey: "anubis", // Key to identify the image
   },
   {
     id: 2,
     title: "Tutankhamun mask",
-    description: "The legendary golden death mask of the young pharaoh Tutankhamun. This stunning piece represents one of the most famous treasures of ancient Egypt, crafted with incredible detail and historical accuracy.",
+    description:
+      "The legendary golden death mask of the young pharaoh Tutankhamun. This stunning piece represents one of the most famous treasures of ancient Egypt, crafted with incredible detail and historical accuracy.",
     image: require("../../assets/images/Grand-Egyptian-Museum.png"),
     imageKey: "tutankhamun", // Key to identify the image
   },
@@ -121,7 +123,7 @@ export default function ArtifactsScreen() {
         {/* Header */}
         <View style={styles.header}>
           {/* Back Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
           >
@@ -420,7 +422,7 @@ const icon = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  
+
   // Home icon
   homeRoof: {
     width: 0,
@@ -441,7 +443,7 @@ const icon = StyleSheet.create({
     position: "absolute",
     bottom: 2,
   },
-  
+
   // Explore icon
   circle: {
     width: 20,
@@ -462,7 +464,7 @@ const icon = StyleSheet.create({
     borderRightColor: "transparent",
     borderBottomColor: MUTED,
   },
-  
+
   // Scan icon
   scanOuter: {
     width: 20,
@@ -480,7 +482,7 @@ const icon = StyleSheet.create({
     borderColor: MUTED,
     borderRadius: 2,
   },
-  
+
   // Events/Calendar icon
   calBox: {
     width: 18,
@@ -505,7 +507,7 @@ const icon = StyleSheet.create({
     backgroundColor: MUTED,
     marginTop: 4,
   },
-  
+
   // Community icon
   commRow: {
     flexDirection: "row",
