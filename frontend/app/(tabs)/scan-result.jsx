@@ -81,7 +81,7 @@ export default function ScanResult() {
       if (!permission.granted) {
         Alert.alert(
           "Permission Required",
-          "Please allow media access in your device settings"
+          "Please allow media access in your device settings",
         );
         return;
       }
@@ -319,7 +319,8 @@ export default function ScanResult() {
                   <View style={styles.descriptionBlock}>
                     <Text style={styles.infoLabel}>Restoration</Text>
                     <Text style={styles.descriptionText}>
-                      No saved restored image is available for this artifact yet.
+                      No saved restored image is available for this artifact
+                      yet.
                     </Text>
                   </View>
                 )}

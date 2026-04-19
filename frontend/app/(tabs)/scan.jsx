@@ -1,18 +1,26 @@
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Alert, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+  Alert,
+  Image,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useState, useEffect, useRef } from "react";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import * as ImagePicker from 'expo-image-picker';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import * as ImagePicker from "expo-image-picker";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 export default function Scan() {
   const router = useRouter();
   const [isScanning, setIsScanning] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
-  const [facing, setFacing] = useState('back');
+  const [facing, setFacing] = useState("back");
   const cameraRef = useRef(null);
 
   useEffect(() => {
@@ -24,28 +32,28 @@ export default function Scan() {
 
   const handleScan = async () => {
     if (!cameraRef.current) return;
-    
+
     setIsScanning(true);
-    
+
     try {
       // Take a picture
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
       });
-      
+
       // Simulate processing for 2 seconds then navigate to result with photo
       setTimeout(() => {
         setIsScanning(false);
         // Pass the photo URI to scan-result screen
         router.push({
           pathname: "/scan-result",
-          params: { photoUri: photo.uri }
+          params: { photoUri: photo.uri },
         });
       }, 2000);
     } catch (error) {
-      console.error('Error taking picture:', error);
+      console.error("Error taking picture:", error);
       setIsScanning(false);
-      Alert.alert('Error', 'Failed to capture image');
+      Alert.alert("Error", "Failed to capture image");
     }
   };
 
@@ -54,16 +62,20 @@ export default function Scan() {
   };
 
   const toggleCameraFacing = () => {
-    setFacing(current => (current === 'back' ? 'front' : 'back'));
+    setFacing((current) => (current === "back" ? "front" : "back"));
   };
 
   const handleGallery = async () => {
     try {
       // Request media library permissions
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
       if (permissionResult.granted === false) {
-        Alert.alert('Permission Required', 'Please allow access to your photo library');
+        Alert.alert(
+          "Permission Required",
+          "Please allow access to your photo library",
+        );
         return;
       }
 
@@ -77,16 +89,16 @@ export default function Scan() {
       // Check if user didn't cancel
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const selectedImage = result.assets[0];
-        
+
         // Navigate to scan-result with selected image
         router.push({
           pathname: "/scan-result",
-          params: { photoUri: selectedImage.uri }
+          params: { photoUri: selectedImage.uri },
         });
       }
     } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image from gallery');
+      console.error("Error picking image:", error);
+      Alert.alert("Error", "Failed to pick image from gallery");
     }
   };
 
@@ -94,7 +106,9 @@ export default function Scan() {
   if (!permission) {
     return (
       <View style={styles.container}>
-        <Text style={styles.permissionText}>Requesting camera permission...</Text>
+        <Text style={styles.permissionText}>
+          Requesting camera permission...
+        </Text>
       </View>
     );
   }
@@ -103,8 +117,13 @@ export default function Scan() {
     return (
       <View style={styles.container}>
         <View style={styles.permissionContainer}>
-          <Text style={styles.permissionText}>Camera access is required to scan artifacts</Text>
-          <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
+          <Text style={styles.permissionText}>
+            Camera access is required to scan artifacts
+          </Text>
+          <TouchableOpacity
+            style={styles.permissionButton}
+            onPress={requestPermission}
+          >
             <Text style={styles.permissionButtonText}>Grant Permission</Text>
           </TouchableOpacity>
         </View>
@@ -116,28 +135,21 @@ export default function Scan() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={handleBack}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        
+
         {/* Title with rounded bubble */}
         <View style={styles.titleBubble}>
           <Text style={styles.headerTitle}>Scan Artifact</Text>
         </View>
-        
+
         <View style={styles.placeholder} />
       </View>
 
       {/* Camera View */}
       <View style={styles.cameraView}>
-        <CameraView 
-          ref={cameraRef}
-          style={styles.camera}
-          facing={facing}
-        >
+        <CameraView ref={cameraRef} style={styles.camera} facing={facing}>
           {/* Scanning Frame Overlay */}
           <View style={styles.overlay}>
             <View style={styles.scanFrame}>
@@ -145,10 +157,8 @@ export default function Scan() {
               <View style={[styles.corner, styles.topRight]} />
               <View style={[styles.corner, styles.bottomLeft]} />
               <View style={[styles.corner, styles.bottomRight]} />
-              
-              {isScanning && (
-                <View style={styles.scanningLine} />
-              )}
+
+              {isScanning && <View style={styles.scanningLine} />}
             </View>
 
             {/* Instructions */}
@@ -164,7 +174,7 @@ export default function Scan() {
       {/* Bottom Controls */}
       <View style={styles.controls}>
         <View style={styles.controlsInner}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.controlButton}
             onPress={handleGallery}
           >
@@ -173,24 +183,29 @@ export default function Scan() {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.scanButton}
             onPress={handleScan}
             disabled={isScanning}
           >
-<View style={[styles.scanButtonInner, isScanning && styles.scanningActive]}>
-  {isScanning ? (
-    <Image
-      source={require("../../assets/images/loading.png")}
-      style={styles.loadingIcon}
-    />
-  ) : (
-    <FontAwesome5 name="camera" size={28} color="#000" />
-  )}
-</View>
+            <View
+              style={[
+                styles.scanButtonInner,
+                isScanning && styles.scanningActive,
+              ]}
+            >
+              {isScanning ? (
+                <Image
+                  source={require("../../assets/images/loading.png")}
+                  style={styles.loadingIcon}
+                />
+              ) : (
+                <FontAwesome5 name="camera" size={28} color="#000" />
+              )}
+            </View>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.controlButton}
             onPress={toggleCameraFacing}
           >
@@ -259,7 +274,7 @@ const styles = StyleSheet.create({
   },
   titleBubble: {
     backgroundColor: "rgba(255, 255, 255, 0.15)",
-    margin:5,
+    margin: 5,
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 25,
@@ -398,7 +413,7 @@ const styles = StyleSheet.create({
   scanningActive: {
     backgroundColor: "#d3d3d3",
   },
-    loadingIcon: {
+  loadingIcon: {
     width: 32,
     height: 32,
   },

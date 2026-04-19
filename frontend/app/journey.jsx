@@ -1,8 +1,18 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, Alert, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  ImageBackground,
+  Alert,
+  TextInput,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import AntDesign from '@expo/vector-icons/AntDesign';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import AntDesign from "@expo/vector-icons/AntDesign";
 
 export default function Journey() {
   const router = useRouter();
@@ -17,12 +27,12 @@ export default function Journey() {
 
   const loadJourney = async () => {
     try {
-      const existingJourney = await AsyncStorage.getItem('journey');
+      const existingJourney = await AsyncStorage.getItem("journey");
       if (existingJourney) {
         setJourneyItems(JSON.parse(existingJourney));
       }
     } catch (error) {
-      console.error('Error loading journey:', error);
+      console.error("Error loading journey:", error);
     } finally {
       setLoading(false);
     }
@@ -30,11 +40,11 @@ export default function Journey() {
 
   const handleRemoveItem = async (id) => {
     try {
-      const updatedJourney = journeyItems.filter(item => item.id !== id);
+      const updatedJourney = journeyItems.filter((item) => item.id !== id);
       setJourneyItems(updatedJourney);
-      await AsyncStorage.setItem('journey', JSON.stringify(updatedJourney));
+      await AsyncStorage.setItem("journey", JSON.stringify(updatedJourney));
     } catch (error) {
-      console.error('Error removing item:', error);
+      console.error("Error removing item:", error);
     }
   };
 
@@ -46,35 +56,35 @@ export default function Journey() {
   const handleSaveName = async (id) => {
     try {
       if (!editName.trim()) {
-        Alert.alert('Error', 'Name cannot be empty');
+        Alert.alert("Error", "Name cannot be empty");
         return;
       }
 
-      const updatedJourney = journeyItems.map(item => 
-        item.id === id ? { ...item, name: editName.trim() } : item
+      const updatedJourney = journeyItems.map((item) =>
+        item.id === id ? { ...item, name: editName.trim() } : item,
       );
-      
+
       setJourneyItems(updatedJourney);
-      await AsyncStorage.setItem('journey', JSON.stringify(updatedJourney));
+      await AsyncStorage.setItem("journey", JSON.stringify(updatedJourney));
       setEditingId(null);
       setEditName("");
-      Alert.alert('Success', 'Artifact name updated!');
+      Alert.alert("Success", "Artifact name updated!");
     } catch (error) {
-      console.error('Error updating name:', error);
-      Alert.alert('Error', 'Failed to update name');
+      console.error("Error updating name:", error);
+      Alert.alert("Error", "Failed to update name");
     }
   };
 
   const formatDateTime = (timestamp) => {
     const date = new Date(timestamp);
-    const dateStr = date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    const dateStr = date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
-    const timeStr = date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
+    const timeStr = date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
     return `${dateStr} • ${timeStr}`;
   };
@@ -88,7 +98,7 @@ export default function Journey() {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
           >
@@ -98,7 +108,7 @@ export default function Journey() {
           <View style={styles.placeholder} />
         </View>
 
-        <ScrollView 
+        <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
@@ -112,9 +122,10 @@ export default function Journey() {
               <Text style={styles.emptyIcon}>📸</Text>
               <Text style={styles.emptyTitle}>No Artifacts Yet</Text>
               <Text style={styles.emptyText}>
-                Start scanning artifacts to build your personal journey collection!
+                Start scanning artifacts to build your personal journey
+                collection!
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.scanButton}
                 onPress={() => router.push("/scan")}
               >
@@ -124,9 +135,10 @@ export default function Journey() {
           ) : (
             <>
               <Text style={styles.count}>
-                {journeyItems.length} {journeyItems.length === 1 ? 'Artifact' : 'Artifacts'}
+                {journeyItems.length}{" "}
+                {journeyItems.length === 1 ? "Artifact" : "Artifacts"}
               </Text>
-              
+
               {/* Grid of artifacts */}
               <View style={styles.grid}>
                 {journeyItems.map((item) => (
@@ -136,7 +148,7 @@ export default function Journey() {
                       style={styles.artifactImage}
                       resizeMode="cover"
                     />
-                    
+
                     {/* Overlay with info */}
                     <View style={styles.overlay}>
                       {editingId === item.id ? (
@@ -163,7 +175,9 @@ export default function Journey() {
                                 setEditName("");
                               }}
                             >
-                              <Text style={styles.cancelButtonText}>Cancel</Text>
+                              <Text style={styles.cancelButtonText}>
+                                Cancel
+                              </Text>
                             </TouchableOpacity>
                           </View>
                         </View>
@@ -178,7 +192,7 @@ export default function Journey() {
                               onPress={() => handleEditName(item.id, item.name)}
                             >
                               <AntDesign name="edit" size={18} color="#fff" />
-                              </TouchableOpacity>
+                            </TouchableOpacity>
                           </View>
                           <Text style={styles.artifactDate}>
                             {formatDateTime(item.timestamp)}
