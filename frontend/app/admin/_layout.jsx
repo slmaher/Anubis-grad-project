@@ -12,7 +12,8 @@ import {
 import { Slot, useRouter, usePathname } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-import { getAuthUser } from "../api/authStorage";
+import { api } from "../api/client";
+import { getAuthToken } from "../api/authStorage";
 
 const { width } = Dimensions.get("window");
 const IS_DESKTOP = width > 768;
@@ -27,15 +28,29 @@ export default function AdminLayout() {
 
   useEffect(() => {
     async function checkAdmin() {
-      const user = await getAuthUser();
-      const normalizedRole = String(user?.role || "")
-        .trim()
-        .toLowerCase();
-      if (!user || normalizedRole !== "admin") {
+      try {
+        const token = await getAuthToken();
+        if (!token) {
+          setIsAdmin(false);
+          router.replace("/auth/login");
+          return;
+        }
+
+        const me = await api.getMe(token);
+        const normalizedRole = String(me?.data?.role || "")
+          .trim()
+          .toLowerCase();
+
+        if (normalizedRole !== "admin") {
+          setIsAdmin(false);
+          router.replace("/auth/login");
+          return;
+        }
+
+        setIsAdmin(true);
+      } catch {
         setIsAdmin(false);
         router.replace("/auth/login");
-      } else {
-        setIsAdmin(true);
       }
     }
     checkAdmin();

@@ -2,6 +2,7 @@ import {
   IsArray,
   IsBoolean,
   IsInt,
+  IsMongoId,
   IsNumber,
   IsOptional,
   IsString,
@@ -11,6 +12,10 @@ import {
 } from 'class-validator';
 
 export class CreateTourGuideDto {
+  @IsOptional()
+  @IsMongoId()
+  user?: string;
+
   @IsOptional()
   @IsString()
   @MaxLength(1000)

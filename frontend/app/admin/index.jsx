@@ -34,6 +34,12 @@ export default function AdminDashboard() {
     return Array.isArray(data) ? data : [];
   };
 
+  const getSettledValue = (result) =>
+    result?.status === "fulfilled" ? result.value : { data: [] };
+
+  const getSettledReason = (result) =>
+    result?.status === "rejected" ? result.reason : null;
+
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -45,13 +51,18 @@ export default function AdminDashboard() {
         return;
       }
 
-      const [usersRes, museumsRes, artifactsRes, applicationsRes] =
-        await Promise.all([
+      const [usersResult, museumsResult, artifactsResult, applicationsResult] =
+        await Promise.allSettled([
           api.admin.getUsers(token),
           api.getMuseums(),
           api.admin.getArtifacts(token),
           api.admin.getApplications(token),
         ]);
+
+      const usersRes = getSettledValue(usersResult);
+      const museumsRes = getSettledValue(museumsResult);
+      const artifactsRes = getSettledValue(artifactsResult);
+      const applicationsRes = getSettledValue(applicationsResult);
 
       const users = toArray(usersRes);
       const museums = toArray(museumsRes);
@@ -98,8 +109,21 @@ export default function AdminDashboard() {
         .slice(0, 6);
 
       setRecentActivity(activity);
+
+      const failedSources = [
+        getSettledReason(usersResult) ? "users" : null,
+        getSettledReason(museumsResult) ? "museums" : null,
+        getSettledReason(artifactsResult) ? "artifacts" : null,
+        getSettledReason(applicationsResult) ? "volunteers" : null,
+      ].filter(Boolean);
+
+      if (failedSources.length > 0) {
+        setError(`Some dashboard data failed to load: ${failedSources.join(", ")}`);
+      }
     } catch (e) {
-      setError(t("admin.dashboard.load_failed"));
+      const message =
+        e?.message || t("admin.dashboard.load_failed") || "Failed to load dashboard";
+      setError(message);
     } finally {
       setLoading(false);
     }
