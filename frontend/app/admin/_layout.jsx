@@ -194,7 +194,7 @@ export default function AdminLayout() {
             >
               <View style={styles.mobileHeaderSide}>
                 <MobileMenuButton />
-                <TouchableOpacity onPress={() => router.replace("/home")}> 
+                <TouchableOpacity onPress={() => router.replace("/home")}>
                   <MaterialCommunityIcons
                     name="home-outline"
                     size={24}
