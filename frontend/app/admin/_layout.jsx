@@ -7,7 +7,8 @@ import {
   ScrollView,
   SafeAreaView,
   Platform,
-  Dimensions,
+  Modal,
+  useWindowDimensions,
 } from "react-native";
 import { Slot, useRouter, usePathname } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -15,14 +16,15 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { getAuthToken } from "../api/authStorage";
 
-const { width } = Dimensions.get("window");
-const IS_DESKTOP = width > 768;
-
 export default function AdminLayout() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { width } = useWindowDimensions();
+
+  const IS_DESKTOP = width > 768;
 
   const isRTL = i18n.language === "ar";
 
@@ -135,7 +137,10 @@ export default function AdminLayout() {
                   borderLeftColor: "#D9A441",
                 },
             ]}
-            onPress={() => router.push(item.path)}
+            onPress={() => {
+              setMenuOpen(false);
+              router.push(item.path);
+            }}
           >
             <MaterialCommunityIcons
               name={item.icon}
@@ -164,6 +169,17 @@ export default function AdminLayout() {
     </View>
   );
 
+  const MobileMenuButton = () => (
+    <TouchableOpacity
+      style={styles.menuButton}
+      onPress={() => setMenuOpen(true)}
+      accessibilityRole="button"
+      accessibilityLabel={t("admin.menu.dashboard")}
+    >
+      <MaterialCommunityIcons name="menu" size={26} color="#2C2010" />
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={[styles.layout, isRTL && { flexDirection: "row-reverse" }]}>
@@ -176,13 +192,16 @@ export default function AdminLayout() {
                 isRTL && { flexDirection: "row-reverse" },
               ]}
             >
-              <TouchableOpacity onPress={() => router.replace("/home")}>
-                <MaterialCommunityIcons
-                  name="home-outline"
-                  size={24}
-                  color="#2C2010"
-                />
-              </TouchableOpacity>
+              <View style={styles.mobileHeaderSide}>
+                <MobileMenuButton />
+                <TouchableOpacity onPress={() => router.replace("/home")}> 
+                  <MaterialCommunityIcons
+                    name="home-outline"
+                    size={24}
+                    color="#2C2010"
+                  />
+                </TouchableOpacity>
+              </View>
               <Text style={styles.mobileTitle}>{t("admin.mobile_title")}</Text>
               <View style={{ width: 24 }} />
             </View>
@@ -190,6 +209,26 @@ export default function AdminLayout() {
           <Slot />
         </View>
       </View>
+
+      {!IS_DESKTOP && (
+        <Modal
+          visible={menuOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setMenuOpen(false)}
+        >
+          <View style={styles.menuOverlay}>
+            <TouchableOpacity
+              style={styles.menuBackdrop}
+              activeOpacity={1}
+              onPress={() => setMenuOpen(false)}
+            />
+            <View style={styles.menuDrawer}>
+              <Sidebar />
+            </View>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -264,10 +303,36 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "rgba(0,0,0,0.05)",
   },
+  mobileHeaderSide: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  menuButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(217, 164, 65, 0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   mobileTitle: {
     fontSize: 18,
     fontWeight: "600",
     color: "#2C2010",
+  },
+  menuOverlay: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: "rgba(0,0,0,0.2)",
+  },
+  menuBackdrop: {
+    flex: 1,
+  },
+  menuDrawer: {
+    width: 280,
+    backgroundColor: "#F9F7F4",
+    height: "100%",
   },
   backHome: {
     flexDirection: "row",
