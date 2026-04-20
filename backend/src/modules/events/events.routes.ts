@@ -83,21 +83,17 @@ eventsRouter.post(
       const endDate = new Date(dto.endDate);
 
       if (startDate >= endDate) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "End date must be after start date",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "End date must be after start date",
+        });
       }
 
       if (startDate < new Date()) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "Start date must be in the future",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "Start date must be in the future",
+        });
       }
 
       const event = await EventModel.create({
@@ -164,12 +160,10 @@ eventsRouter.patch(
         : existingEvent.endDate;
 
       if (startDate >= endDate) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "End date must be after start date",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "End date must be after start date",
+        });
       }
 
       const updateDoc: Record<string, unknown> = {
