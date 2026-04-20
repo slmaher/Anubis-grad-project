@@ -89,6 +89,72 @@ volunteersRouter.delete(
   }
 );
 
+// POST /api/volunteers/opportunities/:id/signup - sign up for an opportunity (authenticated users)
+volunteersRouter.post(
+  "/opportunities/:id/signup",
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const opportunity = await OpportunityModel.findById(req.params.id);
+      if (!opportunity || !opportunity.isActive) {
+        return res.status(404).json({
+          success: false,
+          message: "Opportunity not found",
+        });
+      }
+
+      const existingApplication = await VolunteerModel.findOne({
+        user: req.user!.id,
+        notes: { $regex: new RegExp(`^Opportunity: ${opportunity.title}$`, "i") },
+        status: { $in: ["pending", "active"] },
+      });
+
+      if (existingApplication) {
+        return res.status(409).json({
+          success: false,
+          message: "You have already signed up for this opportunity",
+        });
+      }
+
+      const museum = await MuseumModel.findOne({ isActive: true }).sort({
+        createdAt: -1,
+      });
+
+      if (!museum) {
+        return res.status(400).json({
+          success: false,
+          message: "No museum is available to attach this signup",
+        });
+      }
+
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() + 1);
+
+      const volunteer = await VolunteerModel.create({
+        user: req.user!.id,
+        museum: museum._id,
+        startDate,
+        role: opportunity.title,
+        notes: `Opportunity: ${opportunity.title}\nLocation: ${opportunity.location}\nDuration: ${opportunity.duration}`,
+        status: "pending",
+      });
+
+      const populated = await volunteer.populate([
+        { path: "user", select: "name email" },
+        { path: "museum", select: "name city location" },
+      ]);
+
+      return res.status(201).json({
+        success: true,
+        data: populated,
+        message: "Signed up successfully",
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // --- VOLUNTEER APPLICATIONS (Authenticated / Admin) ---
 
 // GET /api/volunteers - list volunteers (users see their own, Admin/Guide see all)

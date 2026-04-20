@@ -366,10 +366,11 @@ export const api = {
   getVolunteerOpportunities() {
     return apiRequest("/api/volunteers/opportunities");
   },
-  signUpVolunteerOpportunity(opportunityId, payload = {}) {
+  signUpVolunteerOpportunity(opportunityId, payload = {}, token) {
     return apiRequest(`/api/volunteers/opportunities/${opportunityId}/signup`, {
       method: "POST",
       body: payload,
+      token,
     });
   },
 
