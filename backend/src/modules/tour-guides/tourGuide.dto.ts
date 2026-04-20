@@ -8,8 +8,8 @@ import {
   IsString,
   Max,
   MaxLength,
-  Min
-} from 'class-validator';
+  Min,
+} from "class-validator";
 
 export class CreateTourGuideDto {
   @IsOptional()

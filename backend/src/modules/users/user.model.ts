@@ -9,6 +9,8 @@ export interface IUser extends Document {
   isActive: boolean;
   avatar?: string;
   friends: mongoose.Types.ObjectId[];
+  createdBy?: mongoose.Types.ObjectId;
+  updatedBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,6 +34,8 @@ const UserSchema = new Schema<IUser>(
     isActive: { type: Boolean, default: true },
     avatar: { type: String },
     friends: [{ type: Schema.Types.ObjectId, ref: "User", default: [] }],
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
   {
     timestamps: true,

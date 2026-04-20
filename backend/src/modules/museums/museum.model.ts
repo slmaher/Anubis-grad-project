@@ -10,6 +10,8 @@ export interface IMuseum extends Document {
   googlePhotoReference?: string;
   openingHours?: string;
   isActive: boolean;
+  createdBy?: mongoose.Types.ObjectId;
+  updatedBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,7 +25,9 @@ const MuseumSchema = new Schema<IMuseum>(
     imageUrl: { type: String, trim: true },
     googlePhotoReference: { type: String, trim: true },
     openingHours: { type: String, trim: true },
-    isActive: { type: Boolean, default: true }
+    isActive: { type: Boolean, default: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    updatedBy: { type: Schema.Types.ObjectId, ref: 'User' }
   },
   { timestamps: true }
 );
