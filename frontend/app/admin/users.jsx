@@ -245,7 +245,9 @@ export default function UserManagement() {
               })}
             </View>
 
-            {!!actionError && <Text style={styles.errorText}>{actionError}</Text>}
+            {!!actionError && (
+              <Text style={styles.errorText}>{actionError}</Text>
+            )}
 
             <TouchableOpacity
               style={styles.cancelModalBtn}
