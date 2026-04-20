@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema } from "mongoose";
 
 export interface IMuseum extends Document {
   name: string;
@@ -26,10 +26,10 @@ const MuseumSchema = new Schema<IMuseum>(
     googlePhotoReference: { type: String, trim: true },
     openingHours: { type: String, trim: true },
     isActive: { type: Boolean, default: true },
-    createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
-    updatedBy: { type: Schema.Types.ObjectId, ref: 'User' }
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export const MuseumModel = mongoose.model<IMuseum>('Museum', MuseumSchema);
+export const MuseumModel = mongoose.model<IMuseum>("Museum", MuseumSchema);

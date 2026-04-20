@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema } from "mongoose";
 
 export interface IArtifact extends Document {
   name: string;
@@ -19,16 +19,19 @@ const ArtifactSchema = new Schema<IArtifact>(
     description: { type: String, required: true },
     museum: {
       type: Schema.Types.ObjectId,
-      ref: 'Museum',
-      required: true
+      ref: "Museum",
+      required: true,
     },
     era: { type: String, trim: true },
     imageUrl: { type: String, trim: true },
     isActive: { type: Boolean, default: true },
-    createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
-    updatedBy: { type: Schema.Types.ObjectId, ref: 'User' }
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export const ArtifactModel = mongoose.model<IArtifact>('Artifact', ArtifactSchema);
+export const ArtifactModel = mongoose.model<IArtifact>(
+  "Artifact",
+  ArtifactSchema,
+);

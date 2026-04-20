@@ -124,14 +124,13 @@ export default function AdminDashboard() {
         artifactsResult,
         eventsResult,
         applicationsResult,
-      ] =
-        await Promise.allSettled([
-          api.admin.getUsers(token),
-          api.getMuseums(),
-          api.admin.getArtifacts(token),
-          api.getEvents(),
-          api.admin.getApplications(token),
-        ]);
+      ] = await Promise.allSettled([
+        api.admin.getUsers(token),
+        api.getMuseums(),
+        api.admin.getArtifacts(token),
+        api.getEvents(),
+        api.admin.getApplications(token),
+      ]);
 
       const usersRes = getSettledValue(usersResult);
       const museumsRes = getSettledValue(museumsResult);
@@ -166,7 +165,10 @@ export default function AdminDashboard() {
       });
 
       const userActivities = users.map((user) => {
-        const wasUpdated = hasMeaningfulUpdate(user?.createdAt, user?.updatedAt);
+        const wasUpdated = hasMeaningfulUpdate(
+          user?.createdAt,
+          user?.updatedAt,
+        );
         const isDeactivated = user?.isActive === false;
 
         let action = "Joined platform";
@@ -204,7 +206,10 @@ export default function AdminDashboard() {
       });
 
       const museumActivities = museums.map((museum) => {
-        const wasUpdated = hasMeaningfulUpdate(museum?.createdAt, museum?.updatedAt);
+        const wasUpdated = hasMeaningfulUpdate(
+          museum?.createdAt,
+          museum?.updatedAt,
+        );
         const isRemoved = museum?.isActive === false;
 
         let action = "Added museum";
@@ -262,7 +267,9 @@ export default function AdminDashboard() {
             artifact?.name ||
             artifact?.title ||
             t("admin.dashboard.activity.unknown_artifact"),
-          details: artifact?.museum?.name ? `Museum: ${artifact.museum.name}` : "",
+          details: artifact?.museum?.name
+            ? `Museum: ${artifact.museum.name}`
+            : "",
           actor: resolveActorName(
             {
               createdBy: artifact?.createdBy,
@@ -276,7 +283,10 @@ export default function AdminDashboard() {
       });
 
       const eventActivities = events.map((event) => {
-        const wasUpdated = hasMeaningfulUpdate(event?.createdAt, event?.updatedAt);
+        const wasUpdated = hasMeaningfulUpdate(
+          event?.createdAt,
+          event?.updatedAt,
+        );
         const isRemoved = event?.isActive === false;
 
         let action = "Created event";
@@ -297,7 +307,9 @@ export default function AdminDashboard() {
           subject: event?.title || "Event",
           details:
             event?.museum?.name || event?.location
-              ? [event?.museum?.name, event?.location].filter(Boolean).join(" - ")
+              ? [event?.museum?.name, event?.location]
+                  .filter(Boolean)
+                  .join(" - ")
               : "",
           actor: resolveActorName(
             {

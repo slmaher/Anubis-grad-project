@@ -5,7 +5,7 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Alert,
+  Modal,
   ActivityIndicator,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -19,6 +19,9 @@ export default function UserManagement() {
   const [users, setUsers] = useState([]);
   const [guideUserIds, setGuideUserIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
+  const [rolePickerUser, setRolePickerUser] = useState(null);
+  const [roleActionLoading, setRoleActionLoading] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   useEffect(() => {
     initialize();
@@ -59,39 +62,29 @@ export default function UserManagement() {
   };
 
   const deleteUser = async (id) => {
-    Alert.alert(
-      "Delete User",
-      "Are you sure you want to deactivate this user?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Deactivate",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const token = await getAuthToken();
-              const response = await fetch(`${API_URL}/users/${id}`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              const res = await response.json();
-              if (res.success) {
-                setUsers(
-                  users.map((u) =>
-                    u._id === id ? { ...u, isActive: false } : u,
-                  ),
-                );
-              }
-            } catch (error) {
-              console.error(error);
-            }
-          },
-        },
-      ],
-    );
+    try {
+      const token = await getAuthToken();
+      const response = await fetch(`${API_URL}/users/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const res = await response.json();
+      if (res.success) {
+        setUsers(
+          users.map((u) => (u._id === id ? { ...u, isActive: false } : u)),
+        );
+      } else {
+        setActionError(res.message || "Could not deactivate user.");
+      }
+    } catch (error) {
+      console.error(error);
+      setActionError("Could not deactivate user.");
+    }
   };
 
   const changeRole = async (id, nextRole) => {
+    setRoleActionLoading(true);
+    setActionError("");
     try {
       const token = await getAuthToken();
       const response = await fetch(`${API_URL}/users/${id}`, {
@@ -113,20 +106,26 @@ export default function UserManagement() {
             next.delete(id);
             return next;
           });
+          setRolePickerUser(null);
+        } else if (rolePickerUser?._id === id) {
+          setRolePickerUser((current) =>
+            current ? { ...current, role: nextRole } : current,
+          );
         }
+      } else {
+        setActionError(res.message || "Could not update user role.");
       }
     } catch (error) {
       console.error(error);
+      setActionError("Could not update user role.");
+    } finally {
+      setRoleActionLoading(false);
     }
   };
 
   const showRoleActions = (user) => {
-    Alert.alert("Update Role", `Choose role for ${user.name}`, [
-      { text: "Visitor", onPress: () => changeRole(user._id, "Visitor") },
-      { text: "Guide", onPress: () => changeRole(user._id, "Guide") },
-      { text: "Admin", onPress: () => changeRole(user._id, "Admin") },
-      { text: "Cancel", style: "cancel" },
-    ]);
+    setActionError("");
+    setRolePickerUser(user);
   };
 
   const openGuideProfileForUser = (user) => {
@@ -210,6 +209,54 @@ export default function UserManagement() {
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.list}
       />
+
+      <Modal
+        visible={!!rolePickerUser}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRolePickerUser(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Update Role</Text>
+            <Text style={styles.modalSubtitle}>
+              Choose a new role for {rolePickerUser?.name || "this user"}
+            </Text>
+
+            <View style={styles.roleOptions}>
+              {["Visitor", "Guide", "Admin"].map((role) => {
+                const isCurrent = rolePickerUser?.role === role;
+                return (
+                  <TouchableOpacity
+                    key={role}
+                    style={[
+                      styles.roleOption,
+                      isCurrent && styles.roleOptionCurrent,
+                    ]}
+                    onPress={() => changeRole(rolePickerUser._id, role)}
+                    disabled={roleActionLoading || isCurrent}
+                  >
+                    <Text style={styles.roleOptionText}>{role}</Text>
+                    {isCurrent && (
+                      <Text style={styles.currentRoleLabel}>Current</Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {!!actionError && <Text style={styles.errorText}>{actionError}</Text>}
+
+            <TouchableOpacity
+              style={styles.cancelModalBtn}
+              onPress={() => setRolePickerUser(null)}
+              disabled={roleActionLoading}
+            >
+              <Text style={styles.cancelModalText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -274,5 +321,73 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9F7F4",
     justifyContent: "center",
     alignItems: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#2C2010",
+  },
+  modalSubtitle: {
+    marginTop: 6,
+    marginBottom: 16,
+    color: "#8B7B6C",
+    fontSize: 13,
+  },
+  roleOptions: {
+    gap: 10,
+  },
+  roleOption: {
+    borderWidth: 1,
+    borderColor: "#ECE5DE",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    backgroundColor: "#FAF8F4",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  roleOptionCurrent: {
+    borderColor: "#D9A441",
+    backgroundColor: "#FFF8E9",
+  },
+  roleOptionText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#2C2010",
+  },
+  currentRoleLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#A5761A",
+  },
+  cancelModalBtn: {
+    marginTop: 16,
+    alignSelf: "flex-end",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  cancelModalText: {
+    fontWeight: "700",
+    color: "#6B5B4F",
+  },
+  errorText: {
+    marginTop: 12,
+    color: "#C62828",
+    fontSize: 12,
   },
 });
