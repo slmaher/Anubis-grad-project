@@ -11,6 +11,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  Platform,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
@@ -28,6 +29,7 @@ export default function MuseumManagement() {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingMuseum, setEditingMuseum] = useState(null);
+  const [imageRemoved, setImageRemoved] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -51,6 +53,7 @@ export default function MuseumManagement() {
       city: "",
       imageUrl: "",
     });
+    setImageRemoved(false);
     setModalVisible(true);
   }, [actionParam]);
 
@@ -67,7 +70,7 @@ export default function MuseumManagement() {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         quality: 0.7,
         base64: true,
       });
@@ -87,6 +90,7 @@ export default function MuseumManagement() {
         ...prev,
         imageUrl: `data:${mimeType};base64,${selected.base64}`,
       }));
+      setImageRemoved(false);
     } catch (error) {
       Alert.alert("Error", "Unable to pick image right now.");
     }
@@ -111,6 +115,19 @@ export default function MuseumManagement() {
       ? `${API_URL}/museums/${editingMuseum._id}`
       : `${API_URL}/museums`;
 
+    const payload = {
+      name: formData.name?.trim(),
+      description: formData.description?.trim(),
+      location: formData.location?.trim(),
+      city: formData.city?.trim(),
+    };
+
+    if (imageRemoved) {
+      payload.imageUrl = null;
+    } else if (formData.imageUrl?.trim()) {
+      payload.imageUrl = formData.imageUrl.trim();
+    }
+
     try {
       const response = await fetch(url, {
         method,
@@ -118,12 +135,13 @@ export default function MuseumManagement() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
       const res = await response.json();
       if (res.success) {
         setModalVisible(false);
         setEditingMuseum(null);
+        setImageRemoved(false);
         setFormData({
           name: "",
           description: "",
@@ -140,20 +158,51 @@ export default function MuseumManagement() {
     }
   };
 
+  const performDeleteMuseum = async (id) => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        Alert.alert("Error", "Not authenticated. Please log in again.");
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/museums/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const res = await response.json().catch(() => null);
+      if (!response.ok || !res?.success) {
+        throw new Error(
+          res?.message || `HTTP ${response.status}: Failed to delete museum`,
+        );
+      }
+
+      setMuseums((prev) => prev.filter((museum) => museum._id !== id));
+      Alert.alert("Success", "Museum deleted successfully");
+    } catch (error) {
+      Alert.alert(
+        "Delete Failed",
+        error?.message || "Could not delete museum. Please try again.",
+      );
+    }
+  };
+
   const deleteMuseum = (id) => {
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm("Delete Museum? This action cannot be undone.");
+      if (confirmed) {
+        performDeleteMuseum(id);
+      }
+      return;
+    }
+
     Alert.alert("Delete Museum", "Are you sure?", [
       { text: "Cancel" },
       {
         text: "Delete",
         style: "destructive",
-        onPress: async () => {
-          const token = await getAuthToken();
-          await fetch(`${API_URL}/museums/${id}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          fetchMuseums();
-        },
+        onPress: () => performDeleteMuseum(id),
       },
     ]);
   };
@@ -167,6 +216,7 @@ export default function MuseumManagement() {
       city: museum.city || "",
       imageUrl: museum.imageUrl || "",
     });
+    setImageRemoved(false);
     setModalVisible(true);
   };
 
@@ -215,6 +265,7 @@ export default function MuseumManagement() {
               city: "",
               imageUrl: "",
             });
+            setImageRemoved(false);
             setModalVisible(true);
           }}
         >
@@ -259,7 +310,12 @@ export default function MuseumManagement() {
                 style={styles.input}
                 placeholder="Image URL (optional)"
                 value={formData.imageUrl}
-                onChangeText={(t) => setFormData({ ...formData, imageUrl: t })}
+                onChangeText={(t) => {
+                  setFormData({ ...formData, imageUrl: t });
+                  if (t?.trim()) {
+                    setImageRemoved(false);
+                  }
+                }}
               />
               <View style={styles.imageActionsRow}>
                 <TouchableOpacity
@@ -276,7 +332,10 @@ export default function MuseumManagement() {
                 {!!formData.imageUrl && (
                   <TouchableOpacity
                     style={styles.clearImageBtn}
-                    onPress={() => setFormData({ ...formData, imageUrl: "" })}
+                    onPress={() => {
+                      setFormData({ ...formData, imageUrl: "" });
+                      setImageRemoved(true);
+                    }}
                   >
                     <Text style={styles.clearImageText}>Remove</Text>
                   </TouchableOpacity>

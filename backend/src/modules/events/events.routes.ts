@@ -131,20 +131,27 @@ eventsRouter.patch(
         return res.status(400).json({ success: false, message: 'End date must be after start date' });
       }
 
+      const updateDoc: Record<string, unknown> = {
+        $set: {
+          ...(dto.title != null && { title: dto.title }),
+          ...(dto.description != null && { description: dto.description }),
+          ...(dto.museum != null && { museum: dto.museum }),
+          ...(dto.startDate != null && { startDate: new Date(dto.startDate) }),
+          ...(dto.endDate != null && { endDate: new Date(dto.endDate) }),
+          ...(dto.location !== undefined && { location: dto.location }),
+          ...(dto.maxAttendees !== undefined && { maxAttendees: dto.maxAttendees })
+        }
+      };
+
+      if (dto.imageUrl === null) {
+        updateDoc.$unset = { imageUrl: "" };
+      } else if (dto.imageUrl !== undefined) {
+        (updateDoc.$set as Record<string, unknown>).imageUrl = dto.imageUrl;
+      }
+
       const updated = await EventModel.findByIdAndUpdate(
         req.params.id,
-        {
-          $set: {
-            ...(dto.title != null && { title: dto.title }),
-            ...(dto.description != null && { description: dto.description }),
-            ...(dto.museum != null && { museum: dto.museum }),
-            ...(dto.startDate != null && { startDate: new Date(dto.startDate) }),
-            ...(dto.endDate != null && { endDate: new Date(dto.endDate) }),
-            ...(dto.location !== undefined && { location: dto.location }),
-            ...(dto.imageUrl !== undefined && { imageUrl: dto.imageUrl }),
-            ...(dto.maxAttendees !== undefined && { maxAttendees: dto.maxAttendees })
-          }
-        },
+        updateDoc,
         { new: true }
       ).populate('museum', 'name city location');
 
