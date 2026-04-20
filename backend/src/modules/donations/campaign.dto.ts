@@ -14,6 +14,10 @@ export class CreateCampaignDto {
   @IsOptional()
   @IsString()
   imageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  icon?: string;
 }
 
 export class UpdateCampaignDto {
@@ -33,6 +37,10 @@ export class UpdateCampaignDto {
   @IsOptional()
   @IsString()
   imageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  icon?: string;
 
   @IsOptional()
   isActive?: boolean;

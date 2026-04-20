@@ -50,8 +50,17 @@ donationsRouter.post(
   validateBody(CreateCampaignDto),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res.status(401).json({ success: false, message: "Unauthorized" });
+      }
+
       const dto = req.body as CreateCampaignDto;
-      const campaign = await CampaignModel.create(dto);
+      const campaign = await CampaignModel.create({
+        ...dto,
+        createdBy: adminUserId,
+        updatedBy: adminUserId,
+      });
       return res.status(201).json({ success: true, data: campaign });
     } catch (err) {
       next(err);
@@ -66,9 +75,14 @@ donationsRouter.patch(
   validateBody(UpdateCampaignDto),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res.status(401).json({ success: false, message: "Unauthorized" });
+      }
+
       const campaign = await CampaignModel.findByIdAndUpdate(
         req.params.id,
-        { $set: req.body },
+        { $set: { ...req.body, updatedBy: adminUserId } },
         { new: true }
       );
       if (!campaign) {
@@ -87,9 +101,14 @@ donationsRouter.delete(
   authorizeRoles(UserRole.Admin),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res.status(401).json({ success: false, message: "Unauthorized" });
+      }
+
       const campaign = await CampaignModel.findByIdAndUpdate(
         req.params.id,
-        { $set: { isActive: false } },
+        { $set: { isActive: false, updatedBy: adminUserId } },
         { new: true }
       );
       if (!campaign) {
