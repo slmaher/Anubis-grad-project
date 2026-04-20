@@ -50,6 +50,13 @@ museumsRouter.post(
   validateBody(CreateMuseumDto),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Not authenticated" });
+      }
+
       const dto = req.body as CreateMuseumDto;
       const museum = await MuseumModel.create({
         name: dto.name,
@@ -58,6 +65,8 @@ museumsRouter.post(
         city: dto.city,
         imageUrl: dto.imageUrl,
         openingHours: dto.openingHours,
+        createdBy: adminUserId,
+        updatedBy: adminUserId,
       });
       return res.status(201).json({ success: true, data: museum });
     } catch (err) {
@@ -74,6 +83,13 @@ museumsRouter.patch(
   validateBody(UpdateMuseumDto),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Not authenticated" });
+      }
+
       const dto = req.body as UpdateMuseumDto;
       const updateDoc: Record<string, unknown> = {
         $set: {
@@ -84,6 +100,7 @@ museumsRouter.patch(
           ...(dto.openingHours !== undefined && {
             openingHours: dto.openingHours,
           }),
+          updatedBy: adminUserId,
         },
       };
 
@@ -117,9 +134,16 @@ museumsRouter.delete(
   authorizeRoles(UserRole.Admin),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Not authenticated" });
+      }
+
       const museum = await MuseumModel.findByIdAndUpdate(
         req.params.id,
-        { $set: { isActive: false } },
+        { $set: { isActive: false, updatedBy: adminUserId } },
         { new: true },
       );
       if (!museum) {

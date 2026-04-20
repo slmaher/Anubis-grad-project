@@ -57,6 +57,11 @@ artifactsRouter.post(
   validateBody(CreateArtifactDto),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res.status(401).json({ success: false, message: 'Not authenticated' });
+      }
+
       const dto = req.body as CreateArtifactDto;
       const museumExists = await MuseumModel.findById(dto.museum);
       if (!museumExists) {
@@ -67,7 +72,9 @@ artifactsRouter.post(
         description: dto.description,
         museum: dto.museum,
         era: dto.era,
-        imageUrl: dto.imageUrl
+        imageUrl: dto.imageUrl,
+        createdBy: adminUserId,
+        updatedBy: adminUserId
       });
       const populated = await artifact.populate('museum', 'name city');
       return res.status(201).json({ success: true, data: populated });
@@ -85,6 +92,11 @@ artifactsRouter.patch(
   validateBody(UpdateArtifactDto),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res.status(401).json({ success: false, message: 'Not authenticated' });
+      }
+
       const dto = req.body as UpdateArtifactDto;
       if (dto.museum) {
         const museumExists = await MuseumModel.findById(dto.museum);
@@ -100,7 +112,8 @@ artifactsRouter.patch(
             ...(dto.description != null && { description: dto.description }),
             ...(dto.museum != null && { museum: dto.museum }),
             ...(dto.era !== undefined && { era: dto.era }),
-            ...(dto.imageUrl !== undefined && { imageUrl: dto.imageUrl })
+            ...(dto.imageUrl !== undefined && { imageUrl: dto.imageUrl }),
+            updatedBy: adminUserId
           }
         },
         { new: true }
@@ -122,9 +135,14 @@ artifactsRouter.delete(
   authorizeRoles(UserRole.Admin),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res.status(401).json({ success: false, message: 'Not authenticated' });
+      }
+
       const artifact = await ArtifactModel.findByIdAndUpdate(
         req.params.id,
-        { $set: { isActive: false } },
+        { $set: { isActive: false, updatedBy: adminUserId } },
         { new: true }
       ).populate('museum', 'name city');
       if (!artifact) {

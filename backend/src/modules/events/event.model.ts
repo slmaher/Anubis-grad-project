@@ -10,6 +10,8 @@ export interface IEvent extends Document {
   imageUrl?: string;
   maxAttendees?: number;
   isActive: boolean;
+  createdBy?: mongoose.Types.ObjectId;
+  updatedBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,7 +39,9 @@ const EventSchema = new Schema<IEvent>(
       type: Number,
       min: 1
     },
-    isActive: { type: Boolean, default: true }
+    isActive: { type: Boolean, default: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    updatedBy: { type: Schema.Types.ObjectId, ref: 'User' }
   },
   { timestamps: true }
 );

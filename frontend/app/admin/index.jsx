@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -26,6 +26,7 @@ export default function AdminDashboard() {
     pendingVolunteers: 0,
   });
   const [recentActivity, setRecentActivity] = useState([]);
+  const [visibleActivityCount, setVisibleActivityCount] = useState(10);
 
   const isRTL = i18n.dir(i18n.language) === "rtl";
 
@@ -33,6 +34,72 @@ export default function AdminDashboard() {
     const data = response?.data;
     return Array.isArray(data) ? data : [];
   };
+
+  const toId = (value) => {
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    if (typeof value === "object") {
+      return String(value?._id || value?.id || "").trim();
+    }
+    return String(value).trim();
+  };
+
+  const toDateMillis = (value) => {
+    const millis = new Date(value || 0).getTime();
+    return Number.isFinite(millis) ? millis : 0;
+  };
+
+  const formatDateTime = (value) => {
+    const millis = toDateMillis(value);
+    if (!millis) return "Unknown time";
+
+    return new Intl.DateTimeFormat(i18n.language || "en", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(millis));
+  };
+
+  const hasMeaningfulUpdate = (createdAt, updatedAt) =>
+    toDateMillis(updatedAt) - toDateMillis(createdAt) > 1000;
+
+  const resolveActorName = ({ createdBy, updatedBy, fallback }, usersById) => {
+    const updatedById = toId(updatedBy);
+    const createdById = toId(createdBy);
+
+    if (updatedById && usersById[updatedById]?.name) {
+      return usersById[updatedById].name;
+    }
+
+    if (createdById && usersById[createdById]?.name) {
+      return usersById[createdById].name;
+    }
+
+    const updatedByName =
+      typeof updatedBy === "object" ? String(updatedBy?.name || "").trim() : "";
+    if (updatedByName) {
+      return updatedByName;
+    }
+
+    const createdByName =
+      typeof createdBy === "object" ? String(createdBy?.name || "").trim() : "";
+    if (createdByName) {
+      return createdByName;
+    }
+
+    if (updatedById) {
+      return `Admin (${updatedById.slice(-6)})`;
+    }
+
+    if (createdById) {
+      return `Admin (${createdById.slice(-6)})`;
+    }
+
+    return fallback || "System";
+  };
+
+  useEffect(() => {
+    setVisibleActivityCount(10);
+  }, [recentActivity.length]);
 
   const getSettledValue = (result) =>
     result?.status === "fulfilled" ? result.value : { data: [] };
@@ -51,23 +118,40 @@ export default function AdminDashboard() {
         return;
       }
 
-      const [usersResult, museumsResult, artifactsResult, applicationsResult] =
+      const [
+        usersResult,
+        museumsResult,
+        artifactsResult,
+        eventsResult,
+        applicationsResult,
+      ] =
         await Promise.allSettled([
           api.admin.getUsers(token),
           api.getMuseums(),
           api.admin.getArtifacts(token),
+          api.getEvents(),
           api.admin.getApplications(token),
         ]);
 
       const usersRes = getSettledValue(usersResult);
       const museumsRes = getSettledValue(museumsResult);
       const artifactsRes = getSettledValue(artifactsResult);
+      const eventsRes = getSettledValue(eventsResult);
       const applicationsRes = getSettledValue(applicationsResult);
 
       const users = toArray(usersRes);
       const museums = toArray(museumsRes);
       const artifacts = toArray(artifactsRes);
+      const events = toArray(eventsRes);
       const applications = toArray(applicationsRes);
+
+      const usersById = users.reduce((acc, user) => {
+        const id = toId(user?._id || user?.id);
+        if (id) {
+          acc[id] = user;
+        }
+        return acc;
+      }, {});
 
       const pendingVolunteers = applications.filter(
         (application) =>
@@ -81,32 +165,158 @@ export default function AdminDashboard() {
         pendingVolunteers,
       });
 
+      const userActivities = users.map((user) => {
+        const wasUpdated = hasMeaningfulUpdate(user?.createdAt, user?.updatedAt);
+        const isDeactivated = user?.isActive === false;
+
+        let action = "Joined platform";
+        let occurredAt = user?.createdAt;
+
+        if (isDeactivated) {
+          action = "Deactivated user";
+          occurredAt = user?.updatedAt || user?.createdAt;
+        } else if (wasUpdated) {
+          action = "Updated user";
+          occurredAt = user?.updatedAt;
+        }
+
+        const actorFromAdmin = resolveActorName(
+          {
+            createdBy: user?.createdBy,
+            updatedBy: user?.updatedBy,
+            fallback: "Self registration",
+          },
+          usersById,
+        );
+
+        return {
+          id: `u-${toId(user?._id || user?.id) || Math.random()}`,
+          category: "User",
+          action,
+          subject:
+            user?.name ||
+            user?.email ||
+            t("admin.dashboard.activity.unknown_user"),
+          details: user?.email ? `Email: ${user.email}` : "",
+          actor: actorFromAdmin || user?.name || "Self registration",
+          occurredAt,
+        };
+      });
+
+      const museumActivities = museums.map((museum) => {
+        const wasUpdated = hasMeaningfulUpdate(museum?.createdAt, museum?.updatedAt);
+        const isRemoved = museum?.isActive === false;
+
+        let action = "Added museum";
+        let occurredAt = museum?.createdAt;
+
+        if (isRemoved) {
+          action = "Removed museum";
+          occurredAt = museum?.updatedAt || museum?.createdAt;
+        } else if (wasUpdated) {
+          action = "Updated museum";
+          occurredAt = museum?.updatedAt;
+        }
+
+        return {
+          id: `m-${toId(museum?._id || museum?.id) || Math.random()}`,
+          category: "Museum",
+          action,
+          subject: museum?.name || "Museum",
+          details: [museum?.city, museum?.location].filter(Boolean).join(" - "),
+          actor: resolveActorName(
+            {
+              createdBy: museum?.createdBy,
+              updatedBy: museum?.updatedBy,
+              fallback: "Admin action",
+            },
+            usersById,
+          ),
+          occurredAt,
+        };
+      });
+
+      const artifactActivities = artifacts.map((artifact) => {
+        const wasUpdated = hasMeaningfulUpdate(
+          artifact?.createdAt,
+          artifact?.updatedAt,
+        );
+        const isRemoved = artifact?.isActive === false;
+
+        let action = "Added artifact";
+        let occurredAt = artifact?.createdAt;
+
+        if (isRemoved) {
+          action = "Removed artifact";
+          occurredAt = artifact?.updatedAt || artifact?.createdAt;
+        } else if (wasUpdated) {
+          action = "Updated artifact";
+          occurredAt = artifact?.updatedAt;
+        }
+
+        return {
+          id: `a-${toId(artifact?._id || artifact?.id) || Math.random()}`,
+          category: "Artifact",
+          action,
+          subject:
+            artifact?.name ||
+            artifact?.title ||
+            t("admin.dashboard.activity.unknown_artifact"),
+          details: artifact?.museum?.name ? `Museum: ${artifact.museum.name}` : "",
+          actor: resolveActorName(
+            {
+              createdBy: artifact?.createdBy,
+              updatedBy: artifact?.updatedBy,
+              fallback: "Admin action",
+            },
+            usersById,
+          ),
+          occurredAt,
+        };
+      });
+
+      const eventActivities = events.map((event) => {
+        const wasUpdated = hasMeaningfulUpdate(event?.createdAt, event?.updatedAt);
+        const isRemoved = event?.isActive === false;
+
+        let action = "Created event";
+        let occurredAt = event?.createdAt;
+
+        if (isRemoved) {
+          action = "Removed event";
+          occurredAt = event?.updatedAt || event?.createdAt;
+        } else if (wasUpdated) {
+          action = "Updated event";
+          occurredAt = event?.updatedAt;
+        }
+
+        return {
+          id: `e-${toId(event?._id || event?.id) || Math.random()}`,
+          category: "Event",
+          action,
+          subject: event?.title || "Event",
+          details:
+            event?.museum?.name || event?.location
+              ? [event?.museum?.name, event?.location].filter(Boolean).join(" - ")
+              : "",
+          actor: resolveActorName(
+            {
+              createdBy: event?.createdBy,
+              updatedBy: event?.updatedBy,
+              fallback: "Admin action",
+            },
+            usersById,
+          ),
+          occurredAt,
+        };
+      });
+
       const activity = [
-        ...users.slice(0, 3).map((user) => ({
-          id: `u-${user._id || user.id || Math.random()}`,
-          text: t("admin.dashboard.activity.new_user", {
-            name: user?.name || t("admin.dashboard.activity.unknown_user"),
-          }),
-          createdAt: user?.createdAt,
-        })),
-        ...museums.slice(0, 3).map((museum) => ({
-          id: `m-${museum._id || museum.id || Math.random()}`,
-          text: `${museum?.name || "Museum"} ${t("admin.dashboard.actions.add_museum")}`,
-          createdAt: museum?.createdAt,
-        })),
-        ...artifacts.slice(0, 3).map((artifact) => ({
-          id: `a-${artifact._id || artifact.id || Math.random()}`,
-          text: t("admin.dashboard.activity.new_artifact", {
-            name:
-              artifact?.name ||
-              artifact?.title ||
-              t("admin.dashboard.activity.unknown_artifact"),
-          }),
-          createdAt: artifact?.createdAt,
-        })),
-      ]
-        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-        .slice(0, 6);
+        ...museumActivities,
+        ...eventActivities,
+        ...artifactActivities,
+        ...userActivities,
+      ].sort((a, b) => toDateMillis(b.occurredAt) - toDateMillis(a.occurredAt));
 
       setRecentActivity(activity);
 
@@ -114,15 +324,20 @@ export default function AdminDashboard() {
         getSettledReason(usersResult) ? "users" : null,
         getSettledReason(museumsResult) ? "museums" : null,
         getSettledReason(artifactsResult) ? "artifacts" : null,
+        getSettledReason(eventsResult) ? "events" : null,
         getSettledReason(applicationsResult) ? "volunteers" : null,
       ].filter(Boolean);
 
       if (failedSources.length > 0) {
-        setError(`Some dashboard data failed to load: ${failedSources.join(", ")}`);
+        setError(
+          `Some dashboard data failed to load: ${failedSources.join(", ")}`,
+        );
       }
     } catch (e) {
       const message =
-        e?.message || t("admin.dashboard.load_failed") || "Failed to load dashboard";
+        e?.message ||
+        t("admin.dashboard.load_failed") ||
+        "Failed to load dashboard";
       setError(message);
     } finally {
       setLoading(false);
@@ -272,18 +487,47 @@ export default function AdminDashboard() {
             {t("admin.dashboard.activity.empty")}
           </Text>
         ) : (
-          recentActivity.map((item) => (
+          recentActivity.slice(0, visibleActivityCount).map((item) => (
             <View key={item.id} style={styles.activityRow}>
-              <MaterialCommunityIcons
-                name="circle-medium"
-                size={20}
-                color="#D9A441"
-              />
-              <Text style={[styles.activityText, isRTL && styles.textRight]}>
-                {item.text}
-              </Text>
+              <View style={styles.activityDotWrap}>
+                <MaterialCommunityIcons
+                  name="circle-medium"
+                  size={20}
+                  color="#D9A441"
+                />
+              </View>
+              <View style={styles.activityBody}>
+                <Text style={[styles.activityTitle, isRTL && styles.textRight]}>
+                  {`${item.category} • ${item.action}`}
+                </Text>
+                <Text style={[styles.activityText, isRTL && styles.textRight]}>
+                  {item.subject}
+                </Text>
+                {!!item.details && (
+                  <Text
+                    style={[styles.activityDetails, isRTL && styles.textRight]}
+                  >
+                    {item.details}
+                  </Text>
+                )}
+                <Text style={[styles.activityMeta, isRTL && styles.textRight]}>
+                  {`By ${item.actor} • ${formatDateTime(item.occurredAt)}`}
+                </Text>
+              </View>
             </View>
           ))
+        )}
+        {recentActivity.length > visibleActivityCount && (
+          <TouchableOpacity
+            style={styles.loadMoreBtn}
+            onPress={() =>
+              setVisibleActivityCount((prev) =>
+                Math.min(prev + 10, recentActivity.length),
+              )
+            }
+          >
+            <Text style={styles.loadMoreText}>Load more activity</Text>
+          </TouchableOpacity>
         )}
       </View>
     </ScrollView>
@@ -396,17 +640,52 @@ const styles = StyleSheet.create({
   },
   activityRow: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
+    alignItems: "flex-start",
+    marginBottom: 14,
+  },
+  activityDotWrap: {
+    marginTop: 2,
+    marginRight: 4,
+  },
+  activityBody: {
+    flex: 1,
+    gap: 2,
+  },
+  activityTitle: {
+    color: "#2C2010",
+    fontSize: 13,
+    fontWeight: "700",
   },
   activityText: {
     color: "#6B5B4F",
     fontSize: 14,
     flexShrink: 1,
   },
+  activityDetails: {
+    color: "#8B7B6C",
+    fontSize: 13,
+  },
+  activityMeta: {
+    color: "#9B8B7C",
+    fontSize: 12,
+    marginTop: 2,
+  },
   placeholderText: {
     color: "#8B7B6C",
     fontSize: 14,
     textAlign: "center",
+  },
+  loadMoreBtn: {
+    marginTop: 8,
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: "#F6EFE3",
+  },
+  loadMoreText: {
+    color: "#8A631A",
+    fontWeight: "700",
+    fontSize: 12,
   },
 });

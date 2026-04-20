@@ -99,6 +99,11 @@ usersRouter.post(
   validateBody(CreateUserDto),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res.status(401).json({ success: false, message: 'Not authenticated' });
+      }
+
       const dto = req.body as CreateUserDto;
 
       const existing = await UserModel.findOne({ email: dto.email });
@@ -114,7 +119,9 @@ usersRouter.post(
         name: dto.name,
         email: dto.email,
         password: hashed,
-        role: dto.role ?? UserRole.Visitor
+        role: dto.role ?? UserRole.Visitor,
+        createdBy: adminUserId,
+        updatedBy: adminUserId
       });
 
       const plain = user.toObject();
@@ -153,6 +160,11 @@ usersRouter.patch(
   validateBody(UpdateUserDto),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res.status(401).json({ success: false, message: 'Not authenticated' });
+      }
+
       const dto = req.body as UpdateUserDto;
 
       const user = await UserModel.findByIdAndUpdate(
@@ -160,7 +172,8 @@ usersRouter.patch(
         {
           $set: {
             ...(dto.name && { name: dto.name }),
-            ...(dto.role && { role: dto.role })
+            ...(dto.role && { role: dto.role }),
+            updatedBy: adminUserId
           }
         },
         { new: true }
@@ -184,9 +197,14 @@ usersRouter.delete(
   authorizeRoles(UserRole.Admin),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res.status(401).json({ success: false, message: 'Not authenticated' });
+      }
+
       const user = await UserModel.findByIdAndUpdate(
         req.params.id,
-        { $set: { isActive: false } },
+        { $set: { isActive: false, updatedBy: adminUserId } },
         { new: true }
       ).select('-password');
 

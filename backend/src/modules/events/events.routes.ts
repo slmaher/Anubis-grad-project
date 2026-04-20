@@ -61,6 +61,13 @@ eventsRouter.post(
   validateBody(CreateEventDto),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Not authenticated" });
+      }
+
       const dto = req.body as CreateEventDto;
 
       // Verify museum exists
@@ -102,6 +109,8 @@ eventsRouter.post(
         location: dto.location,
         imageUrl: dto.imageUrl,
         maxAttendees: dto.maxAttendees,
+        createdBy: adminUserId,
+        updatedBy: adminUserId,
       });
 
       const populated = await event.populate("museum", "name city location");
@@ -120,6 +129,13 @@ eventsRouter.patch(
   validateBody(UpdateEventDto),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Not authenticated" });
+      }
+
       const dto = req.body as UpdateEventDto;
 
       // If updating museum, verify it exists
@@ -167,6 +183,7 @@ eventsRouter.patch(
           ...(dto.maxAttendees !== undefined && {
             maxAttendees: dto.maxAttendees,
           }),
+          updatedBy: adminUserId,
         },
       };
 
@@ -202,9 +219,16 @@ eventsRouter.delete(
   authorizeRoles(UserRole.Admin),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Not authenticated" });
+      }
+
       const event = await EventModel.findByIdAndUpdate(
         req.params.id,
-        { $set: { isActive: false } },
+        { $set: { isActive: false, updatedBy: adminUserId } },
         { new: true },
       ).populate("museum", "name city location");
 

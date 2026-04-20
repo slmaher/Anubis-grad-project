@@ -7,6 +7,8 @@ export interface IArtifact extends Document {
   era?: string;
   imageUrl?: string;
   isActive: boolean;
+  createdBy?: mongoose.Types.ObjectId;
+  updatedBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,7 +24,9 @@ const ArtifactSchema = new Schema<IArtifact>(
     },
     era: { type: String, trim: true },
     imageUrl: { type: String, trim: true },
-    isActive: { type: Boolean, default: true }
+    isActive: { type: Boolean, default: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    updatedBy: { type: Schema.Types.ObjectId, ref: 'User' }
   },
   { timestamps: true }
 );
