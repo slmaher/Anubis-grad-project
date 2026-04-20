@@ -16,6 +16,20 @@ import { useLocalSearchParams } from "expo-router";
 import { getAuthToken } from "../api/authStorage";
 
 const API_URL = "http://localhost:4000/api";
+const AVAILABLE_ICONS = [
+  "heart-outline",
+  "account-heart-outline",
+  "hand-heart-outline",
+  "gift-outline",
+  "cash-heart",
+  "sprout-outline",
+  "school-outline",
+  "hospital-box-outline",
+  "bookshelf",
+  "image-filter-hdr",
+  "food-apple-outline",
+  "water-outline",
+];
 
 export default function DonationManagement() {
   const params = useLocalSearchParams();
@@ -30,6 +44,7 @@ export default function DonationManagement() {
     title: "",
     description: "",
     goalAmount: "",
+    icon: "heart-outline",
   });
 
   useEffect(() => {
@@ -40,7 +55,12 @@ export default function DonationManagement() {
     if (actionParam !== "create") return;
 
     setEditingCampaign(null);
-    setFormData({ title: "", description: "", goalAmount: "" });
+    setFormData({
+      title: "",
+      description: "",
+      goalAmount: "",
+      icon: "heart-outline",
+    });
     setModalVisible(true);
   }, [actionParam]);
 
@@ -111,12 +131,20 @@ export default function DonationManagement() {
       title: campaign.title,
       description: campaign.description,
       goalAmount: campaign.goalAmount.toString(),
+      icon: campaign.icon || "heart-outline",
     });
     setModalVisible(true);
   };
 
   const renderCampaign = ({ item }) => (
     <View style={styles.card}>
+      <View style={styles.iconBadge}>
+        <MaterialCommunityIcons
+          name={item.icon || "heart-outline"}
+          size={24}
+          color="#D9A441"
+        />
+      </View>
       <View style={styles.cardInfo}>
         <Text style={styles.name}>{item.title}</Text>
         <Text style={styles.sub}>
@@ -155,7 +183,12 @@ export default function DonationManagement() {
           style={styles.addBtn}
           onPress={() => {
             setEditingCampaign(null);
-            setFormData({ title: "", description: "", goalAmount: "" });
+            setFormData({
+              title: "",
+              description: "",
+              goalAmount: "",
+              icon: "heart-outline",
+            });
             setModalVisible(true);
           }}
         >
@@ -202,6 +235,25 @@ export default function DonationManagement() {
                   setFormData({ ...formData, description: t })
                 }
               />
+              <Text style={styles.sectionLabel}>Select Icon</Text>
+              <View style={styles.iconGrid}>
+                {AVAILABLE_ICONS.map((icon) => (
+                  <TouchableOpacity
+                    key={icon}
+                    style={[
+                      styles.iconButton,
+                      formData.icon === icon && styles.iconButtonSelected,
+                    ]}
+                    onPress={() => setFormData({ ...formData, icon })}
+                  >
+                    <MaterialCommunityIcons
+                      name={icon}
+                      size={24}
+                      color={formData.icon === icon ? "#D9A441" : "#8B7B6C"}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
             </ScrollView>
             <View style={styles.modalButtons}>
               <TouchableOpacity
@@ -250,6 +302,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     elevation: 2,
   },
+  iconBadge: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: "#F9F7F4",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
   name: { fontSize: 16, fontWeight: "600", color: "#2C2010" },
   sub: { fontSize: 13, color: "#8B7B6C" },
   actions: { flexDirection: "row", gap: 16 },
@@ -282,5 +343,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
+  },
+  sectionLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#2C2010",
+    marginBottom: 12,
+  },
+  iconGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginBottom: 16,
+  },
+  iconButton: {
+    width: "22%",
+    aspectRatio: 1,
+    borderWidth: 1,
+    borderColor: "#ECE5DE",
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  iconButtonSelected: {
+    borderColor: "#D9A441",
+    backgroundColor: "#F9F7F4",
   },
 });
