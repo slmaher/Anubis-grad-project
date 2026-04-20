@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Image,
   SafeAreaView,
   ScrollView,
@@ -10,36 +11,37 @@ import {
   View,
   ImageBackground,
 } from "react-native";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTranslation } from "react-i18next";
 
-const guides = [
-  {
-    name: "Ahmed Hassan",
-    price: "$25/hour",
-    rating: "4.9 (127 reviews)",
-    languages: "5 Languages",
-    expert: true,
-  },
-  {
-    name: "Sara Mohamed",
-    price: "$30/hour",
-    rating: "4.8 (80 reviews)",
-    languages: "3 Languages",
-    expert: false,
-  },
-  {
-    name: "Omar Ali",
-    price: "$35/hour",
-    rating: "4.7 (102 reviews)",
-    languages: "4 Languages",
-    expert: true,
-  },
-];
+const API_URL = "http://localhost:4000/api";
+const DEFAULT_AVATAR = "https://i.pravatar.cc/100";
 
-const GuideCard = ({ guide, t }) => {
+function mapGuideFromApi(item) {
+  const hourlyRate = Number(item?.hourlyRate || 0);
+  const ratingValue = Number(item?.rating || 0);
+  const totalTours = Number(item?.totalTours || 0);
+  const languagesCount = Array.isArray(item?.languages)
+    ? item.languages.length
+    : 0;
+
+  return {
+    id: item?._id,
+    userId: item?.user?._id || "",
+    name: item?.user?.name || "Unknown Guide",
+    avatar: item?.user?.avatar || DEFAULT_AVATAR,
+    price: `$${hourlyRate}/hour`,
+    rating: `${ratingValue.toFixed(1)} (${totalTours} tours)`,
+    languages: `${languagesCount} Languages`,
+    expert: Number(item?.experienceYears || 0) >= 5,
+    specialties: Array.isArray(item?.specialties) ? item.specialties : [],
+  };
+}
+
+const GuideCard = ({ guide, t, onChat }) => {
   return (
     <View style={styles.card}>
       {/* Top Row */}
@@ -85,8 +87,8 @@ const GuideCard = ({ guide, t }) => {
       </View>
 
       {/* Button */}
-      <TouchableOpacity style={styles.bookBtn}>
-        <Text style={styles.bookText}>{t("tour_guide.book_now")}</Text>
+      <TouchableOpacity style={styles.bookBtn} onPress={onChat}>
+        <Text style={styles.bookText}>Chat now</Text>
       </TouchableOpacity>
     </View>
   );
@@ -95,6 +97,59 @@ const GuideCard = ({ guide, t }) => {
 export default function TourGuideScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const [guides, setGuides] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchText, setSearchText] = useState("");
+
+  useEffect(() => {
+    const fetchGuides = async () => {
+      try {
+        const response = await fetch(`${API_URL}/tour-guides?limit=100`);
+        const res = await response.json();
+        if (response.ok && res?.success) {
+          setGuides((res.data || []).map(mapGuideFromApi));
+        } else {
+          setGuides([]);
+        }
+      } catch (error) {
+        setGuides([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGuides();
+  }, []);
+
+  const filteredGuides = useMemo(() => {
+    const query = searchText.trim().toLowerCase();
+    if (!query) {
+      return guides;
+    }
+
+    return guides.filter((guide) => {
+      const inName = guide.name.toLowerCase().includes(query);
+      const inSpecialties = guide.specialties.some((s) =>
+        String(s).toLowerCase().includes(query),
+      );
+      return inName || inSpecialties;
+    });
+  }, [guides, searchText]);
+
+  const handleChatNow = (guide) => {
+    if (!guide?.userId) {
+      return;
+    }
+
+    router.push({
+      pathname: "/messagesList/chatScreen",
+      params: {
+        contactId: guide.userId,
+        contactName: guide.name,
+        contactAvatar: guide.avatar || "",
+      },
+    });
+  };
 
   return (
     <ImageBackground
@@ -140,6 +195,8 @@ export default function TourGuideScreen() {
               placeholder={t("tour_guide.search_placeholder")}
               placeholderTextColor="#888"
               style={styles.input}
+              value={searchText}
+              onChangeText={setSearchText}
             />
             <MaterialCommunityIcons
               name="magnify"
@@ -159,9 +216,20 @@ export default function TourGuideScreen() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            {guides.map((guide, index) => (
-              <GuideCard key={index} guide={guide} t={t} />
-            ))}
+            {loading ? (
+              <ActivityIndicator size="large" color="#D9A441" />
+            ) : filteredGuides.length === 0 ? (
+              <Text style={styles.emptyState}>No tour guides found.</Text>
+            ) : (
+              filteredGuides.map((guide) => (
+                <GuideCard
+                  key={guide.id}
+                  guide={guide}
+                  t={t}
+                  onChat={() => handleChatNow(guide)}
+                />
+              ))
+            )}
           </ScrollView>
         </View>
       </SafeAreaView>
@@ -249,6 +317,13 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     paddingBottom: 20,
+  },
+
+  emptyState: {
+    fontSize: 14,
+    color: "#8B7B6C",
+    textAlign: "center",
+    marginTop: 24,
   },
 
   // Card

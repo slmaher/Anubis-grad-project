@@ -190,7 +190,9 @@ export default function MuseumManagement() {
 
   const deleteMuseum = (id) => {
     if (Platform.OS === "web") {
-      const confirmed = window.confirm("Delete Museum? This action cannot be undone.");
+      const confirmed = window.confirm(
+        "Delete Museum? This action cannot be undone.",
+      );
       if (confirmed) {
         performDeleteMuseum(id);
       }

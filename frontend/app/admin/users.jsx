@@ -1,17 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { getAuthToken } from '../api/authStorage';
 
 const API_URL = 'http://localhost:4000/api'; // In a real app, use an env var or common client
 
 export default function UserManagement() {
+  const router = useRouter();
   const [users, setUsers] = useState([]);
+  const [guideUserIds, setGuideUserIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchUsers();
+    initialize();
   }, []);
+
+  const initialize = async () => {
+    await Promise.all([fetchUsers(), fetchGuideProfiles()]);
+    setLoading(false);
+  };
 
   const fetchUsers = async () => {
     try {
@@ -25,8 +33,18 @@ export default function UserManagement() {
       }
     } catch (error) {
       console.error(error);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const fetchGuideProfiles = async () => {
+    try {
+      const response = await fetch(`${API_URL}/tour-guides`);
+      const res = await response.json();
+      if (res.success) {
+        setGuideUserIds(new Set((res.data || []).map((g) => g.user?._id).filter(Boolean)));
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -55,10 +73,7 @@ export default function UserManagement() {
     ]);
   };
 
-  const changeRole = async (id, currentRole) => {
-    const roles = ['Visitor', 'Guide', 'Admin'];
-    const nextRole = roles[(roles.indexOf(currentRole) + 1) % roles.length];
-
+  const changeRole = async (id, nextRole) => {
     try {
       const token = await getAuthToken();
       const response = await fetch(`${API_URL}/users/${id}`, {
@@ -72,10 +87,33 @@ export default function UserManagement() {
       const res = await response.json();
       if (res.success) {
         setUsers(users.map(u => u._id === id ? { ...u, role: nextRole } : u));
+        if (nextRole !== 'Guide') {
+          setGuideUserIds((prev) => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+          });
+        }
       }
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const showRoleActions = (user) => {
+    Alert.alert('Update Role', `Choose role for ${user.name}`, [
+      { text: 'Visitor', onPress: () => changeRole(user._id, 'Visitor') },
+      { text: 'Guide', onPress: () => changeRole(user._id, 'Guide') },
+      { text: 'Admin', onPress: () => changeRole(user._id, 'Admin') },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
+  const openGuideProfileForUser = (user) => {
+    router.push({
+      pathname: '/admin/tour-guides',
+      params: { action: 'create', userId: user._id },
+    });
   };
 
   const renderUser = ({ item }) => (
@@ -87,12 +125,16 @@ export default function UserManagement() {
           <Text style={[styles.roleBadge, { backgroundColor: item.role === 'Admin' ? '#D9A441' : '#8B7B6C' }]}>
             {item.role}
           </Text>
+          {guideUserIds.has(item._id) && <Text style={styles.guideProfileBadge}>Guide Profile</Text>}
           {!item.isActive && <Text style={styles.inactiveBadge}>Inactive</Text>}
         </View>
       </View>
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionBtn} onPress={() => changeRole(item._id, item.role)}>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => showRoleActions(item)}>
           <MaterialCommunityIcons name="account-convert" size={20} color="#6B5B4F" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => openGuideProfileForUser(item)}>
+          <MaterialCommunityIcons name="account-tie" size={20} color="#D9A441" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionBtn} onPress={() => deleteUser(item._id)}>
           <MaterialCommunityIcons name="trash-can-outline" size={20} color="#FF6B6B" />
@@ -141,6 +183,7 @@ const styles = StyleSheet.create({
   userEmail: { fontSize: 14, color: '#8B7B6C', marginBottom: 8 },
   badgeContainer: { flexDirection: 'row', gap: 8 },
   roleBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, color: '#fff', fontSize: 12, fontWeight: '600' },
+  guideProfileBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: '#5C9C6D', color: '#fff', fontSize: 12, fontWeight: '600' },
   inactiveBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: '#FF6B6B', color: '#fff', fontSize: 12, fontWeight: '600' },
   actions: { flexDirection: 'row', gap: 8 },
   actionBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F9F7F4', justifyContent: 'center', alignItems: 'center' },

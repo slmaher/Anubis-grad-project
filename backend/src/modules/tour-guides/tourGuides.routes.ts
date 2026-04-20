@@ -19,7 +19,7 @@ tourGuidesRouter.get(
       const skip = Number(req.query.skip) || 0;
 
       const tourGuides = await TourGuideModel.find(filter)
-        .populate('user', 'name email')
+        .populate('user', 'name email avatar')
         .sort({ rating: -1, totalTours: -1 })
         .limit(limit)
         .skip(skip);
@@ -44,7 +44,7 @@ tourGuidesRouter.get(
     try {
       const tourGuide = await TourGuideModel.findById(req.params.id).populate(
         'user',
-        'name email'
+        'name email avatar'
       );
 
       if (!tourGuide) {
@@ -65,7 +65,7 @@ tourGuidesRouter.get(
     try {
       const tourGuide = await TourGuideModel.findOne({ user: req.params.userId }).populate(
         'user',
-        'name email'
+        'name email avatar'
       );
 
       if (!tourGuide) {
@@ -87,7 +87,7 @@ tourGuidesRouter.get(
     try {
       const tourGuide = await TourGuideModel.findOne({ user: req.user!.id }).populate(
         'user',
-        'name email'
+        'name email avatar'
       );
 
       if (!tourGuide) {
@@ -113,7 +113,8 @@ tourGuidesRouter.post(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const dto = req.body as CreateTourGuideDto;
-      const userId = req.user!.id;
+      const isAdmin = req.user!.role === UserRole.Admin;
+      const userId = isAdmin && dto.user ? dto.user : req.user!.id;
 
       // Check if user already has a tour guide profile
       const existing = await TourGuideModel.findOne({ user: userId });
@@ -130,6 +131,11 @@ tourGuidesRouter.post(
         return res.status(404).json({ success: false, message: 'User not found' });
       }
 
+      if (user.role !== UserRole.Guide) {
+        user.role = UserRole.Guide;
+        await user.save();
+      }
+
       const tourGuide = await TourGuideModel.create({
         user: userId,
         bio: dto.bio,
@@ -140,7 +146,7 @@ tourGuidesRouter.post(
         isAvailable: dto.isAvailable !== undefined ? dto.isAvailable : true
       });
 
-      const populated = await tourGuide.populate('user', 'name email');
+      const populated = await tourGuide.populate('user', 'name email avatar');
 
       return res.status(201).json({ success: true, data: populated });
     } catch (err) {
@@ -174,7 +180,7 @@ tourGuidesRouter.patch(
           }
         },
         { new: true }
-      ).populate('user', 'name email');
+      ).populate('user', 'name email avatar');
 
       if (!tourGuide) {
         return res.status(404).json({
@@ -236,7 +242,7 @@ tourGuidesRouter.patch(
           }
         },
         { new: true }
-      ).populate('user', 'name email');
+      ).populate('user', 'name email avatar');
 
       return res.json({ success: true, data: updated });
     } catch (err) {
@@ -257,6 +263,37 @@ tourGuidesRouter.delete(
       if (!tourGuide) {
         return res.status(404).json({ success: false, message: 'Tour guide profile not found' });
       }
+
+      return res.json({ success: true, message: 'Tour guide profile deleted successfully' });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// DELETE /api/tour-guides/:id - delete tour guide profile (Admin only, or own profile)
+tourGuidesRouter.delete(
+  '/:id',
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const tourGuide = await TourGuideModel.findById(req.params.id);
+
+      if (!tourGuide) {
+        return res.status(404).json({ success: false, message: 'Tour guide profile not found' });
+      }
+
+      const isOwner = tourGuide.user.toString() === req.user!.id;
+      const isAdmin = req.user!.role === UserRole.Admin;
+
+      if (!isAdmin && !isOwner) {
+        return res.status(403).json({
+          success: false,
+          message: 'Forbidden: You can only delete your own tour guide profile'
+        });
+      }
+
+      await TourGuideModel.findByIdAndDelete(req.params.id);
 
       return res.json({ success: true, message: 'Tour guide profile deleted successfully' });
     } catch (err) {
