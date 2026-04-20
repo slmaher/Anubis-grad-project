@@ -15,7 +15,8 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
-import { getAuthUser } from "../api/authStorage";
+import { getAuthUser, getAuthToken } from "../api/authStorage";
+import { addItemToCart } from "../api/cartStorage";
 
 const DARK = "#2C2010";
 const MUTED = "#8B7B6C";
@@ -259,7 +260,12 @@ export default function VolunteeringScreen() {
           Array.isArray(volunteerRes.value?.data) &&
           volunteerRes.value.data.length > 0
         ) {
-          setVolunteerItems(volunteerRes.value.data);
+          setVolunteerItems(
+            volunteerRes.value.data.map((item) => ({
+              ...item,
+              id: item._id || item.id,
+            }))
+          );
         }
 
         if (
@@ -270,8 +276,9 @@ export default function VolunteeringScreen() {
           setDonateItems(
             donationRes.value.data.map((item) => ({
               ...item,
+              id: item._id || item.id,
               amount: `${item.amount} ${item.currency || "EGP"}`,
-            })),
+            }))
           );
         }
       } catch {
@@ -314,7 +321,10 @@ export default function VolunteeringScreen() {
           ) {
             setVolunteerItems(
               volunteerRes.value.data.length > 0
-                ? volunteerRes.value.data
+                ? volunteerRes.value.data.map((item) => ({
+                    ...item,
+                    id: item._id || item.id,
+                  }))
                 : fallbackVolunteerItems,
             );
           }
@@ -327,6 +337,7 @@ export default function VolunteeringScreen() {
               donationRes.value.data.length > 0
                 ? donationRes.value.data.map((item) => ({
                     ...item,
+                    id: item._id || item.id,
                     amount: `${item.amount || item.goalAmount || 0} ${item.currency || "EGP"}`,
                   }))
                 : fallbackDonateItems,
@@ -349,13 +360,19 @@ export default function VolunteeringScreen() {
 
   const handleAction = async (item) => {
     try {
-      await api.contributeDonationCampaign(item.id, {
-        amount: Number.parseFloat(String(item.amount).split(" ")[0]) || 100,
-        message: t("volunteering_screen.feedback.donation_note"),
+      const amountValue = Number.parseFloat(String(item.amount).split(" ")[0]) || 100;
+      
+      // Add donation as a cart item
+      await addItemToCart({
+        id: item.id,
+        nameKey: item.title,
+        price: amountValue,
+        image: null,
+        quantity: 1,
       });
-      setFeedbackMessage(
-        t("volunteering_screen.feedback.support_thanks", { title: item.title }),
-      );
+      
+      // Navigate to checkout
+      router.push("/marketplace/checkout");
     } catch (error) {
       setFeedbackMessage(
         error?.message || t("volunteering_screen.feedback.donation_failed"),
@@ -373,10 +390,11 @@ export default function VolunteeringScreen() {
 
     try {
       const authUser = await getAuthUser();
+      const authToken = await getAuthToken();
       await api.signUpVolunteerOpportunity(item.id, {
         applicantName: authUser?.name,
         applicantEmail: authUser?.email,
-      });
+      }, authToken);
 
       setJoinedIds((prev) => [...prev, item.id]);
       setFeedbackMessage(
