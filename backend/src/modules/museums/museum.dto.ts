@@ -25,7 +25,7 @@ export class CreateMuseumDto {
   @Matches(IMAGE_URL_OR_DATA_URL_PATTERN, {
     message: "imageUrl must be an http(s) URL or a base64 data URL",
   })
-  imageUrl?: string;
+  imageUrl?: string | null;
 
   @IsOptional()
   @IsString()
@@ -58,7 +58,7 @@ export class UpdateMuseumDto {
   @Matches(IMAGE_URL_OR_DATA_URL_PATTERN, {
     message: "imageUrl must be an http(s) URL or a base64 data URL",
   })
-  imageUrl?: string;
+  imageUrl?: string | null;
 
   @IsOptional()
   @IsString()

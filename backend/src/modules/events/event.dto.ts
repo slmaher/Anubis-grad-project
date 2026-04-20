@@ -39,7 +39,7 @@ export class CreateEventDto {
   @Matches(IMAGE_URL_OR_DATA_URL_PATTERN, {
     message: "imageUrl must be an http(s) URL or a base64 data URL",
   })
-  imageUrl?: string;
+  imageUrl?: string | null;
 
   @IsOptional()
   @IsInt()
@@ -79,7 +79,7 @@ export class UpdateEventDto {
   @Matches(IMAGE_URL_OR_DATA_URL_PATTERN, {
     message: "imageUrl must be an http(s) URL or a base64 data URL",
   })
-  imageUrl?: string;
+  imageUrl?: string | null;
 
   @IsOptional()
   @IsInt()

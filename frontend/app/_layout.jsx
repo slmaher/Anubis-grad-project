@@ -1,4 +1,4 @@
-import 'intl-pluralrules';
+import "intl-pluralrules";
 import { Stack } from "expo-router";
 import "../i18n/i18n";
 import { useEffect } from "react";
@@ -51,7 +51,8 @@ function RootLayoutNav() {
     };
 
     const originalPushState = historyObject.pushState?.bind(historyObject);
-    const originalReplaceState = historyObject.replaceState?.bind(historyObject);
+    const originalReplaceState =
+      historyObject.replaceState?.bind(historyObject);
     const nativePushState = getNativeHistoryMethod("pushState");
     const nativeReplaceState = getNativeHistoryMethod("replaceState");
 
@@ -83,7 +84,12 @@ function RootLayoutNav() {
       safeCall(originalPushState, nativePushState, originalReplaceState, args);
 
     historyObject.replaceState = (...args) =>
-      safeCall(originalReplaceState, nativeReplaceState, originalPushState, args);
+      safeCall(
+        originalReplaceState,
+        nativeReplaceState,
+        originalPushState,
+        args,
+      );
 
     historyObject.__anubisSafeHistoryPatched = true;
   }, []);

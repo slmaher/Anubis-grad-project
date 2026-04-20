@@ -73,18 +73,25 @@ museumsRouter.patch(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const dto = req.body as UpdateMuseumDto;
+      const updateDoc: Record<string, unknown> = {
+        $set: {
+          ...(dto.name != null && { name: dto.name }),
+          ...(dto.description != null && { description: dto.description }),
+          ...(dto.location != null && { location: dto.location }),
+          ...(dto.city != null && { city: dto.city }),
+          ...(dto.openingHours !== undefined && { openingHours: dto.openingHours })
+        }
+      };
+
+      if (dto.imageUrl === null) {
+        updateDoc.$unset = { imageUrl: "" };
+      } else if (dto.imageUrl !== undefined) {
+        (updateDoc.$set as Record<string, unknown>).imageUrl = dto.imageUrl;
+      }
+
       const museum = await MuseumModel.findByIdAndUpdate(
         req.params.id,
-        {
-          $set: {
-            ...(dto.name != null && { name: dto.name }),
-            ...(dto.description != null && { description: dto.description }),
-            ...(dto.location != null && { location: dto.location }),
-            ...(dto.city != null && { city: dto.city }),
-            ...(dto.imageUrl !== undefined && { imageUrl: dto.imageUrl }),
-            ...(dto.openingHours !== undefined && { openingHours: dto.openingHours })
-          }
-        },
+        updateDoc,
         { new: true }
       );
       if (!museum) {

@@ -88,6 +88,7 @@ export default function EventManagement() {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
+  const [imageRemoved, setImageRemoved] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [formData, setFormData] = useState({
     title: "",
@@ -120,6 +121,7 @@ export default function EventManagement() {
       imageFile: null,
     });
     setFormErrors({});
+    setImageRemoved(false);
     setModalVisible(true);
   }, [actionParam]);
 
@@ -154,13 +156,13 @@ export default function EventManagement() {
       const mimeType = selected.mimeType || "image/jpeg";
       const base64Data = `data:${mimeType};base64,${selected.base64}`;
       const compressedImageUrl = await compressImageForWeb(base64Data);
-      
+
       // Warn user if base64 is very large (rough estimate: base64 is ~33% larger than binary)
       const estimatedSizeKB = (compressedImageUrl.length * 0.75) / 1024;
       if (estimatedSizeKB > 500) {
         Alert.alert(
           "Image Too Large",
-          `This image is ~${Math.round(estimatedSizeKB)}KB. It may fail to upload. Consider choosing a smaller image.`
+          `This image is ~${Math.round(estimatedSizeKB)}KB. It may fail to upload. Consider choosing a smaller image.`,
         );
       }
 
@@ -169,6 +171,7 @@ export default function EventManagement() {
         imageUrl: compressedImageUrl,
         imageFile: null,
       }));
+      setImageRemoved(false);
     } catch (error) {
       Alert.alert("Error", "Unable to pick image right now.");
     }
@@ -292,7 +295,7 @@ export default function EventManagement() {
       const url = editingEvent
         ? `${API_URL}/events/${editingEvent._id}`
         : `${API_URL}/events`;
-      
+
       // Build payload with optional image
       const payload = {
         title: formData.title?.trim(),
@@ -303,8 +306,10 @@ export default function EventManagement() {
         location: formData.location?.trim() || undefined,
       };
 
-      // Only add imageUrl if it exists (skip if too large)
-      if (formData.imageUrl?.trim()) {
+      // Explicitly tell the backend to remove the existing image when requested.
+      if (imageRemoved) {
+        payload.imageUrl = null;
+      } else if (formData.imageUrl?.trim()) {
         payload.imageUrl = formData.imageUrl.trim();
       }
 
@@ -318,18 +323,23 @@ export default function EventManagement() {
       });
 
       const res = await response.json();
-      
+
       if (!response.ok) {
         applyValidationErrors(res.errors);
         throw new Error(
           formatValidationErrors(res.errors) ||
             res.message ||
-            `HTTP ${response.status}: Failed to save event`
+            `HTTP ${response.status}: Failed to save event`,
         );
       }
 
       if (res.success) {
-        Alert.alert("Success", editingEvent ? "Event updated successfully" : "Event created successfully");
+        Alert.alert(
+          "Success",
+          editingEvent
+            ? "Event updated successfully"
+            : "Event created successfully",
+        );
         setModalVisible(false);
         fetchEvents();
       } else {
@@ -372,6 +382,7 @@ export default function EventManagement() {
       imageUrl: event.imageUrl || "",
       imageFile: null,
     });
+    setImageRemoved(false);
     setModalVisible(true);
   };
 
@@ -425,6 +436,7 @@ export default function EventManagement() {
               imageUrl: "",
               imageFile: null,
             });
+            setImageRemoved(false);
             setModalVisible(true);
           }}
         >
@@ -456,7 +468,9 @@ export default function EventManagement() {
                   clearFieldError("title");
                 }}
               />
-              {!!formErrors.title && <Text style={styles.errorText}>{formErrors.title}</Text>}
+              {!!formErrors.title && (
+                <Text style={styles.errorText}>{formErrors.title}</Text>
+              )}
               <TextInput
                 style={styles.input}
                 placeholder="Museum ID"
@@ -466,9 +480,17 @@ export default function EventManagement() {
                   clearFieldError("museum");
                 }}
               />
-              {!!formErrors.museum && <Text style={styles.errorText}>{formErrors.museum}</Text>}
-              <Text style={styles.helperText}>Tap a museum below to fill the ID automatically.</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.museumPickerRow}>
+              {!!formErrors.museum && (
+                <Text style={styles.errorText}>{formErrors.museum}</Text>
+              )}
+              <Text style={styles.helperText}>
+                Tap a museum below to fill the ID automatically.
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.museumPickerRow}
+              >
                 {museums.map((museum) => (
                   <TouchableOpacity
                     key={museum._id}
@@ -495,7 +517,9 @@ export default function EventManagement() {
                   clearFieldError("startDate");
                 }}
               />
-              {!!formErrors.startDate && <Text style={styles.errorText}>{formErrors.startDate}</Text>}
+              {!!formErrors.startDate && (
+                <Text style={styles.errorText}>{formErrors.startDate}</Text>
+              )}
               <TextInput
                 style={styles.input}
                 placeholder="End Date (YYYY-MM-DD)"
@@ -505,7 +529,9 @@ export default function EventManagement() {
                   clearFieldError("endDate");
                 }}
               />
-              {!!formErrors.endDate && <Text style={styles.errorText}>{formErrors.endDate}</Text>}
+              {!!formErrors.endDate && (
+                <Text style={styles.errorText}>{formErrors.endDate}</Text>
+              )}
               <TextInput
                 style={styles.input}
                 placeholder="Location"
@@ -533,7 +559,14 @@ export default function EventManagement() {
                 {!!formData.imageUrl && (
                   <TouchableOpacity
                     style={styles.clearImageBtn}
-                    onPress={() => setFormData({ ...formData, imageUrl: "", imageFile: null })}
+                    onPress={() => {
+                      setFormData({
+                        ...formData,
+                        imageUrl: "",
+                        imageFile: null,
+                      });
+                      setImageRemoved(true);
+                    }}
                   >
                     <Text style={styles.clearImageText}>Remove</Text>
                   </TouchableOpacity>
@@ -556,8 +589,12 @@ export default function EventManagement() {
                   clearFieldError("description");
                 }}
               />
-              {!!formErrors.description && <Text style={styles.errorText}>{formErrors.description}</Text>}
-              {!!formErrors.form && <Text style={styles.errorBanner}>{formErrors.form}</Text>}
+              {!!formErrors.description && (
+                <Text style={styles.errorText}>{formErrors.description}</Text>
+              )}
+              {!!formErrors.form && (
+                <Text style={styles.errorBanner}>{formErrors.form}</Text>
+              )}
             </ScrollView>
             <View style={styles.modalButtons}>
               <TouchableOpacity
