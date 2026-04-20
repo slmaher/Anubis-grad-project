@@ -6,6 +6,7 @@ export interface IOpportunity extends Document {
   requirements: string;
   location: string;
   duration: string;
+  icon?: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -37,6 +38,10 @@ const OpportunitySchema = new Schema<IOpportunity>(
       type: String,
       required: true,
       trim: true
+    },
+    icon: {
+      type: String,
+      default: 'heart-outline'
     },
     isActive: {
       type: Boolean,

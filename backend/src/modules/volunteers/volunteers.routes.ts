@@ -18,18 +18,23 @@ const volunteersRouter = Router();
 // --- OPPORTUNITIES (Public / Admin) ---
 
 // GET /api/volunteers/opportunities - list all active opportunities (public)
-volunteersRouter.get("/opportunities", async (_req, res: Response, next: NextFunction) => {
-  try {
-    const opportunities = await OpportunityModel.find({ isActive: true }).sort({ createdAt: -1 });
-    return res.json({
-      success: true,
-      data: opportunities,
-      total: opportunities.length,
-    });
-  } catch (err) {
-    next(err);
-  }
-});
+volunteersRouter.get(
+  "/opportunities",
+  async (_req, res: Response, next: NextFunction) => {
+    try {
+      const opportunities = await OpportunityModel.find({
+        isActive: true,
+      }).sort({ createdAt: -1 });
+      return res.json({
+        success: true,
+        data: opportunities,
+        total: opportunities.length,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // POST /api/volunteers/opportunities - Create a new opportunity (Admin only)
 volunteersRouter.post(
@@ -40,12 +45,14 @@ volunteersRouter.post(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const dto = req.body as CreateOpportunityDto;
+      console.log('Creating opportunity with data:', dto);
       const opportunity = await OpportunityModel.create(dto);
       return res.status(201).json({ success: true, data: opportunity });
     } catch (err) {
+      console.error('Error creating opportunity:', err);
       next(err);
     }
-  }
+  },
 );
 
 // PATCH /api/volunteers/opportunities/:id - Update an opportunity (Admin only)
@@ -59,16 +66,18 @@ volunteersRouter.patch(
       const opportunity = await OpportunityModel.findByIdAndUpdate(
         req.params.id,
         { $set: req.body },
-        { new: true }
+        { new: true },
       );
       if (!opportunity) {
-        return res.status(404).json({ success: false, message: "Opportunity not found" });
+        return res
+          .status(404)
+          .json({ success: false, message: "Opportunity not found" });
       }
       return res.json({ success: true, data: opportunity });
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // DELETE /api/volunteers/opportunities/:id - Delete an opportunity (Admin only)
@@ -78,15 +87,19 @@ volunteersRouter.delete(
   authorizeRoles(UserRole.Admin),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const opportunity = await OpportunityModel.findByIdAndDelete(req.params.id);
+      const opportunity = await OpportunityModel.findByIdAndDelete(
+        req.params.id,
+      );
       if (!opportunity) {
-        return res.status(404).json({ success: false, message: "Opportunity not found" });
+        return res
+          .status(404)
+          .json({ success: false, message: "Opportunity not found" });
       }
       return res.json({ success: true, message: "Opportunity deleted" });
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // POST /api/volunteers/opportunities/:id/signup - sign up for an opportunity (authenticated users)
@@ -105,7 +118,9 @@ volunteersRouter.post(
 
       const existingApplication = await VolunteerModel.findOne({
         user: req.user!.id,
-        notes: { $regex: new RegExp(`^Opportunity: ${opportunity.title}$`, "i") },
+        notes: {
+          $regex: new RegExp(`^Opportunity: ${opportunity.title}$`, "i"),
+        },
         status: { $in: ["pending", "active"] },
       });
 
