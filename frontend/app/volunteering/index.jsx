@@ -264,7 +264,7 @@ export default function VolunteeringScreen() {
             volunteerRes.value.data.map((item) => ({
               ...item,
               id: item._id || item.id,
-            }))
+            })),
           );
         }
 
@@ -278,7 +278,7 @@ export default function VolunteeringScreen() {
               ...item,
               id: item._id || item.id,
               amount: `${item.amount} ${item.currency || "EGP"}`,
-            }))
+            })),
           );
         }
       } catch {
@@ -360,8 +360,9 @@ export default function VolunteeringScreen() {
 
   const handleAction = async (item) => {
     try {
-      const amountValue = Number.parseFloat(String(item.amount).split(" ")[0]) || 100;
-      
+      const amountValue =
+        Number.parseFloat(String(item.amount).split(" ")[0]) || 100;
+
       // Add donation as a cart item
       await addItemToCart({
         id: item.id,
@@ -370,7 +371,7 @@ export default function VolunteeringScreen() {
         image: null,
         quantity: 1,
       });
-      
+
       // Navigate to checkout
       router.push("/marketplace/checkout");
     } catch (error) {
@@ -391,10 +392,14 @@ export default function VolunteeringScreen() {
     try {
       const authUser = await getAuthUser();
       const authToken = await getAuthToken();
-      await api.signUpVolunteerOpportunity(item.id, {
-        applicantName: authUser?.name,
-        applicantEmail: authUser?.email,
-      }, authToken);
+      await api.signUpVolunteerOpportunity(
+        item.id,
+        {
+          applicantName: authUser?.name,
+          applicantEmail: authUser?.email,
+        },
+        authToken,
+      );
 
       setJoinedIds((prev) => [...prev, item.id]);
       setFeedbackMessage(

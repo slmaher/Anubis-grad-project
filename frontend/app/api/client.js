@@ -139,7 +139,7 @@ export const api = {
     return apiRequest(`/api/museums/${id}`);
   },
 
-   // Volunteers
+  // Volunteers
   getVolunteerOpportunities() {
     return apiRequest("/api/volunteers/opportunities");
   },
