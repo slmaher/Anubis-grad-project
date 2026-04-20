@@ -62,39 +62,74 @@ export default function AdminDashboard() {
   const hasMeaningfulUpdate = (createdAt, updatedAt) =>
     toDateMillis(updatedAt) - toDateMillis(createdAt) > 1000;
 
-  const resolveActorName = ({ createdBy, updatedBy, fallback }, usersById) => {
+  const resolveActorInfo = ({ createdBy, updatedBy, fallback }, usersById) => {
     const updatedById = toId(updatedBy);
     const createdById = toId(createdBy);
 
     if (updatedById && usersById[updatedById]?.name) {
-      return usersById[updatedById].name;
+      return {
+        name: usersById[updatedById].name,
+        role: usersById[updatedById].role || "Admin",
+      };
     }
 
     if (createdById && usersById[createdById]?.name) {
-      return usersById[createdById].name;
+      return {
+        name: usersById[createdById].name,
+        role: usersById[createdById].role || "Admin",
+      };
     }
 
     const updatedByName =
       typeof updatedBy === "object" ? String(updatedBy?.name || "").trim() : "";
     if (updatedByName) {
-      return updatedByName;
+      return {
+        name: updatedByName,
+        role: String(updatedBy?.role || "Admin").trim(),
+      };
     }
 
     const createdByName =
       typeof createdBy === "object" ? String(createdBy?.name || "").trim() : "";
     if (createdByName) {
-      return createdByName;
+      return {
+        name: createdByName,
+        role: String(createdBy?.role || "Admin").trim(),
+      };
     }
 
     if (updatedById) {
-      return `Admin (${updatedById.slice(-6)})`;
+      return {
+        name: `Admin (${updatedById.slice(-6)})`,
+        role: "Admin",
+      };
     }
 
     if (createdById) {
-      return `Admin (${createdById.slice(-6)})`;
+      return {
+        name: `Admin (${createdById.slice(-6)})`,
+        role: "Admin",
+      };
     }
 
-    return fallback || "System";
+    return {
+      name: fallback || "System",
+      role: fallback === "Self registration" ? "Visitor" : "System",
+    };
+  };
+
+  const getActionLabel = (type, action) => `${type} • ${action}`;
+
+  const formatActorLabel = (actor) => {
+    if (!actor?.name) {
+      return "By System";
+    }
+
+    if (!actor?.role) {
+      return `By ${actor.name}`;
+    }
+
+    return `By ${actor.name} (${actor.role})`;
   };
 
   useEffect(() => {
@@ -182,7 +217,7 @@ export default function AdminDashboard() {
           occurredAt = user?.updatedAt;
         }
 
-        const actorFromAdmin = resolveActorName(
+        const actor = resolveActorInfo(
           {
             createdBy: user?.createdBy,
             updatedBy: user?.updatedBy,
@@ -191,16 +226,25 @@ export default function AdminDashboard() {
           usersById,
         );
 
+        const isRoleChange =
+          typeof user?.role === "string" && user.role.trim().length > 0;
+
         return {
           id: `u-${toId(user?._id || user?.id) || Math.random()}`,
           category: "User",
-          action,
+          action: isRoleChange ? `${action} - ${user.role} role` : action,
           subject:
             user?.name ||
             user?.email ||
             t("admin.dashboard.activity.unknown_user"),
-          details: user?.email ? `Email: ${user.email}` : "",
-          actor: actorFromAdmin || user?.name || "Self registration",
+          details: [
+            user?.email ? `Email: ${user.email}` : "",
+            user?.role ? `Role: ${user.role}` : "",
+            !user?.isActive ? "Status: Inactive" : "Status: Active",
+          ]
+            .filter(Boolean)
+            .join(" • "),
+          actor,
           occurredAt,
         };
       });
@@ -229,7 +273,7 @@ export default function AdminDashboard() {
           action,
           subject: museum?.name || "Museum",
           details: [museum?.city, museum?.location].filter(Boolean).join(" - "),
-          actor: resolveActorName(
+          actor: resolveActorInfo(
             {
               createdBy: museum?.createdBy,
               updatedBy: museum?.updatedBy,
@@ -270,7 +314,7 @@ export default function AdminDashboard() {
           details: artifact?.museum?.name
             ? `Museum: ${artifact.museum.name}`
             : "",
-          actor: resolveActorName(
+          actor: resolveActorInfo(
             {
               createdBy: artifact?.createdBy,
               updatedBy: artifact?.updatedBy,
@@ -311,7 +355,7 @@ export default function AdminDashboard() {
                   .filter(Boolean)
                   .join(" - ")
               : "",
-          actor: resolveActorName(
+          actor: resolveActorInfo(
             {
               createdBy: event?.createdBy,
               updatedBy: event?.updatedBy,
@@ -510,7 +554,7 @@ export default function AdminDashboard() {
               </View>
               <View style={styles.activityBody}>
                 <Text style={[styles.activityTitle, isRTL && styles.textRight]}>
-                  {`${item.category} • ${item.action}`}
+                  {getActionLabel(item.category, item.action)}
                 </Text>
                 <Text style={[styles.activityText, isRTL && styles.textRight]}>
                   {item.subject}
@@ -523,7 +567,9 @@ export default function AdminDashboard() {
                   </Text>
                 )}
                 <Text style={[styles.activityMeta, isRTL && styles.textRight]}>
-                  {`By ${item.actor} • ${formatDateTime(item.occurredAt)}`}
+                  {`${formatActorLabel(item.actor)} • ${formatDateTime(
+                    item.occurredAt,
+                  )}`}
                 </Text>
               </View>
             </View>
