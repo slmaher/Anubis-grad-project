@@ -293,7 +293,7 @@ export default function MenuScreen({ onClose }) {
           }).start();
         },
       }),
-    [isRTL, dragAnim, closeMenu]
+    [isRTL, dragAnim, closeMenu],
   );
 
   return (

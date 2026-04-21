@@ -69,100 +69,89 @@ export default function NotificationsScreen() {
         type: item.type || "default",
       }));
 
+      setItems([...safeLocal]);
+
       const nextItems = [...safeLocal];
 
-      if (token) {
-        try {
-          const friendRequestsRes = await api.getIncomingFriendRequests(token);
-          if (
-            friendRequestsRes?.success &&
-            Array.isArray(friendRequestsRes.data)
-          ) {
-            friendRequestsRes.data.forEach((request) => {
-              nextItems.push({
-                id: request.id,
-                type: "friend_request",
-                title: "Friend request",
-                body: `${request.senderName || "Someone"} sent you a friend request.`,
-                createdAt: request.createdAt || new Date().toISOString(),
-                requestStatus: request.status,
-                requesterId: request.senderId,
-                requesterName: request.senderName,
-                requesterAvatar: request.senderAvatar || "",
-                source: "friends",
-              });
-            });
-          }
-        } catch {
-          // Ignore request list failures and keep local notifications visible.
-        }
+      if (!token) {
+        nextItems.sort(
+          (a, b) =>
+            new Date(b.createdAt || 0).getTime() -
+            new Date(a.createdAt || 0).getTime(),
+        );
+        setItems(nextItems);
+        return;
       }
 
-      if (token) {
-        try {
-          const convRes = await api.getConversations(token);
-          if (convRes?.success && Array.isArray(convRes.data)) {
-            convRes.data
-              .filter((conv) => (conv.unreadCount || 0) > 0)
-              .forEach((conv) => {
-                nextItems.push({
-                  id: `msg_${conv.user?._id || conv.user?.id}`,
-                  type: "message",
-                  title: "New message",
-                  body: `${conv.user?.name || "Someone"} sent ${conv.unreadCount} unread message(s).`,
-                  createdAt:
-                    conv.lastMessage?.createdAt || new Date().toISOString(),
-                  source: "chat",
-                });
-              });
-          }
-        } catch {
-          // Keep local notifications visible even if API fails.
-        }
+      const [friendRequestsRes, convRes, postsRes] = await Promise.all([
+        api.getIncomingFriendRequests(token).catch(() => null),
+        api.getConversations(token).catch(() => null),
+        meId ? api.getPosts(meId).catch(() => null) : Promise.resolve(null),
+      ]);
+
+      if (friendRequestsRes?.success && Array.isArray(friendRequestsRes.data)) {
+        friendRequestsRes.data.forEach((request) => {
+          nextItems.push({
+            id: request.id,
+            type: "friend_request",
+            title: "Friend request",
+            body: `${request.senderName || "Someone"} sent you a friend request.`,
+            createdAt: request.createdAt || new Date().toISOString(),
+            requestStatus: request.status,
+            requesterId: request.senderId,
+            requesterName: request.senderName,
+            requesterAvatar: request.senderAvatar || "",
+            source: "friends",
+          });
+        });
       }
 
-      if (token && meId) {
-        try {
-          const postsRes = await api.getPosts(meId);
-          if (postsRes?.data && Array.isArray(postsRes.data)) {
-            postsRes.data.forEach((post) => {
-              const likes = toCount(post.likes);
-              const comments = Array.isArray(post.comments)
-                ? post.comments.length
-                : toCount(post.commentsCount);
+      if (convRes?.success && Array.isArray(convRes.data)) {
+        convRes.data
+          .filter((conv) => (conv.unreadCount || 0) > 0)
+          .forEach((conv) => {
+            nextItems.push({
+              id: `msg_${conv.user?._id || conv.user?.id}`,
+              type: "message",
+              title: "New message",
+              body: `${conv.user?.name || "Someone"} sent ${conv.unreadCount} unread message(s).`,
+              createdAt: conv.lastMessage?.createdAt || new Date().toISOString(),
+              source: "chat",
+            });
+          });
+      }
 
-              if (likes > 0) {
-                nextItems.push({
-                  id: `like_${post._id || post.id}`,
-                  type: "like",
-                  title: "Post liked",
-                  body: `Your post has ${likes} like(s).`,
-                  createdAt:
-                    post.updatedAt ||
-                    post.createdAt ||
-                    new Date().toISOString(),
-                  source: "posts",
-                });
-              }
+      if (postsRes?.data && Array.isArray(postsRes.data)) {
+        postsRes.data.forEach((post) => {
+          const likes = toCount(post.likes);
+          const comments = Array.isArray(post.comments)
+            ? post.comments.length
+            : toCount(post.commentsCount);
 
-              if (comments > 0) {
-                nextItems.push({
-                  id: `comment_${post._id || post.id}`,
-                  type: "comment",
-                  title: "New comment",
-                  body: `Your post has ${comments} comment(s).`,
-                  createdAt:
-                    post.updatedAt ||
-                    post.createdAt ||
-                    new Date().toISOString(),
-                  source: "posts",
-                });
-              }
+          if (likes > 0) {
+            nextItems.push({
+              id: `like_${post._id || post.id}`,
+              type: "like",
+              title: "Post liked",
+              body: `Your post has ${likes} like(s).`,
+              createdAt:
+                post.updatedAt || post.createdAt || new Date().toISOString(),
+              source: "posts",
             });
           }
-        } catch {
-          // Ignore post notifications when unavailable.
-        }
+
+          if (comments > 0) {
+            nextItems.push({
+              id: `comment_${post._id || post.id}`,
+              type: "comment",
+              title: "New comment",
+              body: `Your post has ${comments} comment(s).`,
+              createdAt:
+                post.updatedAt || post.createdAt || new Date().toISOString(),
+              source: "posts",
+            });
+          }
+        });
       }
 
       nextItems.sort(
@@ -288,12 +277,7 @@ export default function NotificationsScreen() {
                 item.type === "friend_request" &&
                 item.requestStatus === "pending";
               return (
-                <View
-                  style={[
-                    styles.card,
-                    item.read && styles.cardRead,
-                  ]}
-                >
+                <View style={[styles.card, item.read && styles.cardRead]}>
                   <Text style={styles.cardIcon}>{icon}</Text>
                   <View style={styles.cardBody}>
                     <Text style={styles.cardTitle}>
