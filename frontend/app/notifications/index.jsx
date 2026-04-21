@@ -295,7 +295,9 @@ export default function NotificationsScreen() {
                       <View style={styles.actionsRow}>
                         <TouchableOpacity
                           style={[styles.actionBtn, styles.acceptBtn]}
-                          onPress={() => handleFriendRequestAction(item, "accept")}
+                          onPress={() =>
+                            handleFriendRequestAction(item, "accept")
+                          }
                           disabled={Boolean(actionLoadingId)}
                         >
                           <Text style={styles.actionText}>
@@ -304,7 +306,9 @@ export default function NotificationsScreen() {
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={[styles.actionBtn, styles.rejectBtn]}
-                          onPress={() => handleFriendRequestAction(item, "reject")}
+                          onPress={() =>
+                            handleFriendRequestAction(item, "reject")
+                          }
                           disabled={Boolean(actionLoadingId)}
                         >
                           <Text style={styles.actionText}>

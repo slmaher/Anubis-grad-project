@@ -74,7 +74,8 @@ export default function UserProfile() {
           setProfile(response.data);
           setUserPosts(postsResponse.data || []);
 
-          const isMe = meResponse.success && meResponse.data._id === response.data._id;
+          const isMe =
+            meResponse.success && meResponse.data._id === response.data._id;
           setIsCurrentUser(isMe);
 
           if (isMe) {
@@ -278,7 +279,8 @@ export default function UserProfile() {
               style={[
                 styles.actionButton,
                 styles.primaryButton,
-                friendRelationship !== FRIEND_RELATIONSHIP.none && styles.sentButton,
+                friendRelationship !== FRIEND_RELATIONSHIP.none &&
+                  styles.sentButton,
               ]}
               onPress={handleSendFriendRequest}
               disabled={
