@@ -180,12 +180,10 @@ friendsRouter.post(
       const senderId = req.user!.id;
 
       if (senderId === receiverId) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "You cannot send a friend request to yourself",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "You cannot send a friend request to yourself",
+        });
       }
 
       const [sender, receiver] = await Promise.all([
@@ -217,12 +215,10 @@ friendsRouter.post(
       });
 
       if (existingRequest) {
-        return res
-          .status(409)
-          .json({
-            success: false,
-            message: "A pending friend request already exists",
-          });
+        return res.status(409).json({
+          success: false,
+          message: "A pending friend request already exists",
+        });
       }
 
       const request = await FriendRequestModel.create({
