@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -10,12 +10,32 @@ import {
   Alert,
   Share,
 } from "react-native";
+import Svg, {
+  Circle,
+  Defs,
+  G,
+  Line as SvgLine,
+  LinearGradient,
+  Path,
+  Rect,
+  Stop,
+  Text as SvgText,
+} from "react-native-svg";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { getAuthToken } from "../api/authStorage";
+
+const CHART_PALETTE = [
+  "#4A90E2",
+  "#50C878",
+  "#D9A441",
+  "#FF6B6B",
+  "#7D89F7",
+  "#8A631A",
+];
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -32,6 +52,7 @@ export default function AdminDashboard() {
   const [visibleActivityCount, setVisibleActivityCount] = useState(10);
   const [exportingCsv, setExportingCsv] = useState(false);
   const [selectedPeriodDays, setSelectedPeriodDays] = useState(30);
+  const paginationLockRef = useRef(false);
 
   const isRTL = i18n.dir(i18n.language) === "rtl";
 
@@ -162,6 +183,37 @@ export default function AdminDashboard() {
     }));
   }, [filteredActivity]);
 
+  const activityTypeChartData = useMemo(
+    () =>
+      activityTypeStats.map((item, index) => ({
+        ...item,
+        color: CHART_PALETTE[index % CHART_PALETTE.length],
+      })),
+    [activityTypeStats],
+  );
+
+  const roleStats = useMemo(() => {
+    const counts = filteredActivity.reduce((acc, item) => {
+      const key = String(item?.actor?.role || "System");
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+  }, [filteredActivity]);
+
+  const roleChartData = useMemo(
+    () =>
+      roleStats.map((item, index) => ({
+        ...item,
+        color: CHART_PALETTE[(index + 2) % CHART_PALETTE.length],
+      })),
+    [roleStats],
+  );
+
   const dailyTrend = useMemo(() => {
     const days = 7;
     const now = new Date();
@@ -200,6 +252,79 @@ export default function AdminDashboard() {
       heightPercent: Math.max(6, Math.round((item.count / max) * 100)),
     }));
   }, [filteredActivity, i18n.language]);
+
+  const trendChartData = useMemo(() => {
+    const max = Math.max(1, ...dailyTrend.map((item) => item.count));
+
+    return dailyTrend.map((item, index) => ({
+      ...item,
+      color: CHART_PALETTE[index % CHART_PALETTE.length],
+      percent: (item.count / max) * 100,
+    }));
+  }, [dailyTrend]);
+
+  const visibleActivity = useMemo(
+    () => filteredActivity.slice(0, visibleActivityCount),
+    [filteredActivity, visibleActivityCount],
+  );
+
+  const analyticsSummary = useMemo(() => {
+    const totalLogs = filteredActivity.length;
+    const uniqueActors = new Set(
+      filteredActivity
+        .map((item) => String(item?.actor?.name || "System").trim())
+        .filter(Boolean),
+    ).size;
+
+    const activeDays = new Set(
+      filteredActivity
+        .map((item) => new Date(toDateMillis(item?.occurredAt)).toISOString().slice(0, 10))
+        .filter(Boolean),
+    ).size;
+
+    const suspiciousLogs = filteredActivity.filter((item) => {
+      const searchable = [item?.category, item?.action, item?.details]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return /(error|fail|exception|denied|inactive|removed)/.test(searchable);
+    }).length;
+
+    const busiest = trendChartData.reduce(
+      (best, point) => (point.count > best.count ? point : best),
+      { label: "-", count: 0 },
+    );
+
+    return {
+      totalLogs,
+      uniqueActors,
+      activeDays,
+      suspiciousLogs,
+      avgPerDay: selectedPeriodDays > 0 ? (totalLogs / selectedPeriodDays).toFixed(2) : "0.00",
+      busiestLabel: busiest.label || "-",
+      busiestCount: busiest.count || 0,
+    };
+  }, [filteredActivity, trendChartData, selectedPeriodDays]);
+
+  const linePath = (points) => {
+    if (!points.length) return "";
+
+    const segments = points.map((point, index) => {
+      const command = index === 0 ? "M" : "L";
+      return `${command}${point.x},${point.y}`;
+    });
+
+    return segments.join(" ");
+  };
+
+  const areaPath = (points, baseY) => {
+    if (!points.length) return "";
+
+    const head = `M${points[0].x},${baseY} L${points[0].x},${points[0].y}`;
+    const body = points.slice(1).map((point) => `L${point.x},${point.y}`).join(" ");
+    const tail = `L${points[points.length - 1].x},${baseY} Z`;
+    return `${head} ${body} ${tail}`;
+  };
 
   const escapeCsvValue = (value) => {
     const safe = String(value ?? "")
@@ -342,7 +467,30 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     setVisibleActivityCount(10);
+    paginationLockRef.current = false;
   }, [filteredActivity.length]);
+
+  const handleDashboardScroll = useCallback(
+    (event) => {
+      const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+      const distanceFromBottom =
+        contentSize.height - (layoutMeasurement.height + contentOffset.y);
+
+      if (
+        distanceFromBottom < 220 &&
+        visibleActivityCount < filteredActivity.length &&
+        !paginationLockRef.current
+      ) {
+        paginationLockRef.current = true;
+        setVisibleActivityCount((prev) => Math.min(prev + 20, filteredActivity.length));
+
+        requestAnimationFrame(() => {
+          paginationLockRef.current = false;
+        });
+      }
+    },
+    [visibleActivityCount, filteredActivity.length],
+  );
 
   const getSettledValue = (result) =>
     result?.status === "fulfilled" ? result.value : { data: [] };
@@ -614,6 +762,179 @@ export default function AdminDashboard() {
     }, [loadDashboardData]),
   );
 
+  const renderBarChart = (data, title) => {
+    const max = Math.max(1, ...data.map((item) => item.count));
+
+    return (
+      <View style={styles.visualCard}>
+        <Text style={[styles.visualTitle, isRTL && styles.textRight]}>{title}</Text>
+        {data.length === 0 ? (
+          <Text style={[styles.placeholderText, isRTL && styles.textRight]}>
+            {t("admin.dashboard.activity.empty")}
+          </Text>
+        ) : (
+          <View style={styles.chartStack}>
+            {data.map((item, index) => {
+              const height = Math.max(18, Math.round((item.count / max) * 100));
+              return (
+                <View key={item.name} style={styles.barItemRow}>
+                  <View style={styles.barItemLabelWrap}>
+                    <View style={[styles.barLegendDot, { backgroundColor: item.color || CHART_PALETTE[index % CHART_PALETTE.length] }]} />
+                    <Text style={[styles.barItemLabel, isRTL && styles.textRight]} numberOfLines={1}>
+                      {item.name}
+                    </Text>
+                  </View>
+                  <View style={styles.barTrackPro}>
+                    <View
+                      style={[
+                        styles.barFillPro,
+                        {
+                          width: `${Math.max(12, height)}%`,
+                          backgroundColor: item.color || CHART_PALETTE[index % CHART_PALETTE.length],
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.barValue}>{item.count}</Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const renderLineChart = (data, title) => {
+    const width = 320;
+    const height = 180;
+    const paddingX = 20;
+    const paddingY = 22;
+    const innerWidth = width - paddingX * 2;
+    const innerHeight = height - paddingY * 2;
+    const max = Math.max(1, ...data.map((item) => item.count));
+    const gap = data.length > 1 ? innerWidth / (data.length - 1) : innerWidth;
+    const points = data.map((item, index) => {
+      const x = paddingX + index * gap;
+      const y = paddingY + innerHeight - (item.count / max) * innerHeight;
+      return { ...item, x, y };
+    });
+
+    return (
+      <View style={styles.visualCard}>
+        <Text style={[styles.visualTitle, isRTL && styles.textRight]}>{title}</Text>
+        {data.length === 0 ? (
+          <Text style={[styles.placeholderText, isRTL && styles.textRight]}>
+            {t("admin.dashboard.activity.empty")}
+          </Text>
+        ) : (
+          <View style={styles.svgCardWrap}>
+            <Svg width="100%" height={220} viewBox={`0 0 ${width} ${height}`}>
+              <Defs>
+                <LinearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+                  <Stop offset="0%" stopColor="#50C878" stopOpacity="0.28" />
+                  <Stop offset="100%" stopColor="#50C878" stopOpacity="0.02" />
+                </LinearGradient>
+              </Defs>
+              <G>
+                <SvgLine x1={paddingX} y1={paddingY} x2={paddingX} y2={height - paddingY} stroke="#D9C9B2" strokeWidth="1" />
+                <SvgLine x1={paddingX} y1={height - paddingY} x2={width - paddingX} y2={height - paddingY} stroke="#D9C9B2" strokeWidth="1" />
+                {[0, 25, 50, 75, 100].map((tick) => {
+                  const y = paddingY + innerHeight - (tick / 100) * innerHeight;
+                  return (
+                    <React.Fragment key={tick}>
+                      <SvgLine x1={paddingX} y1={y} x2={width - paddingX} y2={y} stroke="#EFE4D5" strokeDasharray="4 4" strokeWidth="1" />
+                      <SvgText x={6} y={y + 4} fill="#8B7B6C" fontSize="10">
+                        {Math.round((tick / 100) * max)}
+                      </SvgText>
+                    </React.Fragment>
+                  );
+                })}
+                <Path d={areaPath(points, height - paddingY)} fill="url(#trendFill)" />
+                <Path d={linePath(points)} fill="none" stroke="#50C878" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                {points.map((point, index) => (
+                  <React.Fragment key={point.key}>
+                    <Circle cx={point.x} cy={point.y} r={5} fill="#fff" stroke={CHART_PALETTE[index % CHART_PALETTE.length]} strokeWidth="3" />
+                    <SvgText x={point.x} y={height - 5} fill="#8B7B6C" fontSize="9" textAnchor="middle">
+                      {point.label}
+                    </SvgText>
+                    <SvgText x={point.x} y={point.y - 10} fill="#2C2010" fontSize="10" fontWeight="700" textAnchor="middle">
+                      {point.count}
+                    </SvgText>
+                  </React.Fragment>
+                ))}
+              </G>
+            </Svg>
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const renderDonutChart = (data, title) => {
+    const size = 220;
+    const center = size / 2;
+    const radius = 72;
+    const strokeWidth = 24;
+    const circumference = 2 * Math.PI * radius;
+    const total = Math.max(1, data.reduce((sum, item) => sum + item.count, 0));
+    let currentOffset = 0;
+
+    return (
+      <View style={styles.visualCard}>
+        <Text style={[styles.visualTitle, isRTL && styles.textRight]}>{title}</Text>
+        {data.length === 0 ? (
+          <Text style={[styles.placeholderText, isRTL && styles.textRight]}>
+            {t("admin.dashboard.activity.empty")}
+          </Text>
+        ) : (
+          <View style={styles.donutWrap}>
+            <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+              <G rotation="-90" origin={`${center}, ${center}`}>
+                {data.map((item, index) => {
+                  const strokeDasharray = `${(item.count / total) * circumference} ${circumference}`;
+                  const circle = (
+                    <Circle
+                      key={item.name}
+                      cx={center}
+                      cy={center}
+                      r={radius}
+                      stroke={item.color || CHART_PALETTE[index % CHART_PALETTE.length]}
+                      strokeWidth={strokeWidth}
+                      strokeDasharray={strokeDasharray}
+                      strokeDashoffset={-currentOffset}
+                      fill="none"
+                      strokeLinecap="round"
+                    />
+                  );
+                  currentOffset += (item.count / total) * circumference;
+                  return circle;
+                })}
+              </G>
+              <Circle cx={center} cy={center} r={radius - strokeWidth / 2} fill="#FFF9F0" />
+              <SvgText x={center} y={center - 4} fontSize="22" fontWeight="700" textAnchor="middle" fill="#2C2010">
+                {total}
+              </SvgText>
+              <SvgText x={center} y={center + 18} fontSize="10" textAnchor="middle" fill="#8B7B6C">
+                {t("admin.dashboard.visualizations.total_items")}
+              </SvgText>
+            </Svg>
+
+            <View style={styles.legendList}>
+              {data.map((item, index) => (
+                <View key={item.name} style={styles.legendRow}>
+                  <View style={[styles.legendDot, { backgroundColor: item.color || CHART_PALETTE[index % CHART_PALETTE.length] }]} />
+                  <Text style={styles.legendLabel}>{item.name}</Text>
+                  <Text style={styles.legendValue}>{item.count}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  };
+
   const stats = useMemo(
     () => [
       {
@@ -672,7 +993,12 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      onScroll={handleDashboardScroll}
+      scrollEventThrottle={120}
+    >
       <Text style={[styles.title, isRTL && styles.textRight]}>
         {t("admin.dashboard.overview_title")}
       </Text>
@@ -764,60 +1090,67 @@ export default function AdminDashboard() {
                   isSelected && styles.periodButtonTextActive,
                 ]}
               >
-                {t("admin.dashboard.visualizations.last_days", { days: period })}
+                {t("admin.dashboard.visualizations.last_days", {
+                  days: period,
+                })}
               </Text>
             </TouchableOpacity>
           );
         })}
       </View>
 
-      <View style={styles.visualGrid}>
-        <View style={styles.visualCard}>
-          <Text style={[styles.visualTitle, isRTL && styles.textRight]}>
-            {t("admin.dashboard.visualizations.top_categories")}
+      <View style={styles.analyticsGrid}>
+        <View style={styles.analyticsCard}>
+          <Text style={styles.analyticsLabel}>
+            {t("admin.dashboard.visualizations.total_logs")}
           </Text>
-          {activityTypeStats.length === 0 ? (
-            <Text style={[styles.placeholderText, isRTL && styles.textRight]}>
-              {t("admin.dashboard.activity.empty")}
-            </Text>
-          ) : (
-            activityTypeStats.map((item) => (
-              <View key={item.name} style={styles.barRow}>
-                <Text style={[styles.barLabel, isRTL && styles.textRight]}>
-                  {item.name}
-                </Text>
-                <View style={styles.barTrack}>
-                  <View
-                    style={[styles.barFill, { width: `${item.widthPercent}%` }]}
-                  />
-                </View>
-                <Text style={styles.barValue}>{item.count}</Text>
-              </View>
-            ))
-          )}
+          <Text style={styles.analyticsValue}>{analyticsSummary.totalLogs}</Text>
         </View>
+        <View style={styles.analyticsCard}>
+          <Text style={styles.analyticsLabel}>
+            {t("admin.dashboard.visualizations.unique_actors")}
+          </Text>
+          <Text style={styles.analyticsValue}>{analyticsSummary.uniqueActors}</Text>
+        </View>
+        <View style={styles.analyticsCard}>
+          <Text style={styles.analyticsLabel}>
+            {t("admin.dashboard.visualizations.active_days")}
+          </Text>
+          <Text style={styles.analyticsValue}>{analyticsSummary.activeDays}</Text>
+        </View>
+        <View style={styles.analyticsCard}>
+          <Text style={styles.analyticsLabel}>
+            {t("admin.dashboard.visualizations.avg_per_day")}
+          </Text>
+          <Text style={styles.analyticsValue}>{analyticsSummary.avgPerDay}</Text>
+        </View>
+        <View style={styles.analyticsCard}>
+          <Text style={styles.analyticsLabel}>
+            {t("admin.dashboard.visualizations.suspicious_logs")}
+          </Text>
+          <Text style={styles.analyticsValueDanger}>{analyticsSummary.suspiciousLogs}</Text>
+        </View>
+        <View style={styles.analyticsCard}>
+          <Text style={styles.analyticsLabel}>
+            {t("admin.dashboard.visualizations.busiest_day")}
+          </Text>
+          <Text style={styles.analyticsValue}>{`${analyticsSummary.busiestLabel} (${analyticsSummary.busiestCount})`}</Text>
+        </View>
+      </View>
 
-        <View style={styles.visualCard}>
-          <Text style={[styles.visualTitle, isRTL && styles.textRight]}>
-            {t("admin.dashboard.visualizations.weekly_trend")}
-          </Text>
-          <View style={styles.trendWrap}>
-            {dailyTrend.map((item) => (
-              <View key={item.key} style={styles.trendItem}>
-                <View style={styles.trendBarShell}>
-                  <View
-                    style={[
-                      styles.trendBarFill,
-                      { height: `${item.heightPercent}%` },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.trendCount}>{item.count}</Text>
-                <Text style={styles.trendLabel}>{item.label}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
+      <View style={styles.visualGrid}>
+        {renderBarChart(
+          activityTypeChartData,
+          t("admin.dashboard.visualizations.top_categories"),
+        )}
+        {renderLineChart(
+          trendChartData,
+          t("admin.dashboard.visualizations.weekly_trend"),
+        )}
+        {renderDonutChart(
+          roleChartData,
+          t("admin.dashboard.visualizations.actor_roles"),
+        )}
       </View>
 
       <View style={styles.logsHeaderRow}>
@@ -847,7 +1180,7 @@ export default function AdminDashboard() {
         <Text style={[styles.logsSummary, isRTL && styles.textRight]}>
           {t("admin.dashboard.export.logs_count", {
             total: filteredActivity.length,
-            shown: Math.min(visibleActivityCount, filteredActivity.length),
+            shown: visibleActivity.length,
           })}
         </Text>
         {filteredActivity.length === 0 ? (
@@ -855,7 +1188,7 @@ export default function AdminDashboard() {
             {t("admin.dashboard.activity.empty")}
           </Text>
         ) : (
-          filteredActivity.slice(0, visibleActivityCount).map((item) => (
+          visibleActivity.map((item) => (
             <View key={item.id} style={styles.activityRow}>
               <View style={styles.activityDotWrap}>
                 <MaterialCommunityIcons
@@ -887,17 +1220,10 @@ export default function AdminDashboard() {
             </View>
           ))
         )}
-        {filteredActivity.length > visibleActivityCount && (
-          <TouchableOpacity
-            style={styles.loadMoreBtn}
-            onPress={() =>
-              setVisibleActivityCount((prev) =>
-                Math.min(prev + 10, filteredActivity.length),
-              )
-            }
-          >
-            <Text style={styles.loadMoreText}>Load more activity</Text>
-          </TouchableOpacity>
+        {filteredActivity.length > visibleActivity.length && (
+          <Text style={styles.lazyLoadingHint}>
+            {t("admin.dashboard.visualizations.lazy_loading")}
+          </Text>
         )}
       </View>
     </ScrollView>
@@ -989,6 +1315,111 @@ const styles = StyleSheet.create({
     color: "#2C2010",
     marginBottom: 12,
   },
+  analyticsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginBottom: 16,
+  },
+  analyticsCard: {
+    flex: 1,
+    minWidth: 150,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#EFE4D5",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  analyticsLabel: {
+    fontSize: 11,
+    color: "#8B7B6C",
+    marginBottom: 4,
+    fontWeight: "600",
+  },
+  analyticsValue: {
+    fontSize: 20,
+    color: "#2C2010",
+    fontWeight: "700",
+  },
+  analyticsValueDanger: {
+    fontSize: 20,
+    color: "#D05E46",
+    fontWeight: "700",
+  },
+  chartStack: {
+    gap: 10,
+  },
+  barItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  barItemLabelWrap: {
+    width: 120,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  barLegendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  barItemLabel: {
+    fontSize: 13,
+    color: "#5C4A39",
+    fontWeight: "600",
+    flexShrink: 1,
+  },
+  barTrackPro: {
+    flex: 1,
+    height: 12,
+    borderRadius: 999,
+    backgroundColor: "#EFE4D5",
+    overflow: "hidden",
+  },
+  barFillPro: {
+    height: 12,
+    borderRadius: 999,
+  },
+  svgCardWrap: {
+    marginTop: 4,
+  },
+  donutWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
+    flexWrap: "wrap",
+  },
+  legendList: {
+    flex: 1,
+    minWidth: 160,
+    gap: 8,
+  },
+  legendRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  legendLabel: {
+    flex: 1,
+    fontSize: 13,
+    color: "#5C4A39",
+  },
+  legendValue: {
+    width: 30,
+    textAlign: "right",
+    fontSize: 13,
+    color: "#2C2010",
+    fontWeight: "700",
+  },
   barRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1011,6 +1442,11 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 999,
     backgroundColor: "#4A90E2",
+  },
+  barFillRole: {
+    height: "100%",
+    borderRadius: 999,
+    backgroundColor: "#FF6B6B",
   },
   barValue: {
     width: 26,
@@ -1054,6 +1490,32 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 10,
     color: "#8B7B6C",
+  },
+  webChartWrap: {
+    height: 240,
+  },
+  visualLoadingCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)",
+    paddingVertical: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  visualLoadingText: {
+    fontSize: 13,
+    color: "#8B7B6C",
+    fontWeight: "600",
+  },
+  visualFallbackWrap: {
+    gap: 12,
+  },
+  visualFallbackText: {
+    color: "#8B7B6C",
+    fontSize: 13,
+    fontWeight: "600",
   },
   logsHeaderRow: {
     marginTop: 32,
@@ -1206,5 +1668,11 @@ const styles = StyleSheet.create({
     color: "#8A631A",
     fontWeight: "700",
     fontSize: 12,
+  },
+  lazyLoadingHint: {
+    marginTop: 8,
+    color: "#8B7B6C",
+    fontSize: 12,
+    textAlign: "center",
   },
 });
