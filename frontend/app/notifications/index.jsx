@@ -55,6 +55,7 @@ export default function NotificationsScreen() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
 
   const loadNotifications = useCallback(async () => {
     setLoading(true);
@@ -115,7 +116,8 @@ export default function NotificationsScreen() {
               type: "message",
               title: "New message",
               body: `${conv.user?.name || "Someone"} sent ${conv.unreadCount} unread message(s).`,
-              createdAt: conv.lastMessage?.createdAt || new Date().toISOString(),
+              createdAt:
+                conv.lastMessage?.createdAt || new Date().toISOString(),
               source: "chat",
             });
           });
@@ -185,53 +187,51 @@ export default function NotificationsScreen() {
     loadNotifications();
   };
 
-  const handleAcceptFriendRequest = async (item) => {
+  const handleFriendRequestAction = async (item, action) => {
+    const actionId = `${action}:${item.id}`;
+
     try {
+      setActionLoadingId(actionId);
+
       const token = await getAuthToken();
       if (!token) return;
 
-      const response = await api.acceptFriendRequest(item.id, token);
+      const response =
+        action === "accept"
+          ? await api.acceptFriendRequest(item.id, token)
+          : await api.rejectFriendRequest(item.id, token);
+
       if (!response.success) {
         Alert.alert(
           "Error",
-          response.message || "Could not accept this request.",
+          response.message ||
+            (action === "accept"
+              ? "Could not accept this request."
+              : "Could not reject this request."),
         );
         return;
       }
 
       await updateLocalNotification(item.id, {
-        requestStatus: "accepted",
-        body: `${item.requesterName || "This user"} is now in your friends list.`,
+        requestStatus: action === "accept" ? "accepted" : "rejected",
+        body:
+          action === "accept"
+            ? `${item.requesterName || "This user"} is now in your friends list.`
+            : `You rejected ${item.requesterName || "this"} friend request.`,
         read: true,
       });
+
       loadNotifications();
     } catch (error) {
-      Alert.alert("Error", error.message || "Could not accept this request.");
-    }
-  };
-
-  const handleRejectFriendRequest = async (item) => {
-    try {
-      const token = await getAuthToken();
-      if (!token) return;
-
-      const response = await api.rejectFriendRequest(item.id, token);
-      if (!response.success) {
-        Alert.alert(
-          "Error",
-          response.message || "Could not reject this request.",
-        );
-        return;
-      }
-
-      await updateLocalNotification(item.id, {
-        requestStatus: "rejected",
-        body: `You rejected ${item.requesterName || "this"} friend request.`,
-        read: true,
-      });
-      loadNotifications();
-    } catch (error) {
-      Alert.alert("Error", error.message || "Could not reject this request.");
+      Alert.alert(
+        "Error",
+        error.message ||
+          (action === "accept"
+            ? "Could not accept this request."
+            : "Could not reject this request."),
+      );
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
@@ -276,6 +276,8 @@ export default function NotificationsScreen() {
               const isPendingFriendRequest =
                 item.type === "friend_request" &&
                 item.requestStatus === "pending";
+              const acceptLoading = actionLoadingId === `accept:${item.id}`;
+              const rejectLoading = actionLoadingId === `reject:${item.id}`;
               return (
                 <View style={[styles.card, item.read && styles.cardRead]}>
                   <Text style={styles.cardIcon}>{icon}</Text>
@@ -293,15 +295,21 @@ export default function NotificationsScreen() {
                       <View style={styles.actionsRow}>
                         <TouchableOpacity
                           style={[styles.actionBtn, styles.acceptBtn]}
-                          onPress={() => handleAcceptFriendRequest(item)}
+                          onPress={() => handleFriendRequestAction(item, "accept")}
+                          disabled={Boolean(actionLoadingId)}
                         >
-                          <Text style={styles.actionText}>Accept</Text>
+                          <Text style={styles.actionText}>
+                            {acceptLoading ? "Accepting..." : "Accept"}
+                          </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={[styles.actionBtn, styles.rejectBtn]}
-                          onPress={() => handleRejectFriendRequest(item)}
+                          onPress={() => handleFriendRequestAction(item, "reject")}
+                          disabled={Boolean(actionLoadingId)}
                         >
-                          <Text style={styles.actionText}>Reject</Text>
+                          <Text style={styles.actionText}>
+                            {rejectLoading ? "Rejecting..." : "Reject"}
+                          </Text>
                         </TouchableOpacity>
                       </View>
                     )}

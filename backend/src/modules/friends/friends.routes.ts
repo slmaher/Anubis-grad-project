@@ -91,6 +91,84 @@ friendsRouter.get(
   },
 );
 
+// GET /api/friends/requests/status/:receiverId - current relationship state with a user
+friendsRouter.get(
+  "/requests/status/:receiverId",
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const senderId = req.user!.id;
+      const receiverId = req.params.receiverId;
+
+      if (senderId === receiverId) {
+        return res.json({
+          success: true,
+          data: { relationship: "self" },
+        });
+      }
+
+      const [sender, receiver] = await Promise.all([
+        UserModel.findById(senderId).select("friends"),
+        UserModel.findById(receiverId).select("friends"),
+      ]);
+
+      if (!receiver) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+
+      if (isFriendId(sender?.friends, receiverId)) {
+        return res.json({
+          success: true,
+          data: { relationship: "friends" },
+        });
+      }
+
+      const outgoingRequest = await FriendRequestModel.findOne({
+        sender: senderId,
+        receiver: receiverId,
+        status: FriendRequestStatus.Pending,
+      });
+
+      if (outgoingRequest) {
+        return res.json({
+          success: true,
+          data: {
+            relationship: "pending_outgoing",
+            requestId: outgoingRequest.id,
+            status: outgoingRequest.status,
+          },
+        });
+      }
+
+      const incomingRequest = await FriendRequestModel.findOne({
+        sender: receiverId,
+        receiver: senderId,
+        status: FriendRequestStatus.Pending,
+      });
+
+      if (incomingRequest) {
+        return res.json({
+          success: true,
+          data: {
+            relationship: "pending_incoming",
+            requestId: incomingRequest.id,
+            status: incomingRequest.status,
+          },
+        });
+      }
+
+      return res.json({
+        success: true,
+        data: { relationship: "none" },
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // POST /api/friends/requests - send a friend request
 friendsRouter.post(
   "/requests",
