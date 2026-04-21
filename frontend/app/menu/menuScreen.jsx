@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import React, { useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -139,6 +139,9 @@ export default function MenuScreen({ onClose }) {
   const loadCounts = React.useCallback(async () => {
     try {
       const localNotifications = await getLocalNotifications();
+      const unreadLocalNotifications = localNotifications.filter(
+        (notification) => notification.read !== true,
+      );
       const token = await getAuthToken();
 
       let friendRequests = 0;
@@ -166,7 +169,8 @@ export default function MenuScreen({ onClose }) {
       }
 
       setCounts({
-        notifications: localNotifications.length + friendRequests + messages,
+        notifications:
+          unreadLocalNotifications.length + friendRequests + messages,
         friendRequests,
         messages,
       });
@@ -243,6 +247,12 @@ export default function MenuScreen({ onClose }) {
       .then((user) => setAuthUser(user))
       .catch(() => setAuthUser(null));
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadCounts();
+    }, [loadCounts]),
+  );
 
   const panResponder = React.useMemo(
     () =>

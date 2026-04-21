@@ -226,11 +226,7 @@ export default function UserManagement() {
       </View>
 
       <View style={styles.searchBar}>
-        <MaterialCommunityIcons
-          name="magnify"
-          size={20}
-          color="#8B7B6C"
-        />
+        <MaterialCommunityIcons name="magnify" size={20} color="#8B7B6C" />
         <TextInput
           value={searchQuery}
           onChangeText={setSearchQuery}

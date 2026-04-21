@@ -16,6 +16,7 @@ import { getAuthToken, getAuthUser } from "../api/authStorage";
 import {
   clearLocalNotifications,
   getLocalNotifications,
+  markAllLocalNotificationsAsRead,
   updateLocalNotification,
 } from "../api/notificationsStorage";
 
@@ -53,6 +54,7 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadNotifications = useCallback(async () => {
     setLoading(true);
@@ -171,12 +173,20 @@ export default function NotificationsScreen() {
       setItems(nextItems);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
+  const refreshNotifications = useCallback(async () => {
+    setRefreshing(true);
+    await loadNotifications();
+  }, [loadNotifications]);
+
   useFocusEffect(
     useCallback(() => {
-      loadNotifications();
+      markAllLocalNotificationsAsRead().finally(() => {
+        loadNotifications();
+      });
     }, [loadNotifications]),
   );
 
@@ -203,6 +213,7 @@ export default function NotificationsScreen() {
       await updateLocalNotification(item.id, {
         requestStatus: "accepted",
         body: `${item.requesterName || "This user"} is now in your friends list.`,
+        read: true,
       });
       loadNotifications();
     } catch (error) {
@@ -227,6 +238,7 @@ export default function NotificationsScreen() {
       await updateLocalNotification(item.id, {
         requestStatus: "rejected",
         body: `You rejected ${item.requesterName || "this"} friend request.`,
+        read: true,
       });
       loadNotifications();
     } catch (error) {
@@ -263,6 +275,8 @@ export default function NotificationsScreen() {
             data={items}
             keyExtractor={(item, index) => item.id || `${item.type}_${index}`}
             contentContainerStyle={styles.listContent}
+            refreshing={refreshing}
+            onRefresh={refreshNotifications}
             ListEmptyComponent={
               <View style={styles.centered}>
                 <Text style={styles.emptyText}>No notifications yet.</Text>
@@ -274,7 +288,12 @@ export default function NotificationsScreen() {
                 item.type === "friend_request" &&
                 item.requestStatus === "pending";
               return (
-                <View style={styles.card}>
+                <View
+                  style={[
+                    styles.card,
+                    item.read && styles.cardRead,
+                  ]}
+                >
                   <Text style={styles.cardIcon}>{icon}</Text>
                   <View style={styles.cardBody}>
                     <Text style={styles.cardTitle}>
@@ -374,6 +393,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 12,
     marginBottom: 10,
+  },
+  cardRead: {
+    opacity: 0.65,
   },
   cardIcon: {
     width: 28,
