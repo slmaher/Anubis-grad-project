@@ -6,6 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
+  Alert,
+  Share,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -27,6 +30,7 @@ export default function AdminDashboard() {
   });
   const [recentActivity, setRecentActivity] = useState([]);
   const [visibleActivityCount, setVisibleActivityCount] = useState(10);
+  const [exportingCsv, setExportingCsv] = useState(false);
 
   const isRTL = i18n.dir(i18n.language) === "rtl";
 
@@ -120,6 +124,53 @@ export default function AdminDashboard() {
 
   const getActionLabel = (type, action) => `${type} • ${action}`;
 
+  const escapeCsvValue = (value) => {
+    const safe = String(value ?? "").replace(/\r?\n|\r/g, " ").trim();
+    if (safe.includes(",") || safe.includes('"')) {
+      return `"${safe.replace(/"/g, '""')}"`;
+    }
+    return safe;
+  };
+
+  const buildDashboardCsv = () => {
+    const generatedAt = new Date().toISOString();
+
+    const statsRows = [
+      ["Metric", "Value"],
+      ["Users", statsValues.users],
+      ["Museums", statsValues.museums],
+      ["Artifacts", statsValues.artifacts],
+      ["Pending Volunteers", statsValues.pendingVolunteers],
+    ];
+
+    const logsRows = [
+      ["Category", "Action", "Subject", "Details", "Actor", "Role", "Occurred At"],
+      ...recentActivity.map((item) => [
+        item?.category || "",
+        item?.action || "",
+        item?.subject || "",
+        item?.details || "",
+        item?.actor?.name || "System",
+        item?.actor?.role || "System",
+        formatDateTime(item?.occurredAt),
+      ]),
+    ];
+
+    const lines = [
+      ["Admin Dashboard Report", generatedAt],
+      [],
+      ["Statistics"],
+      ...statsRows,
+      [],
+      ["Activity Logs"],
+      ...logsRows,
+    ];
+
+    return lines
+      .map((row) => row.map((value) => escapeCsvValue(value)).join(","))
+      .join("\n");
+  };
+
   const formatActorLabel = (actor) => {
     if (!actor?.name) {
       return "By System";
@@ -130,6 +181,76 @@ export default function AdminDashboard() {
     }
 
     return `By ${actor.name} (${actor.role})`;
+  };
+
+  const downloadCsvOnWeb = (csvContent, fileName) => {
+    if (typeof document === "undefined") {
+      throw new Error("CSV download is not available in this environment.");
+    }
+
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const shareCsvOnNative = async (csvContent, fileName) => {
+    try {
+      const FileSystem = await import("expo-file-system/legacy");
+      const Sharing = await import("expo-sharing");
+
+      const targetPath = `${FileSystem.cacheDirectory}${fileName}`;
+      await FileSystem.writeAsStringAsync(targetPath, csvContent, {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(targetPath, {
+          mimeType: "text/csv",
+          dialogTitle: t("admin.dashboard.export.csv_title"),
+        });
+        return;
+      }
+    } catch {
+      // Fall back to system share sheet with raw CSV when file APIs are unavailable.
+    }
+
+    await Share.share({
+      title: t("admin.dashboard.export.csv_title"),
+      message: csvContent,
+    });
+  };
+
+  const handleExportCsv = async () => {
+    if (exportingCsv) {
+      return;
+    }
+
+    setExportingCsv(true);
+    try {
+      const csvContent = buildDashboardCsv();
+      const dateStamp = new Date().toISOString().slice(0, 10);
+      const fileName = `admin-dashboard-${dateStamp}.csv`;
+
+      if (Platform.OS === "web") {
+        downloadCsvOnWeb(csvContent, fileName);
+      } else {
+        await shareCsvOnNative(csvContent, fileName);
+      }
+    } catch (err) {
+      const message =
+        err?.message || t("admin.dashboard.export.csv_failed");
+      Alert.alert(t("admin.dashboard.export.csv_error_title"), message);
+    } finally {
+      setExportingCsv(false);
+    }
   };
 
   useEffect(() => {
@@ -534,10 +655,30 @@ export default function AdminDashboard() {
         ))}
       </View>
 
-      <Text style={[styles.subtitle, isRTL && styles.textRight]}>
-        {t("admin.dashboard.recent_activity")}
-      </Text>
+      <View style={styles.logsHeaderRow}>
+        <Text style={[styles.subtitle, styles.logsTitle, isRTL && styles.textRight]}>
+          {t("admin.dashboard.recent_activity")}
+        </Text>
+        <TouchableOpacity
+          style={[styles.exportBtn, exportingCsv && styles.exportBtnDisabled]}
+          onPress={handleExportCsv}
+          disabled={exportingCsv}
+        >
+          <MaterialCommunityIcons name="file-delimited-outline" size={18} color="#8A631A" />
+          <Text style={styles.exportBtnText}>
+            {exportingCsv
+              ? t("admin.dashboard.export.csv_exporting")
+              : t("admin.dashboard.export.csv_button")}
+          </Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.recentActivity}>
+        <Text style={[styles.logsSummary, isRTL && styles.textRight]}>
+          {t("admin.dashboard.export.logs_count", {
+            total: recentActivity.length,
+            shown: Math.min(visibleActivityCount, recentActivity.length),
+          })}
+        </Text>
         {recentActivity.length === 0 ? (
           <Text style={[styles.placeholderText, isRTL && styles.textRight]}>
             {t("admin.dashboard.activity.empty")}
@@ -631,6 +772,19 @@ const styles = StyleSheet.create({
     marginTop: 32,
     marginBottom: 16,
   },
+  logsHeaderRow: {
+    marginTop: 32,
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 10,
+  },
+  logsTitle: {
+    marginTop: 0,
+    marginBottom: 0,
+    flex: 1,
+  },
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -695,6 +849,30 @@ const styles = StyleSheet.create({
     minHeight: 150,
     borderWidth: 1,
     borderColor: "rgba(0,0,0,0.05)",
+  },
+  logsSummary: {
+    color: "#8B7B6C",
+    fontSize: 12,
+    marginBottom: 14,
+  },
+  exportBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#D8C3A6",
+    backgroundColor: "#FFF5E9",
+  },
+  exportBtnDisabled: {
+    opacity: 0.65,
+  },
+  exportBtnText: {
+    color: "#8A631A",
+    fontWeight: "700",
+    fontSize: 12,
   },
   activityRow: {
     flexDirection: "row",

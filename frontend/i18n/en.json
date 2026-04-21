@@ -383,6 +383,14 @@
         "new_artifact": "New artifact added: {{name}}",
         "unknown_user": "Unknown user",
         "unknown_artifact": "Unknown artifact"
+      },
+      "export": {
+        "csv_title": "Export dashboard as CSV",
+        "csv_button": "Export CSV",
+        "csv_exporting": "Exporting...",
+        "csv_failed": "Could not export the CSV file.",
+        "csv_error_title": "CSV Export Failed",
+        "logs_count": "Showing {{shown}} of {{total}} logs"
       }
     }
   }
