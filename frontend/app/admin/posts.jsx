@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { getAuthToken } from '../api/authStorage';
+import { api } from '../api/client';
 
 const API_URL = 'http://localhost:4000/api';
 
 export default function PostManagement() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingPostId, setDeletingPostId] = useState(null);
 
   useEffect(() => {
     fetchPosts();
@@ -28,28 +30,33 @@ export default function PostManagement() {
   };
 
   const deletePost = async (id) => {
-    Alert.alert('Delete Post', 'Are you sure you want to delete this post?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            const token = await getAuthToken();
-            const response = await fetch(`${API_URL}/posts/${id}`, {
-              method: 'DELETE',
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            const res = await response.json();
-            if (res.success) {
-              setPosts(posts.filter(p => p._id !== id));
-            }
-          } catch (error) {
-            console.error(error);
-          }
-        }
+    if (!id) {
+      Alert.alert('Delete failed', 'This post has an invalid id.');
+      return;
+    }
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        Alert.alert('Error', 'Please login again and try deleting this post.');
+        return;
       }
-    ]);
+
+      setDeletingPostId(id);
+      setPosts((currentPosts) => currentPosts.filter((p) => (p._id || p.id) !== id));
+
+      const res = await api.admin.deletePost(id, token);
+      if (!res?.success) {
+        throw new Error(res?.message || 'Could not delete this post.');
+      }
+
+      await fetchPosts();
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Delete failed', error?.message || 'Could not delete this post.');
+      fetchPosts();
+    } finally {
+      setDeletingPostId(null);
+    }
   };
 
   const renderPost = ({ item }) => (
@@ -62,8 +69,12 @@ export default function PostManagement() {
               <Text style={styles.postDate}>{new Date(item.createdAt).toLocaleDateString()}</Text>
            </View>
         </View>
-        <TouchableOpacity onPress={() => deletePost(item._id)}>
-          <MaterialCommunityIcons name="delete-outline" size={24} color="#FF6B6B" />
+        <TouchableOpacity onPress={() => deletePost(item._id || item.id)}>
+          {deletingPostId === (item._id || item.id) ? (
+            <ActivityIndicator size="small" color="#FF6B6B" />
+          ) : (
+            <MaterialCommunityIcons name="delete-outline" size={24} color="#FF6B6B" />
+          )}
         </TouchableOpacity>
       </View>
       <Text style={styles.content}>{item.content}</Text>
@@ -83,7 +94,7 @@ export default function PostManagement() {
       <FlatList
         data={posts}
         renderItem={renderPost}
-        keyExtractor={item => item._id}
+        keyExtractor={item => item._id || item.id}
         contentContainerStyle={styles.list}
       />
     </View>
