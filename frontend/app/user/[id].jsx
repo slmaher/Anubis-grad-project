@@ -10,20 +10,51 @@ import {
   ScrollView,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { api } from "../api/client";
 import { getAuthToken } from "../api/authStorage";
 import * as ImagePicker from "expo-image-picker";
+
+const FRIEND_RELATIONSHIP = {
+  none: "none",
+  friends: "friends",
+  pending_outgoing: "pending_outgoing",
+  pending_incoming: "pending_incoming",
+  self: "self",
+};
 
 export default function UserProfile() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [friendRequestSent, setFriendRequestSent] = useState(false);
+  const [friendRelationship, setFriendRelationship] = useState(
+    FRIEND_RELATIONSHIP.none,
+  );
+  const [friendRequestLoading, setFriendRequestLoading] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
   const [isCurrentUser, setIsCurrentUser] = useState(false);
   const [isUpdatingPhoto, setIsUpdatingPhoto] = useState(false);
+
+  const loadFriendRelationship = useCallback(async (token, targetId) => {
+    if (!token || !targetId) {
+      setFriendRelationship(FRIEND_RELATIONSHIP.none);
+      return;
+    }
+
+    try {
+      const statusResponse = await api.getFriendRequestStatus(targetId, token);
+      const relationship = statusResponse?.data?.relationship;
+      setFriendRelationship(
+        Object.values(FRIEND_RELATIONSHIP).includes(relationship)
+          ? relationship
+          : FRIEND_RELATIONSHIP.none,
+      );
+    } catch (error) {
+      console.error("Error loading friend relationship:", error);
+      setFriendRelationship(FRIEND_RELATIONSHIP.none);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -43,8 +74,13 @@ export default function UserProfile() {
           setProfile(response.data);
           setUserPosts(postsResponse.data || []);
 
-          if (meResponse.success && meResponse.data._id === response.data._id) {
-            setIsCurrentUser(true);
+          const isMe = meResponse.success && meResponse.data._id === response.data._id;
+          setIsCurrentUser(isMe);
+
+          if (isMe) {
+            setFriendRelationship(FRIEND_RELATIONSHIP.self);
+          } else {
+            await loadFriendRelationship(token, response.data._id);
           }
         } else {
           Alert.alert("Error", "Failed to load user profile.");
@@ -62,7 +98,7 @@ export default function UserProfile() {
     if (id) {
       fetchProfile();
     }
-  }, [id]);
+  }, [id, loadFriendRelationship, router]);
 
   const handleChangePhoto = async () => {
     try {
@@ -100,6 +136,14 @@ export default function UserProfile() {
 
   const handleSendFriendRequest = async () => {
     try {
+      if (!profile || isCurrentUser) {
+        return;
+      }
+
+      if (friendRelationship !== FRIEND_RELATIONSHIP.none) {
+        return;
+      }
+
       const token = await getAuthToken();
       if (!token) {
         Alert.alert(
@@ -109,9 +153,11 @@ export default function UserProfile() {
         return;
       }
 
-      const response = await api.sendFriendRequest(profile?._id || id, token);
+      setFriendRequestLoading(true);
+      const targetId = profile?._id || id;
+      const response = await api.sendFriendRequest(targetId, token);
       if (response.success) {
-        setFriendRequestSent(true);
+        setFriendRelationship(FRIEND_RELATIONSHIP.pending_outgoing);
         Alert.alert("Success", `Friend request sent to ${profile?.name}!`);
       } else {
         Alert.alert(
@@ -121,7 +167,27 @@ export default function UserProfile() {
       }
     } catch (error) {
       console.error("Error sending friend request:", error);
+      if (error?.status === 409) {
+        await loadFriendRelationship(await getAuthToken(), profile?._id || id);
+      }
       Alert.alert("Error", error.message || "Failed to send friend request.");
+    } finally {
+      setFriendRequestLoading(false);
+    }
+  };
+
+  const getFriendButtonLabel = () => {
+    switch (friendRelationship) {
+      case FRIEND_RELATIONSHIP.friends:
+        return "✓ Friends";
+      case FRIEND_RELATIONSHIP.pending_outgoing:
+        return "✓ Request Sent";
+      case FRIEND_RELATIONSHIP.pending_incoming:
+        return "Request Pending";
+      case FRIEND_RELATIONSHIP.self:
+        return "This is you";
+      default:
+        return "Add Friend";
     }
   };
 
@@ -212,13 +278,17 @@ export default function UserProfile() {
               style={[
                 styles.actionButton,
                 styles.primaryButton,
-                friendRequestSent && styles.sentButton,
+                friendRelationship !== FRIEND_RELATIONSHIP.none && styles.sentButton,
               ]}
               onPress={handleSendFriendRequest}
-              disabled={friendRequestSent}
+              disabled={
+                friendRequestLoading ||
+                isCurrentUser ||
+                friendRelationship !== FRIEND_RELATIONSHIP.none
+              }
             >
               <Text style={[styles.buttonText, styles.primaryButtonText]}>
-                {friendRequestSent ? "✓ Request Sent" : "Add Friend"}
+                {friendRequestLoading ? "Sending..." : getFriendButtonLabel()}
               </Text>
             </TouchableOpacity>
 

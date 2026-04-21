@@ -322,6 +322,9 @@ export const api = {
   getIncomingFriendRequests(token) {
     return apiRequest("/api/friends/requests/incoming", { token });
   },
+  getFriendRequestStatus(receiverId, token) {
+    return apiRequest(`/api/friends/requests/status/${receiverId}`, { token });
+  },
   acceptFriendRequest(requestId, token) {
     return apiRequest(`/api/friends/requests/${requestId}/accept`, {
       method: "POST",
