@@ -396,7 +396,18 @@
         "title": "Visual Analytics",
         "last_days": "Last {{days}} days",
         "top_categories": "Top Activity Categories",
-        "weekly_trend": "Activity Trend (7 Days)"
+        "weekly_trend": "Activity Trend (7 Days)",
+        "actor_roles": "Activity By Actor Role",
+        "chart_loading": "Loading chart tools...",
+        "lazy_loading": "Loading more activity while you scroll",
+        "chart_fallback": "Charts are using the built-in fallback renderer.",
+        "total_items": "Total items",
+        "total_logs": "Total logs",
+        "unique_actors": "Unique actors",
+        "active_days": "Active days",
+        "avg_per_day": "Avg / day",
+        "suspicious_logs": "Suspicious logs",
+        "busiest_day": "Busiest day"
       }
     }
   }
