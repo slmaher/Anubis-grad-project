@@ -54,7 +54,7 @@ export default function AIChatbot() {
   const suggestions = [t("ai_chat.suggestion_1"), t("ai_chat.suggestion_2")];
 
   // Auto-scroll when messages or loading state changes
-  useEffect(() => { 
+  useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
   }, [messages, isLoading]);
 
@@ -94,11 +94,14 @@ export default function AIChatbot() {
 
       const isQuotaError =
         error?.status === 429 ||
-        String(error?.message || "").toLowerCase().includes("quota");
+        String(error?.message || "")
+          .toLowerCase()
+          .includes("quota");
 
       const messageText = isQuotaError
         ? buildLocalFallbackReply(t)
-        : t("ai_chat.error_message") || "Something went wrong. Please try again.";
+        : t("ai_chat.error_message") ||
+          "Something went wrong. Please try again.";
 
       setMessages((prev) => [
         ...prev,
@@ -203,9 +206,7 @@ export default function AIChatbot() {
           {isLoading && (
             <View style={[styles.messageWrapper, styles.aiMessageWrapper]}>
               <View style={styles.messageLabelContainer}>
-                <Text style={styles.messageLabel}>
-                  {t("ai_chat.label_ai")}
-                </Text>
+                <Text style={styles.messageLabel}>{t("ai_chat.label_ai")}</Text>
               </View>
               <View style={[styles.messageBubble, styles.aiBubble]}>
                 <Text style={styles.typingDots}>● ● ●</Text>
@@ -257,10 +258,7 @@ export default function AIChatbot() {
             >
               <Image
                 source={require("../../assets/images/send-icon2.png")}
-                style={[
-                  styles.sendIcon,
-                  isLoading && styles.sendIconDisabled,
-                ]}
+                style={[styles.sendIcon, isLoading && styles.sendIconDisabled]}
               />
             </TouchableOpacity>
           </View>

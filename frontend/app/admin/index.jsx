@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   View,
   Text,
@@ -278,7 +284,9 @@ export default function AdminDashboard() {
 
     const activeDays = new Set(
       filteredActivity
-        .map((item) => new Date(toDateMillis(item?.occurredAt)).toISOString().slice(0, 10))
+        .map((item) =>
+          new Date(toDateMillis(item?.occurredAt)).toISOString().slice(0, 10),
+        )
         .filter(Boolean),
     ).size;
 
@@ -300,7 +308,10 @@ export default function AdminDashboard() {
       uniqueActors,
       activeDays,
       suspiciousLogs,
-      avgPerDay: selectedPeriodDays > 0 ? (totalLogs / selectedPeriodDays).toFixed(2) : "0.00",
+      avgPerDay:
+        selectedPeriodDays > 0
+          ? (totalLogs / selectedPeriodDays).toFixed(2)
+          : "0.00",
       busiestLabel: busiest.label || "-",
       busiestCount: busiest.count || 0,
     };
@@ -321,7 +332,10 @@ export default function AdminDashboard() {
     if (!points.length) return "";
 
     const head = `M${points[0].x},${baseY} L${points[0].x},${points[0].y}`;
-    const body = points.slice(1).map((point) => `L${point.x},${point.y}`).join(" ");
+    const body = points
+      .slice(1)
+      .map((point) => `L${point.x},${point.y}`)
+      .join(" ");
     const tail = `L${points[points.length - 1].x},${baseY} Z`;
     return `${head} ${body} ${tail}`;
   };
@@ -472,7 +486,8 @@ export default function AdminDashboard() {
 
   const handleDashboardScroll = useCallback(
     (event) => {
-      const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+      const { layoutMeasurement, contentOffset, contentSize } =
+        event.nativeEvent;
       const distanceFromBottom =
         contentSize.height - (layoutMeasurement.height + contentOffset.y);
 
@@ -482,7 +497,9 @@ export default function AdminDashboard() {
         !paginationLockRef.current
       ) {
         paginationLockRef.current = true;
-        setVisibleActivityCount((prev) => Math.min(prev + 20, filteredActivity.length));
+        setVisibleActivityCount((prev) =>
+          Math.min(prev + 20, filteredActivity.length),
+        );
 
         requestAnimationFrame(() => {
           paginationLockRef.current = false;
@@ -767,7 +784,9 @@ export default function AdminDashboard() {
 
     return (
       <View style={styles.visualCard}>
-        <Text style={[styles.visualTitle, isRTL && styles.textRight]}>{title}</Text>
+        <Text style={[styles.visualTitle, isRTL && styles.textRight]}>
+          {title}
+        </Text>
         {data.length === 0 ? (
           <Text style={[styles.placeholderText, isRTL && styles.textRight]}>
             {t("admin.dashboard.activity.empty")}
@@ -779,8 +798,20 @@ export default function AdminDashboard() {
               return (
                 <View key={item.name} style={styles.barItemRow}>
                   <View style={styles.barItemLabelWrap}>
-                    <View style={[styles.barLegendDot, { backgroundColor: item.color || CHART_PALETTE[index % CHART_PALETTE.length] }]} />
-                    <Text style={[styles.barItemLabel, isRTL && styles.textRight]} numberOfLines={1}>
+                    <View
+                      style={[
+                        styles.barLegendDot,
+                        {
+                          backgroundColor:
+                            item.color ||
+                            CHART_PALETTE[index % CHART_PALETTE.length],
+                        },
+                      ]}
+                    />
+                    <Text
+                      style={[styles.barItemLabel, isRTL && styles.textRight]}
+                      numberOfLines={1}
+                    >
                       {item.name}
                     </Text>
                   </View>
@@ -790,7 +821,9 @@ export default function AdminDashboard() {
                         styles.barFillPro,
                         {
                           width: `${Math.max(12, height)}%`,
-                          backgroundColor: item.color || CHART_PALETTE[index % CHART_PALETTE.length],
+                          backgroundColor:
+                            item.color ||
+                            CHART_PALETTE[index % CHART_PALETTE.length],
                         },
                       ]}
                     />
@@ -822,7 +855,9 @@ export default function AdminDashboard() {
 
     return (
       <View style={styles.visualCard}>
-        <Text style={[styles.visualTitle, isRTL && styles.textRight]}>{title}</Text>
+        <Text style={[styles.visualTitle, isRTL && styles.textRight]}>
+          {title}
+        </Text>
         {data.length === 0 ? (
           <Text style={[styles.placeholderText, isRTL && styles.textRight]}>
             {t("admin.dashboard.activity.empty")}
@@ -837,28 +872,80 @@ export default function AdminDashboard() {
                 </LinearGradient>
               </Defs>
               <G>
-                <SvgLine x1={paddingX} y1={paddingY} x2={paddingX} y2={height - paddingY} stroke="#D9C9B2" strokeWidth="1" />
-                <SvgLine x1={paddingX} y1={height - paddingY} x2={width - paddingX} y2={height - paddingY} stroke="#D9C9B2" strokeWidth="1" />
+                <SvgLine
+                  x1={paddingX}
+                  y1={paddingY}
+                  x2={paddingX}
+                  y2={height - paddingY}
+                  stroke="#D9C9B2"
+                  strokeWidth="1"
+                />
+                <SvgLine
+                  x1={paddingX}
+                  y1={height - paddingY}
+                  x2={width - paddingX}
+                  y2={height - paddingY}
+                  stroke="#D9C9B2"
+                  strokeWidth="1"
+                />
                 {[0, 25, 50, 75, 100].map((tick) => {
                   const y = paddingY + innerHeight - (tick / 100) * innerHeight;
                   return (
                     <React.Fragment key={tick}>
-                      <SvgLine x1={paddingX} y1={y} x2={width - paddingX} y2={y} stroke="#EFE4D5" strokeDasharray="4 4" strokeWidth="1" />
+                      <SvgLine
+                        x1={paddingX}
+                        y1={y}
+                        x2={width - paddingX}
+                        y2={y}
+                        stroke="#EFE4D5"
+                        strokeDasharray="4 4"
+                        strokeWidth="1"
+                      />
                       <SvgText x={6} y={y + 4} fill="#8B7B6C" fontSize="10">
                         {Math.round((tick / 100) * max)}
                       </SvgText>
                     </React.Fragment>
                   );
                 })}
-                <Path d={areaPath(points, height - paddingY)} fill="url(#trendFill)" />
-                <Path d={linePath(points)} fill="none" stroke="#50C878" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                <Path
+                  d={areaPath(points, height - paddingY)}
+                  fill="url(#trendFill)"
+                />
+                <Path
+                  d={linePath(points)}
+                  fill="none"
+                  stroke="#50C878"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
                 {points.map((point, index) => (
                   <React.Fragment key={point.key}>
-                    <Circle cx={point.x} cy={point.y} r={5} fill="#fff" stroke={CHART_PALETTE[index % CHART_PALETTE.length]} strokeWidth="3" />
-                    <SvgText x={point.x} y={height - 5} fill="#8B7B6C" fontSize="9" textAnchor="middle">
+                    <Circle
+                      cx={point.x}
+                      cy={point.y}
+                      r={5}
+                      fill="#fff"
+                      stroke={CHART_PALETTE[index % CHART_PALETTE.length]}
+                      strokeWidth="3"
+                    />
+                    <SvgText
+                      x={point.x}
+                      y={height - 5}
+                      fill="#8B7B6C"
+                      fontSize="9"
+                      textAnchor="middle"
+                    >
                       {point.label}
                     </SvgText>
-                    <SvgText x={point.x} y={point.y - 10} fill="#2C2010" fontSize="10" fontWeight="700" textAnchor="middle">
+                    <SvgText
+                      x={point.x}
+                      y={point.y - 10}
+                      fill="#2C2010"
+                      fontSize="10"
+                      fontWeight="700"
+                      textAnchor="middle"
+                    >
                       {point.count}
                     </SvgText>
                   </React.Fragment>
@@ -877,12 +964,17 @@ export default function AdminDashboard() {
     const radius = 72;
     const strokeWidth = 24;
     const circumference = 2 * Math.PI * radius;
-    const total = Math.max(1, data.reduce((sum, item) => sum + item.count, 0));
+    const total = Math.max(
+      1,
+      data.reduce((sum, item) => sum + item.count, 0),
+    );
     let currentOffset = 0;
 
     return (
       <View style={styles.visualCard}>
-        <Text style={[styles.visualTitle, isRTL && styles.textRight]}>{title}</Text>
+        <Text style={[styles.visualTitle, isRTL && styles.textRight]}>
+          {title}
+        </Text>
         {data.length === 0 ? (
           <Text style={[styles.placeholderText, isRTL && styles.textRight]}>
             {t("admin.dashboard.activity.empty")}
@@ -899,7 +991,10 @@ export default function AdminDashboard() {
                       cx={center}
                       cy={center}
                       r={radius}
-                      stroke={item.color || CHART_PALETTE[index % CHART_PALETTE.length]}
+                      stroke={
+                        item.color ||
+                        CHART_PALETTE[index % CHART_PALETTE.length]
+                      }
                       strokeWidth={strokeWidth}
                       strokeDasharray={strokeDasharray}
                       strokeDashoffset={-currentOffset}
@@ -911,11 +1006,29 @@ export default function AdminDashboard() {
                   return circle;
                 })}
               </G>
-              <Circle cx={center} cy={center} r={radius - strokeWidth / 2} fill="#FFF9F0" />
-              <SvgText x={center} y={center - 4} fontSize="22" fontWeight="700" textAnchor="middle" fill="#2C2010">
+              <Circle
+                cx={center}
+                cy={center}
+                r={radius - strokeWidth / 2}
+                fill="#FFF9F0"
+              />
+              <SvgText
+                x={center}
+                y={center - 4}
+                fontSize="22"
+                fontWeight="700"
+                textAnchor="middle"
+                fill="#2C2010"
+              >
                 {total}
               </SvgText>
-              <SvgText x={center} y={center + 18} fontSize="10" textAnchor="middle" fill="#8B7B6C">
+              <SvgText
+                x={center}
+                y={center + 18}
+                fontSize="10"
+                textAnchor="middle"
+                fill="#8B7B6C"
+              >
                 {t("admin.dashboard.visualizations.total_items")}
               </SvgText>
             </Svg>
@@ -923,7 +1036,16 @@ export default function AdminDashboard() {
             <View style={styles.legendList}>
               {data.map((item, index) => (
                 <View key={item.name} style={styles.legendRow}>
-                  <View style={[styles.legendDot, { backgroundColor: item.color || CHART_PALETTE[index % CHART_PALETTE.length] }]} />
+                  <View
+                    style={[
+                      styles.legendDot,
+                      {
+                        backgroundColor:
+                          item.color ||
+                          CHART_PALETTE[index % CHART_PALETTE.length],
+                      },
+                    ]}
+                  />
                   <Text style={styles.legendLabel}>{item.name}</Text>
                   <Text style={styles.legendValue}>{item.count}</Text>
                 </View>
@@ -1104,37 +1226,49 @@ export default function AdminDashboard() {
           <Text style={styles.analyticsLabel}>
             {t("admin.dashboard.visualizations.total_logs")}
           </Text>
-          <Text style={styles.analyticsValue}>{analyticsSummary.totalLogs}</Text>
+          <Text style={styles.analyticsValue}>
+            {analyticsSummary.totalLogs}
+          </Text>
         </View>
         <View style={styles.analyticsCard}>
           <Text style={styles.analyticsLabel}>
             {t("admin.dashboard.visualizations.unique_actors")}
           </Text>
-          <Text style={styles.analyticsValue}>{analyticsSummary.uniqueActors}</Text>
+          <Text style={styles.analyticsValue}>
+            {analyticsSummary.uniqueActors}
+          </Text>
         </View>
         <View style={styles.analyticsCard}>
           <Text style={styles.analyticsLabel}>
             {t("admin.dashboard.visualizations.active_days")}
           </Text>
-          <Text style={styles.analyticsValue}>{analyticsSummary.activeDays}</Text>
+          <Text style={styles.analyticsValue}>
+            {analyticsSummary.activeDays}
+          </Text>
         </View>
         <View style={styles.analyticsCard}>
           <Text style={styles.analyticsLabel}>
             {t("admin.dashboard.visualizations.avg_per_day")}
           </Text>
-          <Text style={styles.analyticsValue}>{analyticsSummary.avgPerDay}</Text>
+          <Text style={styles.analyticsValue}>
+            {analyticsSummary.avgPerDay}
+          </Text>
         </View>
         <View style={styles.analyticsCard}>
           <Text style={styles.analyticsLabel}>
             {t("admin.dashboard.visualizations.suspicious_logs")}
           </Text>
-          <Text style={styles.analyticsValueDanger}>{analyticsSummary.suspiciousLogs}</Text>
+          <Text style={styles.analyticsValueDanger}>
+            {analyticsSummary.suspiciousLogs}
+          </Text>
         </View>
         <View style={styles.analyticsCard}>
           <Text style={styles.analyticsLabel}>
             {t("admin.dashboard.visualizations.busiest_day")}
           </Text>
-          <Text style={styles.analyticsValue}>{`${analyticsSummary.busiestLabel} (${analyticsSummary.busiestCount})`}</Text>
+          <Text
+            style={styles.analyticsValue}
+          >{`${analyticsSummary.busiestLabel} (${analyticsSummary.busiestCount})`}</Text>
         </View>
       </View>
 
