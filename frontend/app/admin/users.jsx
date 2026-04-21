@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Modal,
   ActivityIndicator,
+  TextInput,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -18,6 +19,7 @@ export default function UserManagement() {
   const router = useRouter();
   const [users, setUsers] = useState([]);
   const [guideUserIds, setGuideUserIds] = useState(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [rolePickerUser, setRolePickerUser] = useState(null);
   const [roleActionLoading, setRoleActionLoading] = useState(false);
@@ -135,6 +137,23 @@ export default function UserManagement() {
     });
   };
 
+  const filteredUsers = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return users;
+    }
+
+    return users.filter((user) => {
+      const searchableText = [user.name, user.email, user.role]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(normalizedQuery);
+    });
+  }, [users, searchQuery]);
+
   const renderUser = ({ item }) => (
     <View style={styles.userCard}>
       <View style={styles.userInfo}>
@@ -200,14 +219,65 @@ export default function UserManagement() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>User Management</Text>
-        <Text style={styles.count}>{users.length} Total Users</Text>
+        <View>
+          <Text style={styles.title}>User Management</Text>
+          <Text style={styles.count}>{filteredUsers.length} Total Users</Text>
+        </View>
+      </View>
+
+      <View style={styles.searchBar}>
+        <MaterialCommunityIcons
+          name="magnify"
+          size={20}
+          color="#8B7B6C"
+        />
+        <TextInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search by name, email, or role"
+          placeholderTextColor="#A79B91"
+          style={styles.searchInput}
+          autoCapitalize="none"
+          autoCorrect={false}
+          clearButtonMode="while-editing"
+          returnKeyType="search"
+        />
+        {!!searchQuery && (
+          <TouchableOpacity
+            onPress={() => setSearchQuery("")}
+            style={styles.clearButton}
+            accessibilityRole="button"
+            accessibilityLabel="Clear search"
+          >
+            <MaterialCommunityIcons
+              name="close-circle"
+              size={20}
+              color="#B39E8C"
+            />
+          </TouchableOpacity>
+        )}
       </View>
       <FlatList
-        data={users}
+        data={filteredUsers}
         renderItem={renderUser}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.list}
+        keyboardShouldPersistTaps="handled"
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons
+              name="account-search-outline"
+              size={34}
+              color="#B39E8C"
+            />
+            <Text style={styles.emptyStateTitle}>No users found</Text>
+            <Text style={styles.emptyStateText}>
+              {searchQuery
+                ? "Try a different name, email, or role."
+                : "No users are available right now."}
+            </Text>
+          </View>
+        }
       />
 
       <Modal
@@ -267,13 +337,52 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 24 },
   header: {
     marginBottom: 24,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
   },
   title: { fontSize: 24, fontWeight: "700", color: "#2C2010" },
   count: { fontSize: 14, color: "#8B7B6C" },
+  searchBar: {
+    marginBottom: 18,
+    paddingHorizontal: 14,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "#FAF7F1",
+    borderWidth: 1,
+    borderColor: "#E6DCCF",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    color: "#2C2010",
+    fontSize: 14,
+    paddingVertical: 0,
+  },
+  clearButton: {
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   list: { gap: 12 },
+  emptyState: {
+    paddingVertical: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  emptyStateTitle: {
+    marginTop: 6,
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#2C2010",
+  },
+  emptyStateText: {
+    fontSize: 13,
+    color: "#8B7B6C",
+    textAlign: "center",
+    maxWidth: 240,
+  },
   userCard: {
     backgroundColor: "#fff",
     borderRadius: 12,

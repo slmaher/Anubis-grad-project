@@ -20,6 +20,7 @@ export async function addLocalNotification(notification) {
       ...notification,
       createdAt: notification?.createdAt || new Date().toISOString(),
       source: notification?.source || "local",
+      read: notification?.read ?? false,
     };
     const next = [withId, ...current].slice(0, 100);
     await AsyncStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(next));
@@ -35,6 +36,21 @@ export async function updateLocalNotification(notificationId, patch) {
     const next = current.map((item) =>
       item.id === notificationId ? { ...item, ...patch } : item,
     );
+    await AsyncStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(next));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function markLocalNotificationAsRead(notificationId) {
+  return updateLocalNotification(notificationId, { read: true });
+}
+
+export async function markAllLocalNotificationsAsRead() {
+  try {
+    const current = await getLocalNotifications();
+    const next = current.map((item) => ({ ...item, read: true }));
     await AsyncStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(next));
     return true;
   } catch {

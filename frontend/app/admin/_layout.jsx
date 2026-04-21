@@ -294,11 +294,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#EDE6DF",
   },
   mobileHeader: {
-    height: 60,
+    height: 70,
     backgroundColor: "#F9F7F4",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingTop: 24,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(0,0,0,0.05)",
