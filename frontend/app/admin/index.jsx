@@ -31,6 +31,7 @@ export default function AdminDashboard() {
   const [recentActivity, setRecentActivity] = useState([]);
   const [visibleActivityCount, setVisibleActivityCount] = useState(10);
   const [exportingCsv, setExportingCsv] = useState(false);
+  const [selectedPeriodDays, setSelectedPeriodDays] = useState(30);
 
   const isRTL = i18n.dir(i18n.language) === "rtl";
 
@@ -124,8 +125,86 @@ export default function AdminDashboard() {
 
   const getActionLabel = (type, action) => `${type} • ${action}`;
 
+  const periodOptions = [7, 30, 90];
+
+  const filteredActivity = useMemo(() => {
+    if (!Array.isArray(recentActivity) || recentActivity.length === 0) {
+      return [];
+    }
+
+    const now = Date.now();
+    const periodStart = now - selectedPeriodDays * 24 * 60 * 60 * 1000;
+
+    return recentActivity.filter(
+      (item) => toDateMillis(item?.occurredAt) >= periodStart,
+    );
+  }, [recentActivity, selectedPeriodDays]);
+
+  const activityTypeStats = useMemo(() => {
+    const counts = filteredActivity.reduce((acc, item) => {
+      const key = String(item?.category || "Other");
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    const entries = Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    const max = entries.reduce((highest, entry) => {
+      return entry.count > highest ? entry.count : highest;
+    }, 1);
+
+    return entries.map((entry) => ({
+      ...entry,
+      widthPercent: Math.max(8, Math.round((entry.count / max) * 100)),
+    }));
+  }, [filteredActivity]);
+
+  const dailyTrend = useMemo(() => {
+    const days = 7;
+    const now = new Date();
+    const bucketMap = {};
+
+    for (let i = days - 1; i >= 0; i -= 1) {
+      const date = new Date(now);
+      date.setDate(now.getDate() - i);
+      const key = date.toISOString().slice(0, 10);
+      bucketMap[key] = {
+        key,
+        label: date.toLocaleDateString(i18n.language || "en", {
+          month: "short",
+          day: "numeric",
+        }),
+        count: 0,
+      };
+    }
+
+    filteredActivity.forEach((item) => {
+      const millis = toDateMillis(item?.occurredAt);
+      if (!millis) return;
+      const key = new Date(millis).toISOString().slice(0, 10);
+      if (bucketMap[key]) {
+        bucketMap[key].count += 1;
+      }
+    });
+
+    const values = Object.values(bucketMap);
+    const max = values.reduce((highest, item) => {
+      return item.count > highest ? item.count : highest;
+    }, 1);
+
+    return values.map((item) => ({
+      ...item,
+      heightPercent: Math.max(6, Math.round((item.count / max) * 100)),
+    }));
+  }, [filteredActivity, i18n.language]);
+
   const escapeCsvValue = (value) => {
-    const safe = String(value ?? "").replace(/\r?\n|\r/g, " ").trim();
+    const safe = String(value ?? "")
+      .replace(/\r?\n|\r/g, " ")
+      .trim();
     if (safe.includes(",") || safe.includes('"')) {
       return `"${safe.replace(/"/g, '""')}"`;
     }
@@ -144,8 +223,16 @@ export default function AdminDashboard() {
     ];
 
     const logsRows = [
-      ["Category", "Action", "Subject", "Details", "Actor", "Role", "Occurred At"],
-      ...recentActivity.map((item) => [
+      [
+        "Category",
+        "Action",
+        "Subject",
+        "Details",
+        "Actor",
+        "Role",
+        "Occurred At",
+      ],
+      ...filteredActivity.map((item) => [
         item?.category || "",
         item?.action || "",
         item?.subject || "",
@@ -158,6 +245,7 @@ export default function AdminDashboard() {
 
     const lines = [
       ["Admin Dashboard Report", generatedAt],
+      ["Period (Days)", selectedPeriodDays],
       [],
       ["Statistics"],
       ...statsRows,
@@ -245,8 +333,7 @@ export default function AdminDashboard() {
         await shareCsvOnNative(csvContent, fileName);
       }
     } catch (err) {
-      const message =
-        err?.message || t("admin.dashboard.export.csv_failed");
+      const message = err?.message || t("admin.dashboard.export.csv_failed");
       Alert.alert(t("admin.dashboard.export.csv_error_title"), message);
     } finally {
       setExportingCsv(false);
@@ -255,7 +342,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     setVisibleActivityCount(10);
-  }, [recentActivity.length]);
+  }, [filteredActivity.length]);
 
   const getSettledValue = (result) =>
     result?.status === "fulfilled" ? result.value : { data: [] };
@@ -655,8 +742,88 @@ export default function AdminDashboard() {
         ))}
       </View>
 
+      <Text style={[styles.subtitle, isRTL && styles.textRight]}>
+        {t("admin.dashboard.visualizations.title")}
+      </Text>
+
+      <View style={styles.periodRow}>
+        {periodOptions.map((period) => {
+          const isSelected = selectedPeriodDays === period;
+          return (
+            <TouchableOpacity
+              key={period}
+              style={[
+                styles.periodButton,
+                isSelected && styles.periodButtonActive,
+              ]}
+              onPress={() => setSelectedPeriodDays(period)}
+            >
+              <Text
+                style={[
+                  styles.periodButtonText,
+                  isSelected && styles.periodButtonTextActive,
+                ]}
+              >
+                {t("admin.dashboard.visualizations.last_days", { days: period })}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <View style={styles.visualGrid}>
+        <View style={styles.visualCard}>
+          <Text style={[styles.visualTitle, isRTL && styles.textRight]}>
+            {t("admin.dashboard.visualizations.top_categories")}
+          </Text>
+          {activityTypeStats.length === 0 ? (
+            <Text style={[styles.placeholderText, isRTL && styles.textRight]}>
+              {t("admin.dashboard.activity.empty")}
+            </Text>
+          ) : (
+            activityTypeStats.map((item) => (
+              <View key={item.name} style={styles.barRow}>
+                <Text style={[styles.barLabel, isRTL && styles.textRight]}>
+                  {item.name}
+                </Text>
+                <View style={styles.barTrack}>
+                  <View
+                    style={[styles.barFill, { width: `${item.widthPercent}%` }]}
+                  />
+                </View>
+                <Text style={styles.barValue}>{item.count}</Text>
+              </View>
+            ))
+          )}
+        </View>
+
+        <View style={styles.visualCard}>
+          <Text style={[styles.visualTitle, isRTL && styles.textRight]}>
+            {t("admin.dashboard.visualizations.weekly_trend")}
+          </Text>
+          <View style={styles.trendWrap}>
+            {dailyTrend.map((item) => (
+              <View key={item.key} style={styles.trendItem}>
+                <View style={styles.trendBarShell}>
+                  <View
+                    style={[
+                      styles.trendBarFill,
+                      { height: `${item.heightPercent}%` },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.trendCount}>{item.count}</Text>
+                <Text style={styles.trendLabel}>{item.label}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      </View>
+
       <View style={styles.logsHeaderRow}>
-        <Text style={[styles.subtitle, styles.logsTitle, isRTL && styles.textRight]}>
+        <Text
+          style={[styles.subtitle, styles.logsTitle, isRTL && styles.textRight]}
+        >
           {t("admin.dashboard.recent_activity")}
         </Text>
         <TouchableOpacity
@@ -664,7 +831,11 @@ export default function AdminDashboard() {
           onPress={handleExportCsv}
           disabled={exportingCsv}
         >
-          <MaterialCommunityIcons name="file-delimited-outline" size={18} color="#8A631A" />
+          <MaterialCommunityIcons
+            name="file-delimited-outline"
+            size={18}
+            color="#8A631A"
+          />
           <Text style={styles.exportBtnText}>
             {exportingCsv
               ? t("admin.dashboard.export.csv_exporting")
@@ -675,16 +846,16 @@ export default function AdminDashboard() {
       <View style={styles.recentActivity}>
         <Text style={[styles.logsSummary, isRTL && styles.textRight]}>
           {t("admin.dashboard.export.logs_count", {
-            total: recentActivity.length,
-            shown: Math.min(visibleActivityCount, recentActivity.length),
+            total: filteredActivity.length,
+            shown: Math.min(visibleActivityCount, filteredActivity.length),
           })}
         </Text>
-        {recentActivity.length === 0 ? (
+        {filteredActivity.length === 0 ? (
           <Text style={[styles.placeholderText, isRTL && styles.textRight]}>
             {t("admin.dashboard.activity.empty")}
           </Text>
         ) : (
-          recentActivity.slice(0, visibleActivityCount).map((item) => (
+          filteredActivity.slice(0, visibleActivityCount).map((item) => (
             <View key={item.id} style={styles.activityRow}>
               <View style={styles.activityDotWrap}>
                 <MaterialCommunityIcons
@@ -716,12 +887,12 @@ export default function AdminDashboard() {
             </View>
           ))
         )}
-        {recentActivity.length > visibleActivityCount && (
+        {filteredActivity.length > visibleActivityCount && (
           <TouchableOpacity
             style={styles.loadMoreBtn}
             onPress={() =>
               setVisibleActivityCount((prev) =>
-                Math.min(prev + 10, recentActivity.length),
+                Math.min(prev + 10, filteredActivity.length),
               )
             }
           >
@@ -771,6 +942,118 @@ const styles = StyleSheet.create({
     color: "#2C2010",
     marginTop: 32,
     marginBottom: 16,
+  },
+  periodRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginBottom: 12,
+  },
+  periodButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#D8C3A6",
+    backgroundColor: "#FFF",
+  },
+  periodButtonActive: {
+    borderColor: "#8A631A",
+    backgroundColor: "#F6EFE3",
+  },
+  periodButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6B5B4F",
+  },
+  periodButtonTextActive: {
+    color: "#8A631A",
+  },
+  visualGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 16,
+  },
+  visualCard: {
+    flex: 1,
+    minWidth: 260,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)",
+  },
+  visualTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#2C2010",
+    marginBottom: 12,
+  },
+  barRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 10,
+  },
+  barLabel: {
+    width: 70,
+    fontSize: 12,
+    color: "#6B5B4F",
+  },
+  barTrack: {
+    flex: 1,
+    height: 10,
+    borderRadius: 999,
+    backgroundColor: "#F1E6D7",
+    overflow: "hidden",
+  },
+  barFill: {
+    height: "100%",
+    borderRadius: 999,
+    backgroundColor: "#4A90E2",
+  },
+  barValue: {
+    width: 26,
+    textAlign: "right",
+    fontSize: 12,
+    color: "#2C2010",
+    fontWeight: "700",
+  },
+  trendWrap: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 8,
+    minHeight: 160,
+    paddingTop: 12,
+  },
+  trendItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+  trendBarShell: {
+    width: "100%",
+    maxWidth: 32,
+    height: 96,
+    borderRadius: 8,
+    justifyContent: "flex-end",
+    backgroundColor: "#F1E6D7",
+    overflow: "hidden",
+  },
+  trendBarFill: {
+    width: "100%",
+    backgroundColor: "#50C878",
+  },
+  trendCount: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#2C2010",
+    fontWeight: "700",
+  },
+  trendLabel: {
+    marginTop: 2,
+    fontSize: 10,
+    color: "#8B7B6C",
   },
   logsHeaderRow: {
     marginTop: 32,
