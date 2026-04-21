@@ -383,6 +383,14 @@
         "new_artifact": "تمت إضافة قطعة أثرية: {{name}}",
         "unknown_user": "مستخدم غير معروف",
         "unknown_artifact": "قطعة أثرية غير معروفة"
+      },
+      "export": {
+        "csv_title": "تصدير لوحة التحكم كملف CSV",
+        "csv_button": "تصدير CSV",
+        "csv_exporting": "جارٍ التصدير...",
+        "csv_failed": "تعذر تصدير ملف CSV.",
+        "csv_error_title": "فشل تصدير CSV",
+        "logs_count": "عرض {{shown}} من {{total}} سجل"
       }
     }
   }
