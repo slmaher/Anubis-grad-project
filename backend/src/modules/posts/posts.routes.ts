@@ -172,8 +172,18 @@ postsRouter.delete(
           .json({ success: false, message: "Post not found" });
       }
 
-      const isOwner = post.user.toString() === req.user!.id;
-      const isAdmin = req.user!.role === UserRole.Admin;
+      const postOwnerId =
+        post.user && typeof (post.user as any).toString === "function"
+          ? (post.user as any).toString()
+          : "";
+      const requesterRole = String(req.user?.role || "")
+        .trim()
+        .toLowerCase();
+
+      const isOwner = postOwnerId === req.user!.id;
+      const isAdmin =
+        requesterRole === String(UserRole.Admin).toLowerCase() ||
+        requesterRole === "admin";
 
       if (!isOwner && !isAdmin) {
         return res.status(403).json({
