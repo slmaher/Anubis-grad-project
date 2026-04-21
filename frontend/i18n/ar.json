@@ -391,6 +391,12 @@
         "csv_failed": "تعذر تصدير ملف CSV.",
         "csv_error_title": "فشل تصدير CSV",
         "logs_count": "عرض {{shown}} من {{total}} سجل"
+      },
+      "visualizations": {
+        "title": "التحليلات المرئية",
+        "last_days": "آخر {{days}} يوم",
+        "top_categories": "أعلى فئات النشاط",
+        "weekly_trend": "اتجاه النشاط (7 أيام)"
       }
     }
   }

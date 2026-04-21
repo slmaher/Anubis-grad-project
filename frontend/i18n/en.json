@@ -391,6 +391,12 @@
         "csv_failed": "Could not export the CSV file.",
         "csv_error_title": "CSV Export Failed",
         "logs_count": "Showing {{shown}} of {{total}} logs"
+      },
+      "visualizations": {
+        "title": "Visual Analytics",
+        "last_days": "Last {{days}} days",
+        "top_categories": "Top Activity Categories",
+        "weekly_trend": "Activity Trend (7 Days)"
       }
     }
   }
