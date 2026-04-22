@@ -123,11 +123,11 @@ The platform provides:
   - Create, update, delete products
 - Tour guide management
   - Create, update, delete guide profiles
-- Analytics (implemented as operational summary cards)
-  - User count
-  - Museum count
-  - Artifact count
-  - Volunteer application count
+- Analytics and reporting
+  - KPI summary cards (users, museums, artifacts, volunteer applications)
+  - Bar charts for trend/comparison views (for example users growth, artifacts per museum, event activity, volunteering activity)
+  - Filterable history views for operations and records
+  - CSV export for history/report tables
 
 ## 3. Frontend Structure
 
@@ -257,6 +257,8 @@ The platform provides:
 
 Admin is implemented in frontend/app/admin and adapts for desktop layout in admin/\_layout.jsx.
 
+The dashboard is the operational control center of the platform. It combines content management, moderation, and reporting so admins can both manage entities and track system activity from one place.
+
 ### 4.1 Pages and What They Do
 
 - admin/index
@@ -282,7 +284,32 @@ Admin is implemented in frontend/app/admin and adapts for desktop layout in admi
 - admin/tour-guides
   - Tour guide profile CRUD
 
-### 4.2 APIs Used by Admin Pages
+### 4.2 Core Admin Capabilities (Detailed)
+
+- Access control and security
+  - Admin-only route guard via token + role validation
+  - Unauthorized users are redirected to login
+- Content lifecycle management
+  - Full create/edit/delete flows across museums, artifacts, events, campaigns, opportunities, products, and guide profiles
+  - Soft-delete behavior where implemented on backend modules
+- Community and quality moderation
+  - Post removal for policy/content moderation
+  - Review moderation and deletion to maintain quality/trust
+- Volunteer operations
+  - Create opportunities
+  - Review applicants
+  - Update application status workflow
+- User administration
+  - Role updates (visitor/guide/admin)
+  - User deactivation for safety and governance
+- Visual analytics
+  - Summary KPI cards for platform health
+  - Bar charts for category comparison and historical trends
+- Reporting and auditability
+  - History-style tables for managed records
+  - Export history/report data to CSV for external analysis and archiving
+
+### 4.3 APIs Used by Admin Pages
 
 - Users
   - GET /api/users
@@ -332,7 +359,21 @@ Admin is implemented in frontend/app/admin and adapts for desktop layout in admi
   - PATCH /api/tour-guides/:id
   - DELETE /api/tour-guides/:id
 
-### 4.3 Admin Actions Matrix
+### 4.4 Analytics, Charts, and CSV Export
+
+- KPI cards
+  - Total users
+  - Total museums
+  - Total artifacts
+  - Total volunteer applications
+- Bar charts
+  - Side-by-side comparison of major admin datasets
+  - Trend visualization for periodic growth and activity history
+- CSV export
+  - Exportable history/report tables for operations tracking
+  - Supports offline reporting and sharing with stakeholders
+
+### 4.5 Admin Actions Matrix
 
 - Create: museums, artifacts, events, campaigns, opportunities, products, tour-guides, users
 - Update: users, museums, artifacts, events, campaigns, opportunities, volunteer applications, products, tour-guides
@@ -417,7 +458,16 @@ Mounted in backend/src/app.ts:
 - Response
   - Returns assistant reply text
 
-### 6.2 Artifact/Image Analysis
+### 6.2 Instant Translation in Chats (MyMemory API)
+
+- Frontend usage
+  - Chat UI can trigger instant translation for incoming/outgoing messages
+- Translation provider
+  - MyMemory Translation API is used for real-time text translation in chat context
+- Scope
+  - This is translation assistance for messaging UX and is separate from the Groq assistant generation path
+
+### 6.3 Artifact/Image Analysis
 
 - Frontend flow
   - /scan capture/gallery -> /scan-result
@@ -435,9 +485,10 @@ Mounted in backend/src/app.ts:
 - UI usage
   - Displays confidence, metadata fields, description, restored image
 
-### 6.3 Where AI Is Used in UX
+### 6.4 Where AI Is Used in UX
 
 - Conversational assistant in chatbot screen
+- Instant chat translation in messaging using MyMemory API
 - Visual artifact recognition and restoration in scan result screen
 
 ## 7. Full Integration (Major Feature Flows)
