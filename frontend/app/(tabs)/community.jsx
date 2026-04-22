@@ -23,6 +23,7 @@ import { getAuthToken, getAuthUser } from "../api/authStorage";
 export default function Community() {
   const router = useRouter();
   const { t } = useTranslation();
+  const MAX_POST_IMAGE_LENGTH = 2_000_000;
   const [searchQuery, setSearchQuery] = useState("");
   const [isPostModalVisible, setPostModalVisible] = useState(false);
   const [newPostContent, setNewPostContent] = useState("");
@@ -180,13 +181,23 @@ export default function Community() {
         return;
       }
 
-      let base64Image = selectedImage;
-      if (selectedImage && !selectedImage.startsWith("data:")) {
-        // Optionally, handling base64, but assuming the image is processed properly
+      let imagePayload = null;
+      if (selectedImage?.startsWith("data:")) {
+        if (selectedImage.length > MAX_POST_IMAGE_LENGTH) {
+          alert(
+            "The selected image is too large to upload. Please choose a smaller image.",
+          );
+          return;
+        }
+
+        imagePayload = selectedImage;
       }
 
       await api.createPost(
-        { content: newPostContent, image: base64Image },
+        {
+          content: newPostContent,
+          ...(imagePayload ? { image: imagePayload } : {}),
+        },
         token,
       );
       setPostModalVisible(false);
@@ -208,15 +219,13 @@ export default function Community() {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
-      quality: 0.5,
+      quality: 0.25,
       base64: true,
     });
 
     if (!result.canceled) {
       if (result.assets[0].base64) {
         setSelectedImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
-      } else {
-        setSelectedImage(result.assets[0].uri);
       }
     }
   };
