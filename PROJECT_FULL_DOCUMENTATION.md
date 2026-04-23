@@ -1,5 +1,21 @@
 # Anubis Project - Full System Documentation
 
+## Document Map
+
+This document is organized in the following order to improve readability and traceability:
+
+1. System overview and scope
+2. Role-based feature catalog
+3. Frontend structure and routing
+4. Admin dashboard details
+5. Backend structure, modules, and security
+6. Backend implementation (backend-first view)
+7. AI features and translation/analysis paths
+8. Feature-level integration flows (screen -> API -> backend -> DB/AI -> UI)
+9. End-to-end user journeys
+10. Cross-system relationships
+11. Known integration gaps and implementation notes
+
 ## 1. System Overview
 
 ### 1.1 What the App Does
@@ -45,9 +61,11 @@ The platform provides:
   - Implemented as admin routes inside Expo app (works on web/desktop responsive layout)
   - Folder: frontend/app/admin
 
-## 2. Feature Extraction
+## 2. Role-Based Feature Catalog
 
-### A) Visitor Features
+This section groups all product capabilities by primary actor.
+
+### 2.1 Visitor Features
 
 - Authentication
   - Register and login
@@ -89,7 +107,7 @@ The platform provides:
   - Sign up to opportunities
   - View donation campaigns
 
-### B) Tour Guide Features
+### 2.2 Tour Guide Features
 
 - All visitor features
 - Tour guide profile lifecycle
@@ -97,7 +115,7 @@ The platform provides:
   - Update profile fields (bio, specialties, languages, pricing, availability)
   - Visibility in public guide listing
 
-### C) Admin Dashboard Features
+### 2.3 Admin Dashboard Features
 
 - User management
   - List users
@@ -130,6 +148,8 @@ The platform provides:
   - CSV export for history/report tables
 
 ## 3. Frontend Structure
+
+This section documents the frontend surface area and how navigation and API integration are organized.
 
 ### 3.1 Mobile Screens by Feature Group
 
@@ -382,6 +402,8 @@ The dashboard is the operational control center of the platform. It combines con
 
 ## 5. Backend Structure
 
+This section provides the backend inventory of modules, entities, transport patterns, and security controls.
+
 ### 5.1 Backend Modules
 
 Mounted in backend/src/app.ts:
@@ -443,9 +465,92 @@ Mounted in backend/src/app.ts:
 - Backend emits new_message event when POST /api/chat/messages succeeds
 - Frontend listens in useChatSocket hook and updates UI in chat screen
 
-## 6. AI Features
+### 5.5 Security
 
-### 6.1 Assistant Chat
+- Authentication
+  - JWT-based authentication for protected REST endpoints
+  - User identity loaded from token in middleware
+- Authorization (RBAC)
+  - Role checks enforce Admin/Guide-only operations where needed
+  - Non-privileged users are restricted to their own resources in scoped routes
+- Input validation
+  - DTO validation middleware validates request payloads before handler logic
+  - Invalid data returns controlled 4xx responses
+- Credential handling
+  - Passwords are hashed on registration and verified on login
+  - Secrets/config are environment-driven (for example JWT secret and API keys)
+- Socket security
+  - Socket.IO handshake is protected via JWT validation middleware
+  - Events are emitted to per-user rooms to limit message visibility
+- Data safety patterns
+  - isActive/soft-delete patterns are used in multiple domains to reduce destructive operations
+  - Access guards are applied before data mutation endpoints
+
+## 6. Backend Implementation (First View)
+
+This section explains backend implementation in a focused view so the data and control flow are explicit.
+
+### 6.1 Runtime and Server Bootstrap
+
+- Stack
+  - Node.js + Express + TypeScript
+  - MongoDB with Mongoose ODM
+- App bootstrap flow
+  - backend/src/server.ts creates HTTP server from Express app
+  - Connects MongoDB before accepting traffic
+  - Initializes Socket.IO singleton for realtime chat
+  - Starts listening on configured port
+
+### 6.2 Request Lifecycle
+
+- Entry point
+  - Incoming request reaches route mounted in backend/src/app.ts under /api/*
+- Middleware chain
+  - JSON parsing, CORS and other app-level middleware
+  - Authentication middleware for protected routes
+  - DTO validation middleware for request bodies where configured
+- Business logic
+  - Route handlers execute domain rules (auth, content, social, volunteering, etc.)
+- Data layer
+  - Mongoose models handle reads/writes against MongoDB
+- Response
+  - API returns structured success/error JSON consumed by frontend clients
+
+### 6.3 Modular Domain Implementation
+
+- The backend is organized by feature modules under backend/src/modules.
+- Each module typically includes:
+  - routes for endpoint contracts
+  - model(s) for schema and persistence
+  - dto(s) for input validation
+- Implemented modules include:
+  - auth, users, museums, artifacts, tickets, events, restored-artifacts
+  - chat, assistant, reviews, donations, volunteers, tour-guides
+  - posts, marketplace, friends, ai
+
+### 6.4 Realtime and AI Integration in Backend
+
+- Realtime (chat)
+  - Socket.IO is initialized once in server bootstrap
+  - JWT socket auth validates handshake token
+  - Users join personal rooms by user id
+  - chat.routes emits new_message events after message persistence
+- AI orchestration
+  - /api/assistant/chat calls Groq LLM with model fallback strategy
+  - /api/ai/analyze receives upload and proxies to Python FastAPI service
+  - FastAPI handles recognition + metadata + restoration lookup
+
+### 6.5 Why Backend-First Matters for This Project
+
+- Frontend features are API-driven; behavior is defined primarily by backend contracts.
+- Role access (visitor/guide/admin) is enforced in backend middleware/routes.
+- Realtime delivery and AI responses are orchestrated by backend services before UI rendering.
+
+## 7. AI Features
+
+This section separates AI generation, translation, and visual analysis so each AI path is explicit.
+
+### 7.1 Assistant Chat
 
 - Frontend screen
   - /ai/chatbot
@@ -458,7 +563,7 @@ Mounted in backend/src/app.ts:
 - Response
   - Returns assistant reply text
 
-### 6.2 Instant Translation in Chats (MyMemory API)
+### 7.2 Instant Translation in Chats (MyMemory API)
 
 - Frontend usage
   - Chat UI can trigger instant translation for incoming/outgoing messages
@@ -467,7 +572,7 @@ Mounted in backend/src/app.ts:
 - Scope
   - This is translation assistance for messaging UX and is separate from the Groq assistant generation path
 
-### 6.3 Artifact/Image Analysis
+### 7.3 Artifact/Image Analysis
 
 - Frontend flow
   - /scan capture/gallery -> /scan-result
@@ -485,15 +590,17 @@ Mounted in backend/src/app.ts:
 - UI usage
   - Displays confidence, metadata fields, description, restored image
 
-### 6.4 Where AI Is Used in UX
+### 7.4 Where AI Is Used in UX
 
 - Conversational assistant in chatbot screen
 - Instant chat translation in messaging using MyMemory API
 - Visual artifact recognition and restoration in scan result screen
 
-## 7. Full Integration (Major Feature Flows)
+## 8. Feature-Level Integration Flows
 
-### Feature: Registration and Login
+Each flow follows the same structure: Screen -> API -> Backend Processing -> Database/AI -> UI Response.
+
+### 8.1 Registration and Login
 
 - Screen
   - /auth/signup, /auth/login
@@ -512,7 +619,7 @@ Mounted in backend/src/app.ts:
 - UI response
   - Stores auth session, routes admin to /admin and others to /home
 
-### Feature: Museums Browsing
+### 8.2 Museums Browsing
 
 - Screen
   - /(tabs)/explore and museum related views
@@ -528,7 +635,7 @@ Mounted in backend/src/app.ts:
 - UI response
   - Renders museum list/details
 
-### Feature: Artifacts Browsing
+### 8.3 Artifacts Browsing
 
 - Screen
   - /artifacts/index, /artifacts/artifactDetailsScreen
@@ -544,7 +651,7 @@ Mounted in backend/src/app.ts:
 - UI response
   - Shows artifact details and related metadata fields
 
-### Feature: Events
+### 8.4 Events
 
 - Screen
   - /(tabs)/events, /events/eventsList, /eventScreen/eventScreen
@@ -560,7 +667,7 @@ Mounted in backend/src/app.ts:
 - UI response
   - Event lists/cards/details
 
-### Feature: Reviews
+### 8.5 Reviews
 
 - Screen
   - /reviews, /write-review
@@ -579,7 +686,7 @@ Mounted in backend/src/app.ts:
 - UI response
   - Shows review feeds and confirmation screens
 
-### Feature: Posts and Social Interactions
+### 8.6 Posts and Social Interactions
 
 - Screen
   - /(tabs)/community
@@ -597,7 +704,7 @@ Mounted in backend/src/app.ts:
 - UI response
   - Live local state updates for feed interactions
 
-### Feature: Friend Requests
+### 8.7 Friend Requests
 
 - Screen
   - /user/[id], /notifications/index
@@ -617,7 +724,7 @@ Mounted in backend/src/app.ts:
 - UI response
   - Friendship status and incoming requests lists
 
-### Feature: Chat Messaging (Socket.IO)
+### 8.8 Chat Messaging (Socket.IO)
 
 - Screen
   - /messagesList/index and /messagesList/chatScreen
@@ -637,7 +744,7 @@ Mounted in backend/src/app.ts:
 - UI response
   - Real-time receive path + conversation list refresh
 
-### Feature: Donations and Campaigns
+### 8.9 Donations and Campaigns
 
 - Screen
   - /volunteering/index for campaign browsing and admin/donations for CRUD
@@ -655,7 +762,7 @@ Mounted in backend/src/app.ts:
 - UI response
   - Campaigns list and donation interactions
 
-### Feature: Volunteering
+### 8.10 Volunteering
 
 - Screen
   - /volunteering/index and admin/volunteering
@@ -673,7 +780,7 @@ Mounted in backend/src/app.ts:
 - UI response
   - Opportunity cards, signup actions, admin applicant workflow
 
-### Feature: Tour Guide Profiles
+### 8.11 Tour Guide Profiles
 
 - Screen
   - /tour-guide/index and admin/tour-guides
@@ -690,7 +797,7 @@ Mounted in backend/src/app.ts:
 - UI response
   - Guide listing and profile admin management
 
-### Feature: AI Chat Assistant
+### 8.12 AI Chat Assistant
 
 - Screen
   - /ai/chatbot
@@ -706,7 +813,7 @@ Mounted in backend/src/app.ts:
 - UI response
   - Displays assistant reply bubble
 
-### Feature: AI Image Scan
+### 8.13 AI Image Scan
 
 - Screen
   - /(tabs)/scan -> /(tabs)/scan-result
@@ -721,9 +828,11 @@ Mounted in backend/src/app.ts:
 - UI response
   - Displays identified artifact information and restoration image URL when available
 
-## 8. End-to-End User Flows
+## 9. End-to-End User Journeys
 
-### 8.1 User Registration and Login
+This section summarizes complete user journeys from interaction start to visible outcome.
+
+### 9.1 User Registration and Login
 
 1. User opens auth screen and submits registration or login.
 2. Frontend calls auth endpoint.
@@ -731,14 +840,14 @@ Mounted in backend/src/app.ts:
 4. Backend returns user info and JWT.
 5. Frontend stores token and routes by role.
 
-### 8.2 Browsing Museums and Artifacts
+### 9.2 Browsing Museums and Artifacts
 
 1. User opens explore/artifact views.
 2. Frontend requests museums/artifacts endpoints.
 3. Backend fetches active records from MongoDB.
 4. Frontend renders cards/detail views.
 
-### 8.3 Booking Tickets
+### 9.3 Booking Tickets
 
 Current implementation is primarily UI/local flow in ticket screens.
 
@@ -747,7 +856,7 @@ Current implementation is primarily UI/local flow in ticket screens.
 3. UI navigates to /tickets/qrcode.
    Note: backend ticket endpoints exist, but these specific screens currently do not call POST /api/tickets in the present implementation.
 
-### 8.4 Posting and Social Interaction
+### 9.4 Posting and Social Interaction
 
 1. User opens community tab.
 2. Frontend loads posts from GET /api/posts.
@@ -755,7 +864,7 @@ Current implementation is primarily UI/local flow in ticket screens.
 4. Backend mutates Post document in MongoDB.
 5. Updated state returned and reflected in feed.
 
-### 8.5 Chat Messaging with Socket.IO
+### 9.5 Chat Messaging with Socket.IO
 
 1. User opens conversations and picks contact.
 2. Frontend loads messages via REST.
@@ -764,7 +873,7 @@ Current implementation is primarily UI/local flow in ticket screens.
 5. Backend stores Message and emits new_message to receiver room.
 6. Receiver UI gets event instantly and appends message.
 
-### 8.6 AI Chat Assistant
+### 9.6 AI Chat Assistant
 
 1. User writes message in chatbot screen.
 2. Frontend sends history and language to POST /api/assistant/chat.
@@ -772,7 +881,7 @@ Current implementation is primarily UI/local flow in ticket screens.
 4. Backend returns assistant reply.
 5. Frontend appends AI response.
 
-### 8.7 AI Image Scan
+### 9.7 AI Image Scan
 
 1. User captures image in scan screen or picks from gallery.
 2. Frontend uploads image to POST /api/ai/analyze.
@@ -781,31 +890,31 @@ Current implementation is primarily UI/local flow in ticket screens.
 5. Result returns to Node then to frontend.
 6. Scan-result screen renders metadata and restoration preview URL.
 
-## 9. System Relationships
+## 10. System Relationships and Dependencies
 
-### 9.1 Frontend <-> Backend
+### 10.1 Frontend <-> Backend
 
 - Frontend calls REST APIs using fetch wrappers in frontend/app/api/client.js and frontend/app/api/ai.js.
 - JWT token passed in Authorization header for protected endpoints.
 - Role-sensitive routing in frontend admin layout uses /api/users/me response.
 
-### 9.2 Backend <-> Database
+### 10.2 Backend <-> Database
 
 - Express modules use Mongoose models to query/update MongoDB.
 - Shared middleware performs auth, role checks, and request validation.
 
-### 9.3 Backend <-> AI
+### 10.3 Backend <-> AI
 
 - Assistant route calls external Groq LLM API.
 - AI image route calls Python FastAPI AI service through HTTP.
 
-### 9.4 Admin Dashboard Control Plane
+### 10.4 Admin Dashboard Control Plane
 
 - Admin pages call protected endpoints with bearer token.
 - Admin actions mutate central domain entities (users, content, moderation, campaigns, opportunities, products).
 - Changes propagate to visitor experiences through shared data sources.
 
-## 10. Important Integration Notes and Gaps
+## 11. Implementation Gaps and Priority Notes
 
 These are observed from current code and should be considered in planning:
 
