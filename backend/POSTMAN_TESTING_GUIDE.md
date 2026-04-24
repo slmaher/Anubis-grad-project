@@ -1,43 +1,41 @@
 # Postman Testing Guide - Revive Egypt Backend
 
-This guide walks you through testing the **Auth** and **Users** modules using Postman.
+This guide helps you test Auth and Users endpoints quickly with one Postman environment that works for both PC and phone testing.
+
+The collection now also includes Posts test cases (list, create, like, comment, delete) and additional Users profile/update tests.
 
 ## Prerequisites
 
-1. **Start the backend server**:
-   ```bash
-   npm run dev
-   ```
-   Server should be running at `http://localhost:4000`
+1. Start backend from the `backend` folder:
+```bash
+npm run dev
+```
 
-2. **Ensure MongoDB is running** (check your `.env` file for `MONGODB_URI`)
+2. Confirm MongoDB is available and backend `.env` is configured.
 
-3. **Open Postman** (Desktop app or web version)
+3. Make sure your API is reachable:
+- PC test: `http://localhost:4000`
+- Phone/LAN test: `http://<your-pc-ip>:4000` (example: `http://192.168.1.3:4000`)
 
----
+4. Open Postman desktop app.
 
-## Step 1: Set Up Postman Environment (Optional but Recommended)
+## Step 1: Create Postman Environment
 
-Create a Postman Environment to store variables:
+Create environment `Revive Egypt` with these variables:
 
-1. Click **Environments** → **+** (Create Environment)
-2. Name it: `Revive Egypt Local`
-3. Add variables:
-   - `base_url`: `http://localhost:4000`
-   - `access_token`: (leave empty, will be set automatically)
-4. Save and select this environment
+- `base_url`: `http://localhost:4000` (or your LAN IP for mobile/LAN testing)
+- `access_token`: leave empty
+- `user_id`: leave empty
 
-**Alternative**: Use the full URL `http://localhost:4000` directly in each request.
+You can switch only `base_url` later without editing request URLs.
 
----
+## Step 2: Health Check
 
-## Step 2: Test Health Check
+Request:
 
-**Request**: `GET http://localhost:4000/health`
+`GET {{base_url}}/health`
 
-**Headers**: None required
-
-**Expected Response** (200 OK):
+Expected 200:
 ```json
 {
   "status": "ok",
@@ -45,20 +43,18 @@ Create a Postman Environment to store variables:
 }
 ```
 
-✅ **If this works, your server is running correctly!**
+## Step 3: Register User
 
----
+Request:
 
-## Step 3: Register a New User
+`POST {{base_url}}/api/auth/register`
 
-**Request**: `POST http://localhost:4000/api/auth/register`
-
-**Headers**:
-```
+Headers:
+```text
 Content-Type: application/json
 ```
 
-**Body** (raw JSON):
+Body:
 ```json
 {
   "name": "Nefertari",
@@ -68,40 +64,13 @@ Content-Type: application/json
 }
 ```
 
-**Expected Response** (201 Created):
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": "65f0c3f3c2a3b31234567890",
-      "name": "Nefertari",
-      "email": "nefertari@example.com",
-      "role": "Visitor"
-    },
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-}
-```
+## Step 4: Login
 
-**⚠️ Important**: Copy the `accessToken` value! You'll need it for protected routes.
+Request:
 
-**Common Errors**:
-- **409 Conflict**: Email already exists
-- **400 Bad Request**: Validation errors (check email format, password length, etc.)
+`POST {{base_url}}/api/auth/login`
 
----
-
-## Step 4: Login (Alternative to Register)
-
-**Request**: `POST http://localhost:4000/api/auth/login`
-
-**Headers**:
-```
-Content-Type: application/json
-```
-
-**Body** (raw JSON):
+Body:
 ```json
 {
   "email": "nefertari@example.com",
@@ -109,77 +78,41 @@ Content-Type: application/json
 }
 ```
 
-**Expected Response** (200 OK):
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": "65f0c3f3c2a3b31234567890",
-      "name": "Nefertari",
-      "email": "nefertari@example.com",
-      "role": "Visitor"
-    },
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+Expected response contains `data.accessToken`.
+
+## Step 5: Auto-Save Token in Postman
+
+In the `Tests` tab of Register and Login requests, paste:
+
+```javascript
+if (pm.response.code === 200 || pm.response.code === 201) {
+  const data = pm.response.json();
+  if (data?.data?.accessToken) {
+    pm.environment.set("access_token", data.data.accessToken);
+  }
+  if (data?.data?.user?._id) {
+    pm.environment.set("user_id", data.data.user._id);
   }
 }
 ```
 
-**Copy the `accessToken`** for the next steps.
+For protected requests, use header:
 
----
-
-## Step 5: Get Current User Profile (Protected Route)
-
-**Request**: `GET http://localhost:4000/api/users/me`
-
-**Headers**:
-```
-Authorization: Bearer <paste-your-access-token-here>
+```text
+Authorization: Bearer {{access_token}}
 ```
 
-**Example**:
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
+## Step 6: Get Current User
 
-**Expected Response** (200 OK):
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "65f0c3f3c2a3b31234567890",
-    "name": "Nefertari",
-    "email": "nefertari@example.com",
-    "role": "Visitor",
-    "isActive": true,
-    "createdAt": "2026-02-10T12:00:00.000Z",
-    "updatedAt": "2026-02-10T12:00:00.000Z"
-  }
-}
-```
+Request:
 
-**Common Errors**:
-- **401 Unauthorized**: Missing or invalid token
-- **401 Unauthorized**: Token expired (check `JWT_EXPIRES_IN` in `.env`)
+`GET {{base_url}}/api/users/me`
 
----
+Expected 200 with current user object.
 
-## Step 6: Create an Admin User (For Testing Admin Routes)
+## Step 7: Admin Flow
 
-First, register/login as a regular user, then create an Admin user manually in MongoDB, OR:
-
-**Option A**: Register with Admin role (if your backend allows it):
-```json
-{
-  "name": "Admin Ramses",
-  "email": "admin@revive-egypt.com",
-  "password": "admin123",
-  "role": "Admin"
-}
-```
-
-**Option B**: Use MongoDB Compass or `mongosh` to update a user's role:
+1. Promote your test user to Admin in MongoDB:
 ```javascript
 db.users.updateOne(
   { email: "nefertari@example.com" },
@@ -187,63 +120,28 @@ db.users.updateOne(
 )
 ```
 
-Then login again to get a new token with Admin role.
+2. Login again to get a fresh admin token.
 
----
+3. Test admin endpoints:
+- `GET {{base_url}}/api/users`
+- `POST {{base_url}}/api/users`
+- `GET {{base_url}}/api/users/{{user_id}}`
+- `PATCH {{base_url}}/api/users/{{user_id}}`
+- `DELETE {{base_url}}/api/users/{{user_id}}`
 
-## Step 7: Admin Routes - List All Users
+4. Test extra user endpoints:
+- `PATCH {{base_url}}/api/users/me`
+- `GET {{base_url}}/api/users/profile/{{user_id}}`
 
-**Request**: `GET http://localhost:4000/api/users`
+5. Test posts endpoints:
+- `GET {{base_url}}/api/posts`
+- `GET {{base_url}}/api/posts?userId={{user_id}}`
+- `POST {{base_url}}/api/posts`
+- `POST {{base_url}}/api/posts/{{post_id}}/like`
+- `POST {{base_url}}/api/posts/{{post_id}}/comments`
+- `DELETE {{base_url}}/api/posts/{{post_id}}`
 
-**Headers**:
-```
-Authorization: Bearer <admin-access-token>
-```
-
-**Expected Response** (200 OK):
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "_id": "65f0c3f3c2a3b31234567890",
-      "name": "Nefertari",
-      "email": "nefertari@example.com",
-      "role": "Visitor",
-      "isActive": true,
-      "createdAt": "2026-02-10T12:00:00.000Z",
-      "updatedAt": "2026-02-10T12:00:00.000Z"
-    },
-    {
-      "_id": "65f0c3f3c2a3b31234567891",
-      "name": "Admin Ramses",
-      "email": "admin@revive-egypt.com",
-      "role": "Admin",
-      "isActive": true,
-      "createdAt": "2026-02-10T12:00:00.000Z",
-      "updatedAt": "2026-02-10T12:00:00.000Z"
-    }
-  ]
-}
-```
-
-**Common Errors**:
-- **403 Forbidden**: User role is not Admin
-- **401 Unauthorized**: Missing or invalid token
-
----
-
-## Step 8: Admin Routes - Create a User (e.g., Guide)
-
-**Request**: `POST http://localhost:4000/api/users`
-
-**Headers**:
-```
-Authorization: Bearer <admin-access-token>
-Content-Type: application/json
-```
-
-**Body** (raw JSON):
+Example create body:
 ```json
 {
   "name": "Guide Cleopatra",
@@ -253,233 +151,41 @@ Content-Type: application/json
 }
 ```
 
-**Expected Response** (201 Created):
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "65f0c3f3c2a3b31234567892",
-    "name": "Guide Cleopatra",
-    "email": "cleopatra.guide@example.com",
-    "role": "Guide",
-    "isActive": true,
-    "createdAt": "2026-02-10T12:00:00.000Z",
-    "updatedAt": "2026-02-10T12:00:00.000Z"
-  }
-}
-```
+## Error Scenarios to Verify
 
----
+1. Invalid login credentials -> `401`
+2. Missing Authorization header on protected route -> `401`
+3. Invalid token -> `401`
+4. Visitor token on admin route -> `403`
+5. Invalid register payload -> `400`
 
-## Step 9: Admin Routes - Get User by ID
+In the Postman collection, run the `Error and Security Tests` folder to validate these quickly with built-in assertions.
 
-**Request**: `GET http://localhost:4000/api/users/<user-id>`
+Run the `Posts` folder after login so `{{access_token}}` and `{{user_id}}` are already set.
 
-**Example**: `GET http://localhost:4000/api/users/65f0c3f3c2a3b31234567890`
+## Mobile and PC Testing Notes
 
-**Headers**:
-```
-Authorization: Bearer <admin-access-token>
-```
-
-**Expected Response** (200 OK):
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "65f0c3f3c2a3b31234567890",
-    "name": "Nefertari",
-    "email": "nefertari@example.com",
-    "role": "Visitor",
-    "isActive": true,
-    "createdAt": "2026-02-10T12:00:00.000Z",
-    "updatedAt": "2026-02-10T12:00:00.000Z"
-  }
-}
-```
-
-**Common Errors**:
-- **404 Not Found**: User ID doesn't exist
-- **403 Forbidden**: Not an Admin
-
----
-
-## Step 10: Admin Routes - Update User
-
-**Request**: `PATCH http://localhost:4000/api/users/<user-id>`
-
-**Example**: `PATCH http://localhost:4000/api/users/65f0c3f3c2a3b31234567890`
-
-**Headers**:
-```
-Authorization: Bearer <admin-access-token>
-Content-Type: application/json
-```
-
-**Body** (raw JSON - all fields optional):
-```json
-{
-  "name": "Nefertari Updated",
-  "role": "Guide"
-}
-```
-
-**Expected Response** (200 OK):
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "65f0c3f3c2a3b31234567890",
-    "name": "Nefertari Updated",
-    "email": "nefertari@example.com",
-    "role": "Guide",
-    "isActive": true,
-    "createdAt": "2026-02-10T12:00:00.000Z",
-    "updatedAt": "2026-02-10T12:01:00.000Z"
-  }
-}
-```
-
----
-
-## Step 11: Admin Routes - Deactivate User (Soft Delete)
-
-**Request**: `DELETE http://localhost:4000/api/users/<user-id>`
-
-**Example**: `DELETE http://localhost:4000/api/users/65f0c3f3c2a3b31234567890`
-
-**Headers**:
-```
-Authorization: Bearer <admin-access-token>
-```
-
-**Expected Response** (200 OK):
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "65f0c3f3c2a3b31234567890",
-    "name": "Nefertari Updated",
-    "email": "nefertari@example.com",
-    "role": "Guide",
-    "isActive": false,
-    "createdAt": "2026-02-10T12:00:00.000Z",
-    "updatedAt": "2026-02-10T12:02:00.000Z"
-  }
-}
-```
-
-**Note**: This sets `isActive: false`. The user cannot login after this.
-
----
-
-## Testing Error Scenarios
-
-### 1. Invalid Login Credentials
-**Request**: `POST http://localhost:4000/api/auth/login`
-```json
-{
-  "email": "wrong@example.com",
-  "password": "wrongpass"
-}
-```
-**Expected**: `401 Unauthorized` - "Invalid credentials"
-
-### 2. Missing Authorization Header
-**Request**: `GET http://localhost:4000/api/users/me` (no Authorization header)
-**Expected**: `401 Unauthorized` - "Missing or invalid token"
-
-### 3. Invalid Token
-**Request**: `GET http://localhost:4000/api/users/me`
-**Headers**: `Authorization: Bearer invalid-token-here`
-**Expected**: `401 Unauthorized` - "Invalid or expired token"
-
-### 4. Visitor Trying Admin Route
-**Request**: `GET http://localhost:4000/api/users` (with Visitor token)
-**Expected**: `403 Forbidden` - "Forbidden: insufficient role"
-
-### 5. Validation Errors
-**Request**: `POST http://localhost:4000/api/auth/register`
-```json
-{
-  "name": "A",
-  "email": "invalid-email",
-  "password": "123"
-}
-```
-**Expected**: `400 Bad Request` with validation error details
-
----
-
-## Postman Collection Setup Tips
-
-### Automatically Save Token
-
-1. In Postman, after login/register, go to **Tests** tab
-2. Add this script:
-```javascript
-if (pm.response.code === 200 || pm.response.code === 201) {
-    const jsonData = pm.response.json();
-    if (jsonData.data && jsonData.data.accessToken) {
-        pm.environment.set("access_token", jsonData.data.accessToken);
-    }
-}
-```
-
-3. Then in **Authorization** tab for protected routes, select:
-   - Type: `Bearer Token`
-   - Token: `{{access_token}}`
-
-### Create a Collection
-
-1. Create a new Collection: **Revive Egypt API**
-2. Organize folders:
-   - **Auth** (register, login)
-   - **Users** (me, list, create, get, update, delete)
-3. Set collection-level variables:
-   - `base_url`: `http://localhost:4000`
-4. Use `{{base_url}}/api/auth/register` in requests
-
----
-
-## Quick Test Checklist
-
-- [ ] Health check works
-- [ ] Register new user
-- [ ] Login with credentials
-- [ ] Get current user profile (with token)
-- [ ] Create Admin user (or update role in DB)
-- [ ] Login as Admin
-- [ ] List all users (Admin only)
-- [ ] Create Guide user (Admin only)
-- [ ] Get user by ID (Admin only)
-- [ ] Update user (Admin only)
-- [ ] Deactivate user (Admin only)
-- [ ] Test error scenarios (invalid token, wrong role, etc.)
-
----
+1. If testing from your PC, use `base_url = http://localhost:4000`.
+2. If testing across LAN/phone, use `base_url = http://<your-pc-ip>:4000`.
+3. Keep backend running on `0.0.0.0` (already configured in this project).
+4. Ensure same Wi-Fi and firewall allows port `4000`.
 
 ## Troubleshooting
 
-**Server not starting?**
-- Check MongoDB connection string in `.env`
-- Ensure port 4000 is not in use
-- Run `npm install` if dependencies are missing
+1. Health check fails:
+- Verify backend started successfully.
+- Verify port `4000` is free.
 
-**401 Unauthorized errors?**
-- Check token is copied correctly (no extra spaces)
-- Verify token hasn't expired (check `JWT_EXPIRES_IN` in `.env`)
-- Ensure `Authorization: Bearer <token>` format is correct
+2. `401 Unauthorized`:
+- Token missing/expired.
+- Wrong `Authorization` format.
 
-**403 Forbidden errors?**
-- User role must be `Admin` for admin routes
-- Check user's `role` field in MongoDB
+3. `403 Forbidden`:
+- Token user is not Admin for admin endpoints.
 
-**Validation errors?**
-- Email must be valid format
-- Password must be 6-64 characters
-- Name must be at least 2 characters
+4. No response from phone/LAN:
+- Wrong IP in `base_url`.
+- Different network.
+- Firewall blocks inbound `4000`.
 
----
-
-Happy Testing! 🚀
+Happy testing.
