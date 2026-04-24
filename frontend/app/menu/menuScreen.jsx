@@ -1,4 +1,4 @@
-import { useRouter, useFocusEffect } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -95,21 +95,21 @@ export default function MenuScreen({ onClose }) {
       iconName: "account-group-outline",
       route: "/messagesList",
     },
-    {
-      id: "museums",
-      label: t("menu.museums"),
-      iconLib: "material",
-      iconName: "bank-outline",
-      route: "/Museums",
-    },
+{
+  id: "museums",
+  label: t("menu.museums"),
+  iconLib: "material",
+  iconName: "bank-outline",
+  route: "/(tabs)/explore",
+},
 
-    {
-      id: "map",
-      label: t("menu.map"),
-      iconLib: "ion",
-      iconName: "location-outline",
-      route: "/Map",
-    },
+{
+  id: "map",
+  label: t("menu.map"),
+  iconLib: "ion",
+  iconName: "location-outline",
+  route: "/map",
+},
   ];
 
   const [counts, setCounts] = React.useState({
@@ -139,9 +139,6 @@ export default function MenuScreen({ onClose }) {
   const loadCounts = React.useCallback(async () => {
     try {
       const localNotifications = await getLocalNotifications();
-      const unreadLocalNotifications = localNotifications.filter(
-        (notification) => notification.read !== true,
-      );
       const token = await getAuthToken();
 
       let friendRequests = 0;
@@ -169,8 +166,7 @@ export default function MenuScreen({ onClose }) {
       }
 
       setCounts({
-        notifications:
-          unreadLocalNotifications.length + friendRequests + messages,
+        notifications: localNotifications.length + friendRequests + messages,
         friendRequests,
         messages,
       });
@@ -248,12 +244,6 @@ export default function MenuScreen({ onClose }) {
       .catch(() => setAuthUser(null));
   }, []);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      loadCounts();
-    }, [loadCounts]),
-  );
-
   const panResponder = React.useMemo(
     () =>
       PanResponder.create({
@@ -293,7 +283,7 @@ export default function MenuScreen({ onClose }) {
           }).start();
         },
       }),
-    [isRTL, dragAnim, closeMenu],
+    [isRTL, dragAnim, closeMenu]
   );
 
   return (

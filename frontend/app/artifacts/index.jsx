@@ -11,10 +11,17 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Feather from "@expo/vector-icons/Feather";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 const { width } = Dimensions.get("window");
-const CARD_W = (width - 48 - 12) / 2;
-const COLLECTION_W = (width - 48 - 20) / 3;
+const FEATURED_W = width * 0.42;
+const FEATURED_H = FEATURED_W * 1.62;
+const COLLECTION_W = width * 0.28;
+const COLLECTION_H = COLLECTION_W * 1.5;
 
 const featuredArtifacts = [
   {
@@ -23,7 +30,7 @@ const featuredArtifacts = [
     description:
       "Ancient Egyptian god of mummification and the afterlife, depicted with a jackal head and human body. This exquisite replica captures the mysterious essence of one of Egypt's most iconic deities.",
     image: require("../../assets/images/Anubis-Statue.png"),
-    imageKey: "anubis", // Key to identify the image
+    imageKey: "anubis",
   },
   {
     id: 2,
@@ -31,7 +38,7 @@ const featuredArtifacts = [
     description:
       "The legendary golden death mask of the young pharaoh Tutankhamun. This stunning piece represents one of the most famous treasures of ancient Egypt, crafted with incredible detail and historical accuracy.",
     image: require("../../assets/images/Grand-Egyptian-Museum.png"),
-    imageKey: "tutankhamun", // Key to identify the image
+    imageKey: "tutankhamun",
   },
 ];
 
@@ -41,66 +48,45 @@ const collections = [
   { id: 3, image: require("../../assets/images/exploreCollection3.png") },
 ];
 
-// Icons
-const HomeIcon = () => (
-  <View style={icon.wrap}>
-    <View style={icon.homeRoof} />
-    <View style={icon.homeDoor} />
-  </View>
-);
-
-const ExploreIcon = () => (
-  <View style={icon.wrap}>
-    <View style={icon.circle}>
-      <View style={icon.compassNeedle} />
-    </View>
-  </View>
-);
-
-const ScanIcon = () => (
-  <View style={icon.wrap}>
-    <View style={icon.scanOuter}>
-      <View style={icon.scanInner} />
-    </View>
-  </View>
-);
-
-const EventsIcon = () => (
-  <View style={icon.wrap}>
-    <View style={icon.calBox}>
-      <View style={icon.calTop} />
-      <View style={icon.calCheck} />
-    </View>
-  </View>
-);
-
-const CommunityIcon = () => (
-  <View style={icon.wrap}>
-    <View style={icon.commRow}>
-      <View style={icon.commDot} />
-      <View style={icon.commDot} />
-      <View style={icon.commDot} />
-    </View>
-    <View style={icon.commRow2}>
-      <View style={icon.commDot} />
-      <View style={icon.commDot} />
-    </View>
-  </View>
-);
-
 const tabs = [
-  { label: "Home", Icon: HomeIcon, route: "/home" },
-  { label: "Explore", Icon: ExploreIcon, route: "/explore" },
-  { label: "Scan", Icon: ScanIcon, route: "/scan" },
-  { label: "Events", Icon: EventsIcon, route: "/EventsScreen" },
-  { label: "Community", Icon: CommunityIcon, route: "/community" },
+  {
+    key: "home",
+    label: "Home",
+    route: "/(tabs)/home",
+    Icon: () => <Feather name="home" size={24} color="#2C2010" />,
+  },
+  {
+    key: "explore",
+    label: "Explore",
+    route: "/(tabs)/explore",
+    Icon: () => <MaterialIcons name="explore" size={24} color="#2C2010" />,
+  },
+  {
+    key: "scan",
+    label: "Scan",
+    route: "/(tabs)/scan",
+    Icon: () => <Ionicons name="scan" size={24} color="#2C2010" />,
+  },
+  {
+    key: "events",
+    label: "Events",
+    route: "/eventScreen/eventScreen",
+    Icon: () => (
+      <MaterialIcons name="event-available" size={24} color="#2C2010" />
+    ),
+  },
+  {
+    key: "community",
+    label: "Community",
+    route: "/(tabs)/community",
+    Icon: () => <FontAwesome name="group" size={22} color="#2C2010" />,
+  },
 ];
 
 export default function ArtifactsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  // Handle artifact card press - navigate to detail screen with data
   const handleArtifactPress = (artifact) => {
     router.push({
       pathname: "/artifacts/artifactDetailsScreen",
@@ -108,7 +94,7 @@ export default function ArtifactsScreen() {
         id: artifact.id,
         title: artifact.title,
         description: artifact.description,
-        imageKey: artifact.imageKey, // Pass the image identifier
+        imageKey: artifact.imageKey,
       },
     });
   };
@@ -120,37 +106,43 @@ export default function ArtifactsScreen() {
       resizeMode="cover"
     >
       <SafeAreaView style={styles.safeArea}>
-        {/* Header */}
         <View style={styles.header}>
-          {/* Back Button */}
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
-
-          <View style={styles.headerLeft}>
-            <Text style={styles.headerTitle}>Artifact page</Text>
-            <Text style={styles.headerSub}>View Art, Culture and History</Text>
-          </View>
-
-          <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconBtn}>
-              <Text style={styles.iconTxt}>🔍</Text>
+          <View style={styles.headerTopRow}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.backIcon}>←</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.iconBtn}>
-              <Text style={styles.iconTxt}>☰</Text>
-            </TouchableOpacity>
+            <View style={styles.headerIcons}>
+              <TouchableOpacity style={styles.iconBtn} activeOpacity={0.8}>
+                <Image
+                  source={require("../../assets/images/search-icon.png")}
+                  style={styles.searchIconImage}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.iconBtn} activeOpacity={0.8}>
+                <MaterialCommunityIcons
+                  name="menu"
+                  size={30}
+                  color="#4D4D4D"
+                />
+              </TouchableOpacity>
+            </View>
           </View>
+
+          <Text style={styles.headerTitle}>Artifact page</Text>
+          <Text style={styles.headerSub}>View Art, Culture and History</Text>
         </View>
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={styles.scrollContent}
         >
-          {/* Featured artifacts */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -161,7 +153,7 @@ export default function ArtifactsScreen() {
                 key={item.id}
                 style={styles.featuredCard}
                 onPress={() => handleArtifactPress(item)}
-                activeOpacity={0.85}
+                activeOpacity={0.9}
               >
                 <Image
                   source={item.image}
@@ -170,7 +162,9 @@ export default function ArtifactsScreen() {
                 />
 
                 <View style={styles.featuredLabel}>
-                  <Text style={styles.featuredLabelTxt}>{item.title}</Text>
+                  <Text style={styles.featuredLabelTxt} numberOfLines={1}>
+                    {item.title}
+                  </Text>
 
                   <View style={styles.featuredArrow}>
                     <Text style={styles.featuredArrowTxt}>›</Text>
@@ -180,11 +174,10 @@ export default function ArtifactsScreen() {
             ))}
           </ScrollView>
 
-          {/* Explore Collections */}
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Explore Collections</Text>
 
-            <TouchableOpacity>
+            <TouchableOpacity activeOpacity={0.8}>
               <Text style={styles.seeAll}>See all</Text>
             </TouchableOpacity>
           </View>
@@ -198,7 +191,7 @@ export default function ArtifactsScreen() {
               <TouchableOpacity
                 key={item.id}
                 style={styles.collectionCard}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
               >
                 <Image
                   source={item.image}
@@ -210,95 +203,122 @@ export default function ArtifactsScreen() {
           </ScrollView>
         </ScrollView>
 
-        {/* Bottom Tab Bar */}
-        <View style={styles.tabBar}>
-          {tabs.map((tab) => (
-            <TouchableOpacity
-              key={tab.label}
-              style={styles.tabItem}
-              onPress={() => router.push(tab.route)}
-              activeOpacity={0.7}
-            >
-              <tab.Icon />
-              <Text style={styles.tabLabel}>{tab.label}</Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.tabBarContainer}>
+          <View style={styles.tabBar}>
+            <View style={styles.activeBubble} />
+
+            {tabs.map((tab, index) => (
+              <TouchableOpacity
+                key={tab.key}
+                style={styles.tabButton}
+                activeOpacity={0.8}
+                onPress={() => router.push(tab.route)}
+              >
+                <View style={styles.iconContainer}>
+                  <tab.Icon />
+                </View>
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    index === 0 && styles.tabLabelActive,
+                  ]}
+                >
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       </SafeAreaView>
     </ImageBackground>
   );
 }
 
-const DARK = "#1a1a1a";
-const MUTED = "#666";
-
-/* ======================
-   STYLES
-   ====================== */
+const DARK = "#2C2010";
+const MUTED = "#6E6E6E";
 
 const styles = StyleSheet.create({
-  background: { flex: 1, width: "100%", height: "100%" },
-  safeArea: { flex: 1 },
+  background: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
+
+  safeArea: {
+    flex: 1,
+  },
 
   header: {
+    paddingHorizontal: 14,
+    paddingTop: 8,
+    paddingBottom: 10,
+  },
+
+  headerTopRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
+    alignItems: "center",
+    marginBottom: 8,
   },
 
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    width: 34,
+    height: 34,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
   },
 
   backIcon: {
-    fontSize: 24,
-    color: DARK,
-    fontWeight: "bold",
+    fontSize: 28,
+    color: "#6B6B6B",
+    fontWeight: "400",
   },
 
-  headerLeft: { flex: 1 },
-
   headerTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: DARK,
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#4F4F4F",
+    marginBottom: 4,
   },
 
   headerSub: {
     fontSize: 12,
-    color: MUTED,
-    marginTop: 2,
+    color: "#7B7B7B",
   },
 
   headerIcons: {
     flexDirection: "row",
-    gap: 8,
     alignItems: "center",
+    gap: 8,
   },
 
-  iconBtn: { padding: 6 },
+  iconBtn: {
+    padding: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
-  iconTxt: { fontSize: 18 },
+  searchIconImage: {
+    width: 18,
+    height: 18,
+    tintColor: "#4D4D4D",
+  },
+
+  scrollContent: {
+    paddingBottom: 120,
+  },
 
   featuredRow: {
-    paddingHorizontal: 20,
-    gap: 12,
+    paddingHorizontal: 14,
+    gap: 16,
+    paddingTop: 12,
     paddingBottom: 8,
   },
 
   featuredCard: {
-    width: CARD_W,
-    height: CARD_W * 1.4,
-    borderRadius: 16,
+    width: FEATURED_W,
+    height: FEATURED_H,
+    borderRadius: 20,
     overflow: "hidden",
     backgroundColor: "#2a1e0e",
   },
@@ -306,52 +326,54 @@ const styles = StyleSheet.create({
   featuredImg: {
     width: "100%",
     height: "100%",
-    position: "absolute",
   },
 
   featuredLabel: {
     position: "absolute",
-    bottom: 12,
-    left: 12,
-    right: 12,
+    left: 10,
+    right: 10,
+    bottom: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "rgba(0,0,0,0.45)",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: "rgba(34, 27, 18, 0.58)",
+    borderRadius: 18,
+    paddingLeft: 12,
+    paddingRight: 8,
+    paddingVertical: 7,
   },
 
   featuredLabelTxt: {
     fontSize: 11,
-    color: "#fff",
+    color: "#FFFFFF",
     fontWeight: "500",
     flex: 1,
+    marginRight: 8,
   },
 
   featuredArrow: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.25)",
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.18)",
     alignItems: "center",
     justifyContent: "center",
   },
 
   featuredArrowTxt: {
-    color: "#fff",
-    fontSize: 14,
-    lineHeight: 20,
+    color: "#FFFFFF",
+    fontSize: 16,
+    lineHeight: 18,
+    fontWeight: "500",
   },
 
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 12,
+    paddingHorizontal: 14,
+    marginTop: 10,
+    marginBottom: 10,
   },
 
   sectionTitle: {
@@ -362,18 +384,19 @@ const styles = StyleSheet.create({
 
   seeAll: {
     fontSize: 13,
-    color: MUTED,
+    color: "#7A7A7A",
+    fontWeight: "400",
   },
 
   collectionsRow: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 14,
     gap: 10,
   },
 
   collectionCard: {
     width: COLLECTION_W,
-    height: COLLECTION_W * 1.3,
-    borderRadius: 14,
+    height: COLLECTION_H,
+    borderRadius: 18,
     overflow: "hidden",
     backgroundColor: "#2a1e0e",
   },
@@ -383,145 +406,63 @@ const styles = StyleSheet.create({
     height: "100%",
   },
 
-  tabBar: {
+  tabBarContainer: {
     position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    backgroundColor: "rgba(255,252,248,0.97)",
-    borderTopWidth: 1,
-    borderTopColor: "rgba(200,180,150,0.25)",
-    paddingBottom: 28,
-    paddingTop: 12,
-    paddingHorizontal: 8,
+    left: 20,
+    right: 20,
+    bottom: 28,
+    alignItems: "center",
   },
 
-  tabItem: {
+  tabBar: {
+    width: "100%",
+    flexDirection: "row",
+    backgroundColor: "rgba(255, 255, 255, 0.92)",
+    borderRadius: 32,
+    paddingVertical: 4,
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.92)",
+    elevation: 12,
+    alignItems: "center",
+    overflow: "hidden",
+    justifyContent: "space-between",
+    position: "relative",
+  },
+
+  activeBubble: {
+    position: "absolute",
+    left: 4,
+    top: 2,
+    width: "19%",
+    height: 56,
+    borderRadius: 30,
+    backgroundColor: "rgba(255,255,255,0.96)",
+    elevation: 4,
+  },
+
+  tabButton: {
     flex: 1,
+    height: 52,
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
+    zIndex: 2,
+    paddingHorizontal: 2,
+  },
+
+  iconContainer: {
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   tabLabel: {
-    fontSize: 10,
-    color: MUTED,
-    fontWeight: "500",
-  },
-});
-
-/* ======================
-   ICON STYLES
-   ====================== */
-
-const icon = StyleSheet.create({
-  wrap: {
-    width: 24,
-    height: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  // Home icon
-  homeRoof: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 10,
-    borderRightWidth: 10,
-    borderBottomWidth: 8,
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    borderBottomColor: MUTED,
-    position: "absolute",
-    top: 2,
-  },
-  homeDoor: {
-    width: 12,
-    height: 10,
-    backgroundColor: MUTED,
-    position: "absolute",
-    bottom: 2,
-  },
-
-  // Explore icon
-  circle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: MUTED,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  compassNeedle: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 4,
-    borderRightWidth: 4,
-    borderBottomWidth: 10,
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    borderBottomColor: MUTED,
-  },
-
-  // Scan icon
-  scanOuter: {
-    width: 20,
-    height: 20,
-    borderWidth: 2,
-    borderColor: MUTED,
-    borderRadius: 4,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  scanInner: {
-    width: 12,
-    height: 12,
-    borderWidth: 1.5,
-    borderColor: MUTED,
-    borderRadius: 2,
-  },
-
-  // Events/Calendar icon
-  calBox: {
-    width: 18,
-    height: 18,
-    borderWidth: 2,
-    borderColor: MUTED,
-    borderRadius: 3,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  calTop: {
-    width: 12,
-    height: 2,
-    backgroundColor: MUTED,
-    position: "absolute",
-    top: 1,
-  },
-  calCheck: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: MUTED,
+    fontSize: 10.5,
+    fontWeight: "600",
+    color: "#2C2010",
     marginTop: 4,
   },
 
-  // Community icon
-  commRow: {
-    flexDirection: "row",
-    gap: 3,
-    marginBottom: 3,
-  },
-  commRow2: {
-    flexDirection: "row",
-    gap: 3,
-  },
-  commDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: MUTED,
+  tabLabelActive: {
+    fontWeight: "700",
+    color: "#2C2010",
   },
 });
