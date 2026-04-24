@@ -12,8 +12,7 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { getAuthToken } from "../api/authStorage";
-
-const API_URL = "http://localhost:4000/api"; // In a real app, use an env var or common client
+import { API_URL } from "../api/baseUrl";
 
 export default function UserManagement() {
   const router = useRouter();

@@ -1,10 +1,9 @@
 import { useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import { getAuthToken } from "../api/authStorage";
+import { API_BASE_URL } from "../api/baseUrl";
 
-// For mobile/emulator development, you might need to use your machine's IP address
-// const SOCKET_URL = 'http://192.168.x.x:4000';
-const SOCKET_URL = "http://localhost:4000";
+const SOCKET_URL = API_BASE_URL;
 
 export const useChatSocket = (onNewMessage) => {
   const socketRef = useRef(null);

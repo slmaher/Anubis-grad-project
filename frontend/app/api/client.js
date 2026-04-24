@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:4000";
+import { API_BASE_URL } from "./baseUrl";
 const MONGODB_OBJECT_ID_PATTERN = /^[a-fA-F0-9]{24}$/;
 
 const LEGACY_MUSEUM_ALIASES = {

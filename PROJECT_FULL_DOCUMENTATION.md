@@ -504,7 +504,7 @@ This section explains backend implementation in a focused view so the data and c
 ### 6.2 Request Lifecycle
 
 - Entry point
-  - Incoming request reaches route mounted in backend/src/app.ts under /api/*
+  - Incoming request reaches route mounted in backend/src/app.ts under /api/\*
 - Middleware chain
   - JSON parsing, CORS and other app-level middleware
   - Authentication middleware for protected routes

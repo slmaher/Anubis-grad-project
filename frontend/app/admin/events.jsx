@@ -17,8 +17,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { getAuthToken } from "../api/authStorage";
-
-const API_URL = "http://localhost:4000/api";
+import { API_URL } from "../api/baseUrl";
 
 const compressImageForWeb = async (dataUrl) => {
   if (Platform.OS !== "web") {

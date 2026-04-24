@@ -13,8 +13,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getAuthToken } from "../api/authStorage";
-
-const API_URL = "http://localhost:4000/api";
+import { API_URL } from "../api/baseUrl";
 
 export default function VolunteeringManagement() {
   const [opportunities, setOpportunities] = useState([]);
