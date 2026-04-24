@@ -14,8 +14,7 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getAuthToken } from "../api/authStorage";
-
-const API_URL = "http://localhost:4000/api";
+import { API_URL } from "../api/baseUrl";
 
 const EMPTY_FORM = {
   user: "",

@@ -14,8 +14,8 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { getAuthToken } from "../api/authStorage";
+import { API_URL } from "../api/baseUrl";
 
-const API_URL = "http://localhost:4000/api";
 const AVAILABLE_ICONS = [
   "heart-outline",
   "account-heart-outline",

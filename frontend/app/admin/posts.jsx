@@ -3,8 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Image, Activ
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { getAuthToken } from '../api/authStorage';
 import { api } from '../api/client';
-
-const API_URL = 'http://localhost:4000/api';
+import { API_URL } from '../api/baseUrl';
 
 export default function PostManagement() {
   const [posts, setPosts] = useState([]);

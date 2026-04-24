@@ -16,8 +16,8 @@ import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTranslation } from "react-i18next";
+import { API_URL } from "../api/baseUrl";
 
-const API_URL = "http://localhost:4000/api";
 const DEFAULT_AVATAR = "https://i.pravatar.cc/100";
 
 function mapGuideFromApi(item) {
