@@ -4,6 +4,7 @@ export interface ICampaign extends Document {
   title: string;
   description: string;
   goalAmount: number;
+  suggestedAmount: number;
   currentAmount: number;
   imageUrl?: string;
   icon?: string;
@@ -29,6 +30,11 @@ const CampaignSchema = new Schema<ICampaign>(
     goalAmount: {
       type: Number,
       required: true,
+      min: 0
+    },
+    suggestedAmount: {
+      type: Number,
+      default: 0,
       min: 0
     },
     currentAmount: {
