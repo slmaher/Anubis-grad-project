@@ -148,8 +148,15 @@ function DonateCard({ item, onPress, labels }) {
       </View>
 
       <View style={styles.donateFooter}>
-        <Text style={styles.amountLabel}>{labels.suggestedAmount}</Text>
+        <Text style={styles.amountLabel}>Suggested amount</Text>
         <Text style={styles.amountValue}>{item.amount}</Text>
+      </View>
+
+      <View style={styles.donateFooter}>
+        <Text style={styles.amountLabel}>Campaign goal</Text>
+        <Text style={styles.amountValue}>
+          {item.goalAmount ?? 0} {item.currency || "EGP"}
+        </Text>
       </View>
 
       <TouchableOpacity
@@ -260,12 +267,18 @@ export default function VolunteeringScreen() {
           Array.isArray(volunteerRes.value?.data) &&
           volunteerRes.value.data.length > 0
         ) {
-          setVolunteerItems(
-            volunteerRes.value.data.map((item) => ({
-              ...item,
-              id: item._id || item.id,
-            })),
-          );
+setVolunteerItems(
+  volunteerRes.value.data.map((item) => ({
+    ...item,
+    id: item._id || item.id,
+    title: item.title || "Volunteer Opportunity",
+    desc: item.description || item.desc || "",
+    location: item.location || "Museum",
+    schedule: item.requirements || item.schedule || "No requirements",
+    duration: item.duration || "Flexible",
+    icon: item.icon || "account-heart-outline",
+  })),
+);
         }
 
         if (
@@ -273,13 +286,18 @@ export default function VolunteeringScreen() {
           Array.isArray(donationRes.value?.data) &&
           donationRes.value.data.length > 0
         ) {
-          setDonateItems(
-            donationRes.value.data.map((item) => ({
-              ...item,
-              id: item._id || item.id,
-              amount: `${item.amount} ${item.currency || "EGP"}`,
-            })),
-          );
+setDonateItems(
+  donationRes.value.data.map((item) => ({
+    ...item,
+    id: item._id || item.id,
+    title: item.title || "Donation Campaign",
+    desc: item.description || item.desc || "",
+    amount: `${item.suggestedAmount || 0} ${item.currency || "EGP"}`,
+    goalAmount: item.goalAmount || 0,
+    currency: item.currency || "EGP",
+    icon: item.icon || "heart-outline",
+  })),
+);
         }
       } catch {
         if (isMounted) {
@@ -322,9 +340,15 @@ export default function VolunteeringScreen() {
             setVolunteerItems(
               volunteerRes.value.data.length > 0
                 ? volunteerRes.value.data.map((item) => ({
-                    ...item,
-                    id: item._id || item.id,
-                  }))
+  ...item,
+  id: item._id || item.id,
+  title: item.title || "Volunteer Opportunity",
+  desc: item.description || item.desc || "",
+  location: item.location || "Museum",
+  schedule: item.requirements || item.schedule || "No requirements",
+  duration: item.duration || "Flexible",
+  icon: item.icon || "account-heart-outline",
+}))
                 : fallbackVolunteerItems,
             );
           }
@@ -336,10 +360,15 @@ export default function VolunteeringScreen() {
             setDonateItems(
               donationRes.value.data.length > 0
                 ? donationRes.value.data.map((item) => ({
-                    ...item,
-                    id: item._id || item.id,
-                    amount: `${item.amount || item.goalAmount || 0} ${item.currency || "EGP"}`,
-                  }))
+  ...item,
+  id: item._id || item.id,
+  title: item.title || "Donation Campaign",
+  desc: item.description || item.desc || "",
+  amount: `${item.suggestedAmount || 0} ${item.currency || "EGP"}`,
+  goalAmount: item.goalAmount || 0,
+  currency: item.currency || "EGP",
+  icon: item.icon || "heart-outline",
+}))
                 : fallbackDonateItems,
             );
           }
