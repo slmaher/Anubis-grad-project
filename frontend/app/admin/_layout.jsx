@@ -245,6 +245,7 @@ const styles = StyleSheet.create({
   sidebar: {
     width: 250,
     backgroundColor: "#F9F7F4",
+    paddingTop: 70,
     paddingVertical: 20,
   },
   sidebarLTR: {
