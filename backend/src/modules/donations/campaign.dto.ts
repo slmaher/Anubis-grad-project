@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, Min } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString, Min } from "class-validator";
 
 export class CreateCampaignDto {
   @IsString()
@@ -10,6 +10,11 @@ export class CreateCampaignDto {
   @IsNumber()
   @Min(0)
   goalAmount!: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  suggestedAmount?: number;
 
   @IsOptional()
   @IsString()
@@ -35,6 +40,11 @@ export class UpdateCampaignDto {
   goalAmount?: number;
 
   @IsOptional()
+  @IsNumber()
+  @Min(0)
+  suggestedAmount?: number;
+
+  @IsOptional()
   @IsString()
   imageUrl?: string;
 
@@ -43,5 +53,6 @@ export class UpdateCampaignDto {
   icon?: string;
 
   @IsOptional()
+  @IsBoolean()
   isActive?: boolean;
 }
