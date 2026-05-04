@@ -74,7 +74,7 @@ const result = await api.getReviews(
     return () => {
       isMounted = false;
     };
-  }, [museumId]);
+  }, [museumId, museumName, museumLookupName]);
 
   return (
     <View style={styles.container}>

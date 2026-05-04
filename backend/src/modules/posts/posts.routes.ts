@@ -111,6 +111,67 @@ postsRouter.post(
   },
 );
 
+// PATCH /api/posts/:postId - update post content
+postsRouter.patch(
+  "/:postId",
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { postId } = req.params;
+      const userId = req.user!.id;
+
+      const content =
+        typeof req.body?.content === "string" ? req.body.content.trim() : "";
+
+      if (!content) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Post content is required" });
+      }
+
+      const post = await PostModel.findById(postId);
+
+      if (!post) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Post not found" });
+      }
+
+      const postOwnerId =
+        post.user && typeof (post.user as any).toString === "function"
+          ? (post.user as any).toString()
+          : "";
+
+      const requesterRole = String(req.user?.role || "")
+        .trim()
+        .toLowerCase();
+
+      const isOwner = postOwnerId === userId;
+      const isAdmin =
+        requesterRole === String(UserRole.Admin).toLowerCase() ||
+        requesterRole === "admin";
+
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: You can only edit your own posts",
+        });
+      }
+
+      post.content = content;
+      await post.save();
+
+      const updatedPost = await PostModel.findById(postId)
+        .populate("user", "name email avatar")
+        .populate("comments.user", "name email avatar");
+
+      return res.json({ success: true, data: updatedPost });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // POST /api/posts/:postId/comments - add a comment
 postsRouter.post(
   "/:postId/comments",

@@ -15,7 +15,6 @@ import { useTranslation } from "react-i18next";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { api } from "../api/client";
 
-// Different local image for each museum (when remote fails or is missing)
 const MUSEUM_LOCAL_IMAGES = [
   require("../../assets/images/Grand-Egyptian-Museum.png"),
   require("../../assets/images/The-Grand-Egyptian-Museum.png"),
@@ -33,10 +32,13 @@ const MUSEUM_LOCAL_IMAGES = [
 
 const MUSEUM_NAME_TO_IMAGE = {
   "Grand Egyptian Museum": MUSEUM_LOCAL_IMAGES[0],
+  "Grand Egyptian Museum (GEM)": MUSEUM_LOCAL_IMAGES[0],
   "The Grand Egyptian Museum": MUSEUM_LOCAL_IMAGES[1],
   "Egyptian Museum": MUSEUM_LOCAL_IMAGES[2],
+  "Egyptian Museum (Tahrir)": MUSEUM_LOCAL_IMAGES[2],
   "The Egyptian Museum": MUSEUM_LOCAL_IMAGES[2],
   "National Museum of Egyptian Civilization": MUSEUM_LOCAL_IMAGES[3],
+  "National Museum of Egyptian Civilization (NMEC)": MUSEUM_LOCAL_IMAGES[3],
   "The National Museum of Egypt": MUSEUM_LOCAL_IMAGES[3],
   "Museum of Islamic Art, Cairo": MUSEUM_LOCAL_IMAGES[5],
   "Museum of Islamic Art": MUSEUM_LOCAL_IMAGES[5],
@@ -47,14 +49,15 @@ const MUSEUM_NAME_TO_IMAGE = {
   "Sharm El Sheikh Museum": MUSEUM_LOCAL_IMAGES[9],
   "Hurghada Museum": MUSEUM_LOCAL_IMAGES[10],
   "Museum of Tal Basta Antiquities": MUSEUM_LOCAL_IMAGES[11],
-  "Al-Muizz Street (Historic Open‑Air Museum)": MUSEUM_LOCAL_IMAGES[1],
-  "Beit Al‑Suhaymi": MUSEUM_LOCAL_IMAGES[2],
+  "Al-Muizz Street (Historic Open-Air Museum)": MUSEUM_LOCAL_IMAGES[1],
+  "Beit Al-Suhaymi": MUSEUM_LOCAL_IMAGES[2],
   "Qasr Samihah Kamel (Samihah Kamel Palace)": MUSEUM_LOCAL_IMAGES[0],
 };
 
 function getLocalImageForMuseum(museum) {
   const name = museum?.name?.trim?.();
   if (name && MUSEUM_NAME_TO_IMAGE[name]) return MUSEUM_NAME_TO_IMAGE[name];
+
   const id = (museum?._id || name || "").toString();
   const index = id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return MUSEUM_LOCAL_IMAGES[Math.abs(index) % MUSEUM_LOCAL_IMAGES.length];
@@ -76,15 +79,43 @@ function getMuseumKey(museum, index = 0) {
   return `museum-${index}`;
 }
 
+function getCreatedTime(museum) {
+  const dateValue = museum?.createdAt || museum?.created_at || museum?.date;
+  const time = dateValue ? new Date(dateValue).getTime() : NaN;
+  return Number.isNaN(time) ? 0 : time;
+}
+
+function getPopularityScore(museum) {
+  return (
+    Number(museum?.popularityScore) ||
+    Number(museum?.rating) * 100 + Number(museum?.reviewsCount || 0) ||
+    Number(museum?.reviewsCount) ||
+    0
+  );
+}
+
+function getVisitScore(museum) {
+  return (
+    Number(museum?.viewCount) ||
+    Number(museum?.views) ||
+    Number(museum?.visitedCount) ||
+    Number(museum?.visits) ||
+    Number(museum?.visitCount) ||
+    Number(museum?.reviewsCount) ||
+    0
+  );
+}
+
 export default function Explore() {
   const router = useRouter();
   const { t } = useTranslation();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
   const [museums, setMuseums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // Track remote images that failed to load so we show local fallback
+
   const [failedImageIds, setFailedImageIds] = useState({});
 
   useEffect(() => {
@@ -95,6 +126,7 @@ export default function Explore() {
         setLoading(true);
         const result = await api.getMuseums();
         const list = result?.data || [];
+
         if (isMounted) {
           setMuseums(list);
         }
@@ -115,35 +147,42 @@ export default function Explore() {
     };
   }, []);
 
-  const handleMuseumPress = (museum) => {
+  const handleMuseumPress = async (museum) => {
+    try {
+      if (typeof api.trackMuseumView === "function") {
+        await api.trackMuseumView(museum._id || museum.id);
+      }
+    } catch (err) {
+      console.log("Could not track museum view", err);
+    }
+
     router.push({
       pathname: "/museum-profile",
       params: {
         id: museum._id || museum.id,
+        museumId: museum._id || museum.id,
         name: museum.name,
+        museumName: museum.name,
+        museumLookupName: museum.name,
         city: museum.city,
+        location: museum.location,
         description: museum.description,
         imageUrl: museum.imageUrl,
+        hours: museum.openingHours,
       },
     });
   };
 
   const museumCards = useMemo(() => {
     return museums.map((museum, index) => {
-      const seedKey = (museum?._id || museum?.name || String(index)).toString();
-      const seed = seedKey
-        .split("")
-        .reduce((sum, char) => sum + char.charCodeAt(0), 0);
-
-      const rating = Number((4.1 + (seed % 9) * 0.1).toFixed(1));
-      const reviewsCount = 120 + (seed % 880);
+      const realRating = Number(museum.rating);
+      const realReviews = Number(museum.reviewsCount);
 
       return {
         ...museum,
-        rating,
-        reviewsCount,
-        isPopular: rating >= 4.6,
-        isRecommended: seed % 3 !== 0,
+        rating: Number.isFinite(realRating) ? realRating : 4.1,
+        reviewsCount: Number.isFinite(realReviews) ? realReviews : 0,
+        originalIndex: index,
       };
     });
   }, [museums]);
@@ -151,30 +190,42 @@ export default function Explore() {
   const filteredMuseums = useMemo(() => {
     const query = normalizeText(searchQuery);
 
-    return museumCards.filter((museum) => {
+    let list = museumCards.filter((museum) => {
       const searchableText = normalizeText(
         [museum.name, museum.city, museum.location, museum.description]
           .filter(Boolean)
           .join(" "),
       );
 
-      const matchesSearch = !query || searchableText.includes(query);
-
-      const matchesFilter =
-        activeFilter === "All" ||
-        (activeFilter === "Popular" && museum.isPopular) ||
-        (activeFilter === "Recommended" && museum.isRecommended);
-
-      return matchesSearch && matchesFilter;
+      return !query || searchableText.includes(query);
     });
+
+    if (activeFilter === "All") {
+      return [...list].sort((a, b) => {
+        const dateDiff = getCreatedTime(a) - getCreatedTime(b);
+        if (dateDiff !== 0) return dateDiff;
+        return a.originalIndex - b.originalIndex;
+      });
+    }
+
+    if (activeFilter === "Popular") {
+      return [...list]
+        .filter((museum) => museum.isPopular === true || getPopularityScore(museum) > 0)
+        .sort((a, b) => getPopularityScore(b) - getPopularityScore(a));
+    }
+
+    if (activeFilter === "Recommended") {
+      return [...list].sort((a, b) => getVisitScore(b) - getVisitScore(a));
+    }
+
+    return list;
   }, [activeFilter, museumCards, searchQuery]);
 
   const getImageSource = (museum, index = 0) => {
     const museumKey = getMuseumKey(museum, index);
     const useRemote = museum.imageUrl && !failedImageIds[museumKey];
-    return useRemote
-      ? { uri: museum.imageUrl }
-      : getLocalImageForMuseum(museum);
+
+    return useRemote ? { uri: museum.imageUrl } : getLocalImageForMuseum(museum);
   };
 
   const handleImageError = (museum, index = 0) => {
@@ -184,20 +235,32 @@ export default function Explore() {
 
   return (
     <ImageBackground
-      source={require("../../assets/images/community-background.png")}
+      source={require("../../assets/images/beige-background.jpeg")}
       style={styles.backgroundImage}
       resizeMode="cover"
     >
       <View style={styles.container}>
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{t("explore.title")}</Text>
+
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => router.push("/journey")}
+            >
+              <MaterialCommunityIcons name="camera" size={23} color="#6D5840" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => router.push("/favorites")}
+            >
+              <MaterialCommunityIcons name="bookmark-outline" size={23} color="#6D5840" />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           {loading && (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#8B7B6C" />
@@ -210,7 +273,6 @@ export default function Explore() {
             </View>
           )}
 
-          {/* Search Bar */}
           <View style={styles.searchContainer}>
             <View style={styles.searchBar}>
               <MaterialCommunityIcons
@@ -219,6 +281,7 @@ export default function Explore() {
                 color="#736A61"
                 style={styles.searchLeadingIcon}
               />
+
               <TextInput
                 style={styles.searchInput}
                 placeholder={t("explore.search")}
@@ -234,17 +297,12 @@ export default function Explore() {
                   style={styles.clearSearchButton}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <MaterialCommunityIcons
-                    name="close-circle"
-                    size={18}
-                    color="#90867B"
-                  />
+                  <MaterialCommunityIcons name="close-circle" size={18} color="#90867B" />
                 </TouchableOpacity>
               )}
             </View>
           </View>
 
-          {/* Filter Tabs */}
           <View style={styles.filterContainer}>
             {["All", "Popular", "Recommended"].map((filter) => (
               <TouchableOpacity
@@ -269,11 +327,8 @@ export default function Explore() {
 
           {!loading && !error && filteredMuseums.length > 0 && (
             <>
-              {/* Hero Card */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>
-                  {t("explore.museums_section")}
-                </Text>
+                <Text style={styles.sectionTitle}>{t("explore.museums_section")}</Text>
 
                 <TouchableOpacity
                   style={styles.heroCard}
@@ -286,20 +341,31 @@ export default function Explore() {
                     resizeMode="cover"
                     onError={() => handleImageError(filteredMuseums[0], 0)}
                   />
+
                   <View style={styles.heroOverlay}>
                     <View style={styles.heroBadge}>
                       <MaterialCommunityIcons
-                        name="star-four-points"
+                        name={
+                          activeFilter === "Recommended"
+                            ? "eye-outline"
+                            : activeFilter === "Popular"
+                              ? "fire"
+                              : "star-four-points"
+                        }
                         size={14}
                         color="#F8E6B0"
                       />
                       <Text style={styles.heroBadgeText}>
-                        {t("explore.filters.recommended")}
+                        {activeFilter === "All"
+                          ? t("explore.filters.recommended")
+                          : t(`explore.filters.${activeFilter.toLowerCase()}`)}
                       </Text>
                     </View>
+
                     <Text style={styles.heroName} numberOfLines={2}>
                       {filteredMuseums[0].name}
                     </Text>
+
                     <View style={styles.heroMetaRow}>
                       <MaterialCommunityIcons
                         name="map-marker-outline"
@@ -328,21 +394,17 @@ export default function Explore() {
                         resizeMode="cover"
                         onError={() => handleImageError(museum, index + 1)}
                       />
+
                       <View style={styles.recentOverlay}>
                         <View style={styles.glassyBubble}>
                           <Text style={styles.recentName} numberOfLines={2}>
                             {museum.name}
                           </Text>
+
                           <View style={styles.ratingContainer}>
-                            <MaterialCommunityIcons
-                              name="star"
-                              size={12}
-                              color="#FFD36B"
-                            />
+                            <MaterialCommunityIcons name="star" size={12} color="#FFD36B" />
                             <Text style={styles.rating}>{museum.rating}</Text>
-                            <Text style={styles.reviews}>
-                              ({museum.reviewsCount})
-                            </Text>
+                            <Text style={styles.reviews}>({museum.reviewsCount})</Text>
                           </View>
                         </View>
                       </View>
@@ -351,7 +413,6 @@ export default function Explore() {
                 </View>
               </View>
 
-              {/* Featured Museums */}
               <View style={styles.section}>
                 {filteredMuseums.map((museum, index) => (
                   <TouchableOpacity
@@ -365,8 +426,10 @@ export default function Explore() {
                       resizeMode="cover"
                       onError={() => handleImageError(museum, index)}
                     />
+
                     <View style={styles.featuredOverlay}>
                       <Text style={styles.featuredName}>{museum.name}</Text>
+
                       <View style={styles.featuredFooter}>
                         <View style={styles.featuredMetaLeft}>
                           <MaterialCommunityIcons
@@ -378,6 +441,7 @@ export default function Explore() {
                             {museum.openingHours || "Open today"}
                           </Text>
                         </View>
+
                         <View style={styles.arrowButton}>
                           <MaterialCommunityIcons
                             name="arrow-top-right"
@@ -395,15 +459,14 @@ export default function Explore() {
 
           {!loading && !error && filteredMuseums.length === 0 && (
             <View style={styles.emptyState}>
-              <MaterialCommunityIcons
-                name="magnify-close"
-                size={40}
-                color="#9A8E80"
-              />
+              <MaterialCommunityIcons name="magnify-close" size={40} color="#9A8E80" />
+
               <Text style={styles.emptyStateTitle}>No museums found</Text>
+
               <Text style={styles.emptyStateBody}>
                 Try another name, city, or clear your filters.
               </Text>
+
               <TouchableOpacity
                 style={styles.clearFiltersButton}
                 onPress={() => {
@@ -438,11 +501,37 @@ const styles = StyleSheet.create({
     paddingTop: 70,
     paddingHorizontal: 20,
     paddingBottom: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: "800",
-    color: "#2C2010",
+    fontWeight: "700",
+    color: "#6d4f27",
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  headerIconButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.82)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.95)",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   scrollView: {
     flex: 1,
@@ -508,8 +597,8 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255, 255, 255, 0.9)",
   },
   filterButtonActive: {
-    backgroundColor: "#D4B86A",
-    borderColor: "#C7A955",
+    backgroundColor: "#feeab3",
+    borderColor: "#e2c36d",
   },
   filterText: {
     fontSize: 14,
