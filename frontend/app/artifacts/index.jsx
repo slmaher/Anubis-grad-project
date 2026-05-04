@@ -35,6 +35,7 @@ const featuredArtifacts = [
       "Ancient Egyptian god of mummification and the afterlife, depicted with a jackal head and human body. This exquisite replica captures the mysterious essence of one of Egypt's most iconic deities.",
     image: require("../../assets/images/Anubis-Statue.png"),
     imageKey: "anubis",
+    modelKey: "anubis",
   },
   {
     id: 2,
@@ -110,6 +111,7 @@ export default function ArtifactsScreen() {
         title: artifact.title,
         description: artifact.description,
         imageKey: artifact.imageKey,
+        modelKey: artifact.modelKey,
       },
     });
   };

@@ -89,9 +89,23 @@ export default function ArtifactDetailScreen() {
         {/* CTA Button */}
           <View style={styles.ctaContainer}>
             <TouchableOpacity
-              style={styles.ctaBtn}
-              activeOpacity={0.85}
-            >
+  style={styles.ctaBtn}
+  activeOpacity={0.85}
+  onPress={() => {
+  if (params.modelKey !== "anubis") {
+    alert("3D preview is available for Anubis only for now.");
+    return;
+  }
+
+  router.push({
+    pathname: "/artifacts/Artifact3DViewer",
+    params: {
+      title: artifactTitle,
+      modelKey: "anubis",
+    },
+  });
+}}
+>
               <Text style={styles.ctaTxt}>
                 Take a virtual tour
               </Text>
