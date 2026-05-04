@@ -3,29 +3,96 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
   TouchableOpacity,
   Image,
 } from "react-native";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTranslation } from "react-i18next";
 import MenuScreen from "../menu/menuScreen";
+import { api } from "../api/client";
 
 const DARK = "#2C2010";
 const MUTED = "#8B7B6C";
 const CARD_BG = "rgba(255,255,255,0.6)";
 const LIGHT = "#EDE6DF";
 const BORDER = "rgba(255,255,255,0.55)";
-const ACCENT = "#7A6650";
+const ACCENT = "#725535";
+
+const FEATURED_MUSEUM_NAMES = [
+  "Grand Egyptian Museum (GEM)",
+  "Egyptian Museum (Tahrir)",
+  "National Museum of Egyptian Civilization (NMEC)",
+  "Museum of Islamic Art",
+];
+
+function getFeaturedMuseumImage(name) {
+  switch (name) {
+    case "Grand Egyptian Museum (GEM)":
+      return require("../../assets/images/grand-museum.png");
+    case "Egyptian Museum (Tahrir)":
+      return require("../../assets/images/egyptian-museum.png");
+    case "National Museum of Egyptian Civilization (NMEC)":
+      return require("../../assets/images/The-National-Museum-Of-Egypt.png");
+    case "Museum of Islamic Art":
+      return require("../../assets/images/Museum-of-Islamic-Art.jpg");
+    default:
+      return require("../../assets/images/grand-museum.png");
+  }
+}
 
 export default function Home() {
   const router = useRouter();
   const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState("");
   const [menuVisible, setMenuVisible] = useState(false);
+  const [museums, setMuseums] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      try {
+        const result = await api.getMuseums();
+        if (isMounted) {
+          setMuseums(result?.data || []);
+        }
+      } catch (err) {
+        console.error("Failed to load featured museums", err);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const featuredMuseums = useMemo(() => {
+    return FEATURED_MUSEUM_NAMES.map((name) =>
+      museums.find((museum) => museum.name === name),
+    ).filter(Boolean);
+  }, [museums]);
+
+  const openMuseumProfile = (museum) => {
+    const realId = museum._id || museum.id;
+
+    router.push({
+      pathname: "/museum-profile",
+      params: {
+        id: realId,
+        museumId: realId,
+        name: museum.name,
+        museumName: museum.name,
+        museumLookupName: museum.name,
+        city: museum.city,
+        location: museum.location,
+        description: museum.description,
+        imageUrl: museum.imageUrl,
+        hours: museum.openingHours,
+      },
+    });
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -34,9 +101,8 @@ export default function Home() {
         <View style={styles.bgGlowBottom} />
 
         <View style={styles.container}>
-          {/* Header with hamburger menu */}
           <View style={styles.topBar}>
-            <View style={styles.searchContainer}>
+            <View style={styles.headerContainer}>
               <TouchableOpacity
                 style={styles.menuButton}
                 onPress={() => setMenuVisible(true)}
@@ -44,32 +110,40 @@ export default function Home() {
                 <MaterialCommunityIcons name="menu" size={24} color="#7A6650" />
               </TouchableOpacity>
 
-              <View style={styles.searchBar}>
-                <MaterialCommunityIcons
-                  name="magnify"
-                  size={20}
-                  color="#857565"
-                />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder={t("home.search")}
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  placeholderTextColor="#9C8F84"
-                />
-              </View>
+              <View style={styles.headerActions}>
+                <TouchableOpacity
+                  style={styles.tourGuideButton}
+                  onPress={() => router.push("/tour-guide")}
+                >
+                  <Text style={styles.tourGuideButtonText}>Need a Tour Guide?</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.chatButton}
-                onPress={() => router.push("/ai/chatbot")}
-              >
-                <Ionicons
-                  name="chatbubble-ellipses-outline"
-                  size={20}
-                  color="#755B42"
-                />
-                <Text style={styles.chatText}>{t("home.chat_ai")}</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.smallHeaderButton}
+                  onPress={() => router.push("/faq/FAQ-screens")}
+                >
+                  <MaterialCommunityIcons
+                    name="frequently-asked-questions"
+                    size={20}
+                    color="#755B42"
+                  />
+                  <Text style={styles.smallHeaderButtonText}>FAQ</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.smallHeaderButton}
+                  onPress={() => router.push("/ai/chatbot")}
+                >
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={20}
+                    color="#755B42"
+                  />
+                  <Text style={styles.smallHeaderButtonText}>
+                    {t("home.chat_ai")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
@@ -78,12 +152,9 @@ export default function Home() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            {/* Title */}
             <Text style={styles.title}>{t("home.title")}</Text>
 
-            {/* Navigation Cards Grid */}
             <View style={styles.cardsGrid}>
-              {/* Museums Card */}
               <TouchableOpacity
                 style={styles.navCard}
                 onPress={() => router.push("/explore")}
@@ -98,7 +169,6 @@ export default function Home() {
                 <Text style={styles.navLabel}>{t("home.museums")}</Text>
               </TouchableOpacity>
 
-              {/* Souvenirs Card */}
               <TouchableOpacity
                 style={styles.navCard}
                 onPress={() => router.push("/marketplace")}
@@ -113,7 +183,6 @@ export default function Home() {
                 <Text style={styles.navLabel}>{t("home.souvenirs")}</Text>
               </TouchableOpacity>
 
-              {/* Tickets Card */}
               <TouchableOpacity
                 style={styles.navCard}
                 onPress={() => router.push("/tickets")}
@@ -128,7 +197,6 @@ export default function Home() {
                 <Text style={styles.navLabel}>{t("home.tickets")}</Text>
               </TouchableOpacity>
 
-              {/* Map Card */}
               <TouchableOpacity
                 style={styles.navCard}
                 onPress={() => router.push("/map")}
@@ -140,7 +208,6 @@ export default function Home() {
               </TouchableOpacity>
             </View>
 
-            {/* Featured Section */}
             <View style={styles.featuredSection}>
               <View style={styles.featuredHeader}>
                 <Text style={styles.featuredTitle}>{t("home.featured")}</Text>
@@ -157,67 +224,31 @@ export default function Home() {
                 </TouchableOpacity>
               </View>
 
-              {/* Featured Museum Cards */}
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.museumCardsContainer}
               >
-                {/* Grand Egyptian Museum Card */}
-                <TouchableOpacity
-                  style={styles.museumCard}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/museum-profile",
-                      params: {
-                        id: 1,
-                        name: t("home.grand_museum"),
-                        museumLookupName: "Grand Egyptian Museum",
-                      },
-                    })
-                  }
-                >
-                  <Image
-                    source={require("../../assets/images/grand-museum.png")}
-                    style={styles.museumImage}
-                    resizeMode="cover"
-                  />
-                  <View style={styles.museumCardOverlay}>
-                    <View style={styles.museumTitleBubble}>
-                      <Text style={styles.museumCardTitle}>
-                        {t("home.grand_museum")}
-                      </Text>
+                {featuredMuseums.map((museum) => (
+                  <TouchableOpacity
+                    key={museum._id || museum.id || museum.name}
+                    style={styles.museumCard}
+                    onPress={() => openMuseumProfile(museum)}
+                  >
+                    <Image
+                      source={getFeaturedMuseumImage(museum.name)}
+                      style={styles.museumImage}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.museumCardOverlay}>
+                      <View style={styles.museumTitleBubble}>
+                        <Text style={styles.museumCardTitle}>
+                          {museum.name}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                </TouchableOpacity>
-
-                {/* Egyptian Museum Card */}
-                <TouchableOpacity
-                  style={styles.museumCard}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/museum-profile",
-                      params: {
-                        id: 2,
-                        name: t("home.egyptian_museum"),
-                        museumLookupName: "Egyptian Museum",
-                      },
-                    })
-                  }
-                >
-                  <Image
-                    source={require("../../assets/images/egyptian-museum.png")}
-                    style={styles.museumImage}
-                    resizeMode="cover"
-                  />
-                  <View style={styles.museumCardOverlay}>
-                    <View style={styles.museumTitleBubble}>
-                      <Text style={styles.museumCardTitle}>
-                        {t("home.egyptian_museum")}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                ))}
               </ScrollView>
             </View>
           </ScrollView>
@@ -263,10 +294,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 14,
   },
-  searchContainer: {
+  headerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
   },
   menuButton: {
     width: 44,
@@ -278,32 +308,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(224,215,205,0.9)",
   },
-  searchBar: {
-    flex: 1,
+  headerActions: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.88)",
-    borderRadius: 22,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.95)",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    gap: 7,
+    marginLeft: "auto",
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: DARK,
-  },
-  chatButton: {
+  smallHeaderButton: {
     backgroundColor: "rgba(255,255,255,0.88)",
     borderRadius: 18,
     paddingHorizontal: 10,
@@ -312,17 +323,38 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minWidth: 72,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.95)",
+    borderColor: "rgba(220, 220, 220, 0.95)",
   },
-  chatText: {
+  smallHeaderButtonText: {
     color: MUTED,
-    fontSize: 8.5,
+    fontSize: 9,
     fontWeight: "700",
     textAlign: "center",
     lineHeight: 10,
     marginTop: 2,
     maxWidth: 62,
   },
+tourGuideButton: {
+  backgroundColor: "rgba(255,255,255,0.88)",
+  borderRadius: 18,
+  paddingHorizontal: 12,
+  paddingVertical: 0,
+  height: 30,
+  alignItems: "center",
+  justifyContent: "center",
+  minWidth: 150,
+  borderWidth: 1,
+  borderColor: "rgba(208, 208, 208, 0.95)",
+},
+
+tourGuideButtonText: {
+  color: MUTED,
+  fontSize: 13,
+  fontWeight: "700",
+  textAlign: "center",
+  lineHeight: 15,
+  includeFontPadding: false,
+},
   scrollView: {
     flex: 1,
   },
@@ -331,7 +363,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 30,
-    fontWeight: "800",
+    fontWeight: "700",
     color: ACCENT,
     paddingHorizontal: 16,
     paddingTop: 2,
@@ -387,8 +419,8 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   featuredTitle: {
-    fontSize: 18,
-    fontWeight: "800",
+    fontSize: 20,
+    fontWeight: "700",
     color: ACCENT,
   },
   seeAllButton: {

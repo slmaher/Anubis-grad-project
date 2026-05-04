@@ -10,14 +10,13 @@ import {
   Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import * as Sharing from "expo-sharing";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import AntDesign from "@expo/vector-icons/AntDesign";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { api } from "./api/client";
 
 const { width, height } = Dimensions.get("window");
 
@@ -38,10 +37,13 @@ const MUSEUM_LOCAL_IMAGES = [
 
 const MUSEUM_NAME_TO_IMAGE = {
   "Grand Egyptian Museum": MUSEUM_LOCAL_IMAGES[0],
+  "Grand Egyptian Museum (GEM)": MUSEUM_LOCAL_IMAGES[0],
   "The Grand Egyptian Museum": MUSEUM_LOCAL_IMAGES[1],
   "Egyptian Museum": MUSEUM_LOCAL_IMAGES[2],
+  "Egyptian Museum (Tahrir)": MUSEUM_LOCAL_IMAGES[2],
   "The Egyptian Museum": MUSEUM_LOCAL_IMAGES[2],
   "National Museum of Egyptian Civilization": MUSEUM_LOCAL_IMAGES[3],
+  "National Museum of Egyptian Civilization (NMEC)": MUSEUM_LOCAL_IMAGES[3],
   "The National Museum of Egypt": MUSEUM_LOCAL_IMAGES[3],
   "Museum of Islamic Art, Cairo": MUSEUM_LOCAL_IMAGES[5],
   "Museum of Islamic Art": MUSEUM_LOCAL_IMAGES[5],
@@ -52,28 +54,189 @@ const MUSEUM_NAME_TO_IMAGE = {
   "Sharm El Sheikh Museum": MUSEUM_LOCAL_IMAGES[9],
   "Hurghada Museum": MUSEUM_LOCAL_IMAGES[10],
   "Museum of Tal Basta Antiquities": MUSEUM_LOCAL_IMAGES[11],
-  "Al-Muizz Street (Historic Open‑Air Museum)": MUSEUM_LOCAL_IMAGES[1],
-  "Beit Al‑Suhaymi": MUSEUM_LOCAL_IMAGES[2],
-  "Qasr Samihah Kamel (Samihah Kamel Palace)": MUSEUM_LOCAL_IMAGES[0],
 };
 
 function getLocalImageForMuseum(name) {
   const trimmed = name?.trim?.();
-  if (trimmed && MUSEUM_NAME_TO_IMAGE[trimmed])
+  if (trimmed && MUSEUM_NAME_TO_IMAGE[trimmed]) {
     return MUSEUM_NAME_TO_IMAGE[trimmed];
+  }
+
   const index = (trimmed || "")
     .split("")
     .reduce((acc, c) => acc + c.charCodeAt(0), 0);
+
   return MUSEUM_LOCAL_IMAGES[Math.abs(index) % MUSEUM_LOCAL_IMAGES.length];
+}
+
+function isValidMongoId(id) {
+  return typeof id === "string" && /^[a-f\d]{24}$/i.test(id);
+}
+
+function getTicketPrice(museum) {
+  return (
+    museum?.ticketPrice ||
+    museum?.price ||
+    museum?.entryPrice ||
+    museum?.adultTicketPrice ||
+    museum?.foreignAdultPrice ||
+    museum?.egyptianAdultPrice ||
+    "120 LE/ Person"
+  );
+}
+
+function getMuseumType(museum) {
+  return (
+    museum?.type ||
+    museum?.category ||
+    museum?.museumType ||
+    museum?.classification ||
+    "About The Museum"
+  );
+}
+
+function formatRating(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num) || num <= 0) return "N/A";
+  return num.toFixed(1);
 }
 
 export default function MuseumProfile() {
   const router = useRouter();
   const { t } = useTranslation();
   const params = useLocalSearchParams();
+
   const [activeTab, setActiveTab] = useState("Overview");
   const [isFavorite, setIsFavorite] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [dbMuseum, setDbMuseum] = useState(null);
+  const [appRating, setAppRating] = useState(null);
+
+  const rawMuseumId = params.id || params.museumId;
+  const museumId = isValidMongoId(rawMuseumId) ? rawMuseumId : undefined;
+  const lookupName = params.museumLookupName || params.museumName || params.name;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadMuseumData = async () => {
+      try {
+        const result = await api.getMuseums();
+        const list = result?.data || [];
+
+        const found = list.find((item) => {
+          const itemId = item._id || item.id;
+          return (
+            (museumId && itemId === museumId) ||
+            (lookupName && item.name === lookupName)
+          );
+        });
+
+        if (isMounted && found) {
+          setDbMuseum(found);
+        }
+      } catch (err) {
+        console.error("Failed to load museum profile data", err);
+      }
+    };
+
+    loadMuseumData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [museumId, lookupName]);
+
+  const museum = useMemo(() => {
+    const source = dbMuseum || {};
+
+    return {
+      id: museumId || source._id || source.id || lookupName,
+      name: source.name || params.name || "Museum",
+      lookupName: source.name || lookupName || params.name || "Museum",
+      price: getTicketPrice(source) || params.price || "120 LE/ Person",
+      rating: source.rating || params.rating || 0,
+      imageUrl: source.imageUrl || params.imageUrl,
+      type: getMuseumType(source),
+      description:
+        source.description ||
+        params.description ||
+        "No description available for this museum.",
+      hours: source.openingHours || params.hours || "Open today",
+      location: source.city || params.city || "Cairo",
+      duration: source.duration || source.visitDuration || "2-3 hours",
+    };
+  }, [dbMuseum, museumId, lookupName, params]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadFavoriteState = async () => {
+      try {
+        const existingFavorites = await AsyncStorage.getItem("favorites");
+        const favoritesArray = existingFavorites
+          ? JSON.parse(existingFavorites)
+          : [];
+
+        const alreadyFavorite = favoritesArray.some(
+          (fav) => fav.id === museum.id || fav.name === museum.name,
+        );
+
+        if (isMounted) {
+          setIsFavorite(alreadyFavorite);
+        }
+      } catch (error) {
+        console.error("Error loading favorite state:", error);
+      }
+    };
+
+    loadFavoriteState();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [museum.id, museum.name]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadAppRating = async () => {
+      try {
+        const query = {
+          ...(museumId ? { museumId } : {}),
+          ...(museum.name ? { museumName: museum.name } : {}),
+          ...(museum.lookupName ? { museumLookupName: museum.lookupName } : {}),
+        };
+
+        const result = await api.getReviews(query);
+        const reviews = result?.data || [];
+
+        if (reviews.length > 0) {
+          const total = reviews.reduce(
+            (sum, review) => sum + Number(review.rating || 0),
+            0,
+          );
+          const average = total / reviews.length;
+
+          if (isMounted) {
+            setAppRating(average);
+          }
+        } else if (isMounted) {
+          setAppRating(null);
+        }
+      } catch (err) {
+        console.error("Failed to load app rating", err);
+      }
+    };
+
+    loadAppRating();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [museumId, museum.name, museum.lookupName]);
+
+  const displayRating = appRating || museum.rating;
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -84,45 +247,12 @@ export default function MuseumProfile() {
     router.replace("/home");
   };
 
-  // Museum data
-const rawMuseumId = params.id;
-const museumId =
-  typeof rawMuseumId === "string" &&
-  /^[a-f\d]{24}$/i.test(rawMuseumId)
-    ? rawMuseumId
-    : undefined;
-
-const museum = {
-  id: museumId,
-  name: params.name || "Grand Egyptian Museum",
-  lookupName:
-    params.museumLookupName || params.name || "Grand Egyptian Museum",
-    price: "120 LE/ Person",
-    rating: 4.6,
-    imageUrl: params.imageUrl,
-    type: "Archaeological museum",
-    description:
-      params.description ||
-      "The Museum of Egyptian Antiquities, commonly known as the Egyptian Museum, located in Cairo, Egypt, houses the largest collection of Egyptian antiquities in the world. It houses over 120,000 items, with a representative amount on display.",
-    hours: params.hours || "07/09",
-    capacity: "4/10",
-    duration: "1 day",
-  };
-
   const handleShare = async () => {
     try {
-      const isAvailable = await Sharing.isAvailableAsync();
-
-      if (!isAvailable) {
-        Alert.alert("Error", "Sharing is not available on this device");
-        return;
-      }
-
-      const shareText = `Check out ${museum.name}!\n\nPrice: ${museum.price}\nRating: ⭐ ${museum.rating}\n\n${museum.description}\n\nDiscover more amazing museums in Egypt with Anubis app!`;
-
       const Share = require("react-native").Share;
+
       await Share.share({
-        message: shareText,
+        message: `Check out ${museum.name}!\n\nPrice: ${museum.price}\nRating: ${formatRating(displayRating)}\n\n${museum.description}\n\nDiscover more amazing museums in Egypt with Anubis app!`,
         title: museum.name,
       });
     } catch (error) {
@@ -134,40 +264,44 @@ const museum = {
   const handleFavorite = async () => {
     try {
       const existingFavorites = await AsyncStorage.getItem("favorites");
-      let favoritesArray = existingFavorites
-        ? JSON.parse(existingFavorites)
-        : [];
+      let favoritesArray = existingFavorites ? JSON.parse(existingFavorites) : [];
 
       const alreadyFavorite = favoritesArray.some(
-        (fav) => fav.id === museum.id,
+        (fav) => fav.id === museum.id || fav.name === museum.name,
       );
 
       if (alreadyFavorite) {
-        favoritesArray = favoritesArray.filter((fav) => fav.id !== museum.id);
+        favoritesArray = favoritesArray.filter(
+          (fav) => fav.id !== museum.id && fav.name !== museum.name,
+        );
         setIsFavorite(false);
-        Alert.alert("Removed", "Removed from your favorites");
-      } else {
-        const favoriteItem = {
-          id: museum.id,
-          name: museum.name,
-          price: museum.price,
-          rating: museum.rating,
-          type: museum.type,
-          timestamp: new Date().toISOString(),
-        };
-        favoritesArray.push(favoriteItem);
-        setIsFavorite(true);
-
         await AsyncStorage.setItem("favorites", JSON.stringify(favoritesArray));
-
-        Alert.alert("Success", "Added to your favorites!", [
-          { text: "View Favorites", onPress: () => router.push("/favorites") },
-          { text: "OK" },
-        ]);
+        return;
       }
+
+      const favoriteItem = {
+        id: museum.id,
+        name: museum.name,
+        price: museum.price,
+        rating: formatRating(displayRating),
+        type: museum.type,
+        imageUrl: museum.imageUrl,
+        description: museum.description,
+        timestamp: new Date().toISOString(),
+      };
+
+      favoritesArray.push(favoriteItem);
+      setIsFavorite(true);
+      await AsyncStorage.setItem("favorites", JSON.stringify(favoritesArray));
+
+      Alert.alert("Success", "Added to your favorites!", [
+  { text: "View Favorites", onPress: () => router.push("/favorites") },
+  { text: "OK" },
+]);
+
     } catch (error) {
-      console.error("Error adding to favorites:", error);
-      Alert.alert("Error", "Failed to add to favorites");
+      console.error("Error updating favorites:", error);
+      Alert.alert("Error", "Failed to update favorites");
     }
   };
 
@@ -178,7 +312,6 @@ const museum = {
       resizeMode="cover"
     >
       <View style={styles.container}>
-        {/* Header Image */}
         <View style={styles.imageContainer}>
           <Image
             source={
@@ -191,47 +324,48 @@ const museum = {
             onError={() => setImageError(true)}
           />
 
-          {/* Shadow Layer under image */}
           <View style={styles.imageShadow} />
 
-          {/* Back Button */}
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
             <Text style={styles.backIcon}>{t("common.back_arrow")}</Text>
           </TouchableOpacity>
 
-          {/* Share Button */}
           <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
             <Text style={styles.shareIcon}>↗</Text>
           </TouchableOpacity>
 
-          {/* Info Overlay */}
           <View style={styles.imageOverlay}>
             <Text style={styles.museumName}>{museum.name}</Text>
+
             <View style={styles.priceRatingContainer}>
               <Text style={styles.price}>{museum.price}</Text>
+
               <View style={styles.ratingBadge}>
-                <Text style={styles.ratingText}>⭐ {museum.rating}</Text>
+                <MaterialCommunityIcons name="star" size={16} color="#D4AF37" />
+                <Text style={styles.ratingText}>{formatRating(displayRating)}</Text>
               </View>
             </View>
           </View>
 
-          {/* Bookmark Button with Glassy Bubble */}
           <View style={styles.bookmarkContainer}>
-            <View style={styles.bookmarkBubble} />
             <TouchableOpacity
-              style={styles.bookmarkButton}
+              style={[
+                styles.bookmarkButton,
+                isFavorite && styles.bookmarkButtonSaved,
+              ]}
               onPress={handleFavorite}
+              activeOpacity={0.8}
             >
               <FontAwesome6
-                name={isFavorite ? "bookmark" : "bookmark"}
+                name="bookmark"
+                solid={isFavorite}
                 size={24}
-                color="#333"
+                color={isFavorite ? "#000" : "#ffffff"}
               />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Tabs */}
         <View style={styles.tabsContainer}>
           <ScrollView
             horizontal
@@ -245,15 +379,16 @@ const museum = {
                 onPress={() => {
                   if (tab === "Reviews") {
                     router.push({
-  pathname: "/reviews",
-  params: {
-    ...(museum.id ? { museumId: museum.id } : {}),
-    museumName: museum.name,
-    museumLookupName: museum.lookupName,
-  },
-});
+                      pathname: "/reviews",
+                      params: {
+                        ...(museum.id && isValidMongoId(museum.id)
+                          ? { museumId: museum.id }
+                          : {}),
+                        museumName: museum.name,
+                        museumLookupName: museum.lookupName,
+                      },
+                    });
                   } else if (tab === "Artifacts") {
-                    // Navigate to Artifacts Screen
                     router.push({
                       pathname: "/artifacts",
                       params: {
@@ -282,44 +417,57 @@ const museum = {
           </ScrollView>
         </View>
 
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Info Cards */}
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           <View style={styles.infoCards}>
             <View style={styles.infoCard}>
               <MaterialIcons name="date-range" size={20} color="#666" />
               <Text style={styles.infoText}>{museum.hours}</Text>
             </View>
+
             <View style={styles.infoCard}>
               <MaterialCommunityIcons
-                name="account-group"
+                name="map"
                 size={20}
                 color="#666"
               />
-              <Text style={styles.infoText}>{museum.capacity}</Text>
+              <Text style={styles.infoText} numberOfLines={1}>
+                {museum.location}
+              </Text>
             </View>
+
             <View style={styles.infoCard}>
               <MaterialCommunityIcons name="clock" size={20} color="#666" />
               <Text style={styles.infoText}>{museum.duration}</Text>
             </View>
           </View>
 
-          {/* Museum Type */}
           <Text style={styles.museumType}>{museum.type}</Text>
 
-          {/* Description */}
           <Text style={styles.description}>{museum.description}</Text>
 
           <View style={{ height: 180 }} />
         </ScrollView>
 
-        {/* Book Ticket Button */}
         <View style={styles.bookButtonContainer}>
-          <TouchableOpacity style={styles.bookButton}>
-            <Text style={styles.bookButtonText}>{t("museum.book_ticket")}</Text>
-          </TouchableOpacity>
+          <TouchableOpacity
+  style={styles.bookButton}
+  onPress={() =>
+    router.push({
+      pathname: "/tickets/checkout",
+      params: {
+        museumId: museum.id,
+        museumName: museum.name,
+        museumTime: museum.hours,
+        museumPrice: museum.price,
+        museumImageUrl: museum.imageUrl,
+        museumLocation: museum.location,
+        museumDescription: museum.description,
+      },
+    })
+  }
+>
+  <Text style={styles.bookButtonText}>{t("museum.book_ticket")}</Text>
+</TouchableOpacity>
         </View>
       </View>
     </ImageBackground>
@@ -416,6 +564,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+    flexWrap: "wrap",
   },
   price: {
     fontSize: 16,
@@ -426,29 +575,23 @@ const styles = StyleSheet.create({
     textShadowRadius: 3,
   },
   ratingBadge: {
-    backgroundColor: "transparent",
-    paddingHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(0,0,0,0.28)",
+    paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 12,
   },
   ratingText: {
     fontSize: 15,
     color: "#fff",
-    fontWeight: "600",
+    fontWeight: "700",
   },
   bookmarkContainer: {
     position: "absolute",
     bottom: 20,
     right: 20,
-  },
-  bookmarkBubble: {
-    position: "absolute",
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "rgba(255, 255, 255, 0.6)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.7)",
   },
   bookmarkButton: {
     width: 56,
@@ -456,7 +599,13 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 1,
+    backgroundColor: "rgba(255,255,255,0.5)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.95)",
+  },
+  bookmarkButtonSaved: {
+    backgroundColor: "rgba(255,255,255,0.78)",
+    borderColor: "rgba(255,255,255,0.95)",
   },
   tabsContainer: {
     backgroundColor: "transparent",
@@ -478,7 +627,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   activeTabText: {
-    color: "#000",
+    color: "#512f00",
     fontWeight: "700",
   },
   scrollView: {
@@ -528,11 +677,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   bookButton: {
-    backgroundColor: "#000",
+    backgroundColor: "#4c3100",
     paddingVertical: 20,
-    paddingHorizontal: 120,
+    paddingHorizontal: 90,
     borderRadius: 40,
-    shadowColor: "#000",
+    shadowColor: "#000000",
     shadowOffset: {
       width: 0,
       height: 4,

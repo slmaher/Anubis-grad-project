@@ -25,6 +25,9 @@ export default function Checkout() {
     params.museumName || t("tickets_checkout.default_museum_name");
   const museumTime =
     params.museumTime || t("tickets_checkout.default_museum_time");
+  const museumPriceText = params.museumPrice || "120 LE/ Person";
+  const museumPriceNumber =
+  Number(String(museumPriceText).match(/\d+/)?.[0]) || 120;
 
   // Generate dates for the next 7 days
   const generateDates = () => {
@@ -53,7 +56,7 @@ export default function Checkout() {
       id: 1,
       typeKey: "silver_ticket",
       descriptionKey: "silver_description",
-      price: 50,
+      price: museumPriceNumber,
       quantity: 1,
       isHotChoice: true,
     },
@@ -61,7 +64,7 @@ export default function Checkout() {
       id: 2,
       typeKey: "gold_ticket",
       descriptionKey: "gold_description",
-      price: 150,
+      price: museumPriceNumber * 2,
       quantity: 1,
       isHotChoice: false,
     },
@@ -85,8 +88,23 @@ export default function Checkout() {
   };
 
   const handleContinue = () => {
-    router.push("/tickets/qrcode");
-  };
+  const selectedTickets = tickets.filter((ticket) => ticket.quantity > 0);
+
+  if (selectedTickets.length === 0) {
+    return;
+  }
+
+  router.push({
+    pathname: "/tickets/payment",
+    params: {
+      museumName,
+      museumTime,
+      selectedDate: `${dates[selectedDate].day}, ${dates[selectedDate].month} ${dates[selectedDate].date}`,
+      tickets: JSON.stringify(selectedTickets),
+      subtotal: calculateTotal(),
+    },
+  });
+};
 
   return (
     <View style={styles.backgroundLayer}>
