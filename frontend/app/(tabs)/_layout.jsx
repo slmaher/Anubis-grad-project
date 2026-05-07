@@ -11,14 +11,17 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 const TAB_COUNT = 5;
+const GOLD = "#f1b900";
+const DARK = "#2C2010";
 
 function CustomTabBar({ state, descriptors, navigation }) {
   const bubblePosition = useRef(new Animated.Value(0)).current;
+  const shineAnim = useRef(new Animated.Value(0)).current;
+
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
 
@@ -28,8 +31,10 @@ function CustomTabBar({ state, descriptors, navigation }) {
   const tabBarWidth = Math.min(width - horizontalInset * 2, 640);
   const TAB_WIDTH = tabBarWidth / TAB_COUNT;
   const iconSize = isCompact ? 22 : 26;
+  const scanIconSize = isCompact ? 31 : 35;
   const communityIconSize = isCompact ? 20 : 24;
   const labelSize = isCompact ? 9.5 : 11;
+  const scanLabelSize = isCompact ? 12 : 13.5;
 
   useEffect(() => {
     Animated.spring(bubblePosition, {
@@ -40,23 +45,37 @@ function CustomTabBar({ state, descriptors, navigation }) {
     }).start();
   }, [state.index]);
 
-  const getIcon = (routeName, isFocused) => {
-    const color = "#2C2010";
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(shineAnim, {
+        toValue: 1,
+        duration: 1600,
+        useNativeDriver: true,
+      }),
+    ).start();
+  }, []);
+
+  const getIcon = (routeName) => {
+    const isScan = routeName === "scan";
+    const color = isScan ? GOLD : DARK;
+    const size = isScan ? scanIconSize : iconSize;
 
     switch (routeName) {
       case "home":
-        return <Feather name="home" size={iconSize} color={color} />;
+        return <Feather name="home" size={size} color={color} />;
       case "explore":
-        return <MaterialIcons name="explore" size={iconSize} color={color} />;
+        return <MaterialIcons name="explore" size={size} color={color} />;
       case "scan":
-        return <Ionicons name="scan" size={iconSize} color={color} />;
+        return <Ionicons name="scan" size={size} color={color} />;
       case "events":
-        return (
-          <MaterialIcons name="event-available" size={iconSize} color={color} />
-        );
+        return <MaterialIcons name="event-available" size={size} color={color} />;
       case "community":
         return (
-          <FontAwesome name="group" size={communityIconSize} color={color} />
+          <FontAwesome
+            name="group"
+            size={isScan ? scanIconSize : communityIconSize}
+            color={color}
+          />
         );
       default:
         return null;
@@ -90,7 +109,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
   useEffect(() => {
     if (hideTabBar) {
       Animated.spring(bubblePosition, {
-        toValue: -1, // move bubble offscreen smoothly
+        toValue: -1,
         useNativeDriver: true,
         friction: 7,
         tension: 60,
@@ -110,7 +129,6 @@ function CustomTabBar({ state, descriptors, navigation }) {
       ]}
     >
       <View style={[styles.tabBar, { width: tabBarWidth }]}>
-        {/* 🔥 SMOOTH MOVING BUBBLE */}
         <Animated.View
           style={[
             styles.activeBubble,
@@ -128,10 +146,10 @@ function CustomTabBar({ state, descriptors, navigation }) {
           ]}
         />
 
-        {/* TABS */}
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
           const isFocused = state.index === index;
+          const isScan = route.name === "scan";
 
           if (options.href === null) return null;
 
@@ -154,8 +172,33 @@ function CustomTabBar({ state, descriptors, navigation }) {
               style={[styles.tabButton, { width: TAB_WIDTH }]}
               activeOpacity={0.8}
             >
-              <View style={styles.iconContainer}>
-                {getIcon(route.name, isFocused)}
+              <View
+                style={[
+                  styles.iconContainer,
+                  isScan && styles.scanIconContainer,
+                ]}
+              >
+                {isScan && (
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[
+                      styles.scanShine,
+                      {
+                        transform: [
+                          {
+                            translateX: shineAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [-24, 24],
+                            }),
+                          },
+                          { rotate: "25deg" },
+                        ],
+                      },
+                    ]}
+                  />
+                )}
+
+                {getIcon(route.name)}
               </View>
 
               <Text
@@ -163,8 +206,9 @@ function CustomTabBar({ state, descriptors, navigation }) {
                 adjustsFontSizeToFit
                 style={[
                   styles.tabLabel,
-                  { fontSize: labelSize },
-                  isFocused && styles.tabLabelActive,
+                  { fontSize: isScan ? scanLabelSize : labelSize },
+                  isScan && styles.scanLabel,
+                  isFocused && !isScan && styles.tabLabelActive,
                 ]}
               >
                 {getLabel(route.name)}
@@ -211,7 +255,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.9)",
     boxShadow: "0px 6px 15px rgba(0, 0, 0, 0.2)",
     elevation: 12,
-
     alignItems: "center",
     overflow: "hidden",
     justifyContent: "space-between",
@@ -222,10 +265,8 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 35,
     backgroundColor: "rgba(255,255,255,0.9)",
-
     top: 1,
     left: 2,
-
     boxShadow: "0px 3px 6px rgba(0, 0, 0, 0.12)",
     elevation: 4,
   },
@@ -243,14 +284,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
+  scanIconContainer: {
+    width: 44,
+    height: 34,
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: -5,
+  },
+
+  scanShine: {
+    position: "absolute",
+    width: 10,
+    height: 44,
+    backgroundColor: "rgba(255,255,255,0.65)",
+    opacity: 0.75,
+  },
+
   tabLabel: {
     fontWeight: "600",
-    color: "#2C2010",
+    color: DARK,
     marginTop: 4,
   },
 
   tabLabelActive: {
-    color: "#2C2010",
+    color: DARK,
     fontWeight: "700",
+  },
+
+  scanLabel: {
+    color: GOLD,
+    fontWeight: "800",
+    marginTop: 1,
   },
 });

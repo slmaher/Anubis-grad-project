@@ -12,11 +12,11 @@ import {
 
 const { width, height } = Dimensions.get('window');
 
-const TABS = ['Facts', 'Highlights', 'Collections', 'Blogs'];
+const TABS = ['Facts'];
 
 const imageMap = {
   anubis: require("../../assets/images/Anubis-Statue.png"),
-  tutankhamun: require("../../assets/images/Grand-Egyptian-Museum.png"),
+  tutankhamun: require("../../assets/images/tutankhamun.jpg"),
 };
 
 export default function ArtifactDetailScreen() {
@@ -58,26 +58,12 @@ export default function ArtifactDetailScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Tabs */}
           <View style={styles.tabs}>
-            {TABS.map((tab) => (
-              <TouchableOpacity
-                key={tab}
-                style={styles.tabItem}
-                onPress={() => setActiveTab(tab)}
-              >
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    activeTab === tab && styles.tabLabelActive,
-                  ]}
-                >
-                  {tab}
-                </Text>
-
-                {activeTab === tab && (
-                  <View style={styles.tabUnderline} />
-                )}
-              </TouchableOpacity>
-            ))}
+            <View style={styles.tabItem}>
+  <Text style={[styles.tabLabel, styles.tabLabelActive]}>
+    Facts
+  </Text>
+  <View style={styles.tabUnderline} />
+</View>
           </View>
 
           {/* Content */}
@@ -96,20 +82,35 @@ export default function ArtifactDetailScreen() {
             </Text>
           </View>
 
-          {/* CTA Button */}
+          
+
+          <View style={{ height: 40 }} />
+        </ScrollView>
+        {/* CTA Button */}
           <View style={styles.ctaContainer}>
             <TouchableOpacity
-              style={styles.ctaBtn}
-              activeOpacity={0.85}
-            >
+  style={styles.ctaBtn}
+  activeOpacity={0.85}
+  onPress={() => {
+  if (params.modelKey !== "anubis") {
+    alert("3D preview is available for Anubis only for now.");
+    return;
+  }
+
+  router.push({
+    pathname: "/artifacts/Artifact3DViewer",
+    params: {
+      title: artifactTitle,
+      modelKey: "anubis",
+    },
+  });
+}}
+>
               <Text style={styles.ctaTxt}>
                 Take a virtual tour
               </Text>
             </TouchableOpacity>
           </View>
-
-          <View style={{ height: 40 }} />
-        </ScrollView>
       </View>
     </View>
   );
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
 
   backBtn: {
     position: 'absolute',
-    top: 52,
+    top: 60,
     left: 20,
     flexDirection: 'row',
     alignItems: 'center',
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
 
   sheet: {
     flex: 1,
-    backgroundColor: '#1a1108',
+    backgroundColor: '#362411',
   },
 
   tabs: {
@@ -182,7 +183,7 @@ const styles = StyleSheet.create({
   },
 
   tabLabel: {
-    fontSize: 13,
+    fontSize: 15,
     color: 'rgba(255,255,255,0.4)',
     fontWeight: '500',
   },
@@ -194,10 +195,10 @@ const styles = StyleSheet.create({
   tabUnderline: {
     position: 'absolute',
     bottom: 0,
-    left: '20%',
-    right: '20%',
+    left: '0%',
+    right: '0%',
     height: 2,
-    backgroundColor: '#fff',
+    backgroundColor: '#969696',
     borderRadius: 1,
   },
 
@@ -210,18 +211,19 @@ const styles = StyleSheet.create({
   contentTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#fff',
+    color: 'rgb(255, 248, 230)',
     marginBottom: 12,
   },
 
   contentBody: {
-    fontSize: 13,
+    fontSize: 15,
     color: 'rgba(255,255,255,0.6)',
     lineHeight: 20,
   },
 
   ctaContainer: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 30,
+    bottom: 50,
     alignItems: 'center',
   },
 
@@ -241,4 +243,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.3,
   },
+  
 });
