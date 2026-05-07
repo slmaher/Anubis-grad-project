@@ -6,6 +6,8 @@ import { saveAuthSession } from "../api/authStorage";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function Signup() {
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
@@ -14,11 +16,56 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+  });
+
+  const clearFieldError = (field) => {
+    setFieldErrors((current) => ({ ...current, [field]: "" }));
+    setFormError("");
+  };
+
+  const validateForm = () => {
+    const nextErrors = {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+    };
+
+    if (!firstName.trim()) {
+      nextErrors.firstName = "First name is required.";
+    }
+
+    if (!lastName.trim()) {
+      nextErrors.lastName = "Last name is required.";
+    }
+
+    if (!email.trim()) {
+      nextErrors.email = "Email is required.";
+    } else if (!EMAIL_PATTERN.test(email.trim())) {
+      nextErrors.email = "Enter a valid email address.";
+    }
+
+    if (!password) {
+      nextErrors.password = "Password is required.";
+    } else if (password.length < 6) {
+      nextErrors.password = "Password must be at least 6 characters.";
+    }
+
+    setFieldErrors(nextErrors);
+    return !nextErrors.firstName && !nextErrors.lastName && !nextErrors.email && !nextErrors.password;
+  };
 
   const handleSignup = async () => {
     if (loading) return; // Prevent double submit
-    if (!firstName || !lastName || !email || !password) {
-      Alert.alert("Missing details", "Please fill in all fields.");
+    setFormError("");
+
+    if (!validateForm()) {
       return;
     }
 
@@ -38,6 +85,12 @@ export default function Signup() {
       setLastName("");
       setEmail("");
       setPassword("");
+      setFieldErrors({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+      });
 
       // Show success message and redirect to login
       Alert.alert(
@@ -54,10 +107,7 @@ export default function Signup() {
       );
     } catch (error) {
       console.error("[Signup] failed:", error?.message);
-      Alert.alert(
-        "Sign up failed",
-        error?.message || "Please check your details and try again."
-      );
+      setFormError(error?.message || "Please check your details and try again.");
     } finally {
       setLoading(false);
     }
@@ -115,49 +165,98 @@ export default function Signup() {
                 </TouchableOpacity>
               </View>
 
+              {formError ? (
+                <View style={styles.errorBanner}>
+                  <Text style={styles.errorBannerText}>{formError}</Text>
+                </View>
+              ) : null}
+
               {/* First Name and Last Name Row */}
               <View style={styles.nameRow}>
                 <View style={styles.nameInputContainer}>
                   <TextInput
-                    style={styles.inputUnderline}
+                    style={[
+                      styles.inputUnderline,
+                      fieldErrors.firstName ? styles.inputUnderlineError : null,
+                    ]}
                     value={firstName}
-                    onChangeText={setFirstName}
+                    onChangeText={(text) => {
+                      setFirstName(text);
+                      if (fieldErrors.firstName) {
+                        clearFieldError("firstName");
+                      }
+                    }}
                     placeholder="First Name"
                     placeholderTextColor="rgba(255, 255, 255, 0.8)"
                   />
+                  {fieldErrors.firstName ? (
+                    <Text style={styles.fieldErrorText}>{fieldErrors.firstName}</Text>
+                  ) : null}
                 </View>
 
                 <View style={styles.nameInputContainer}>
                   <TextInput
-                    style={styles.inputUnderline}
+                    style={[
+                      styles.inputUnderline,
+                      fieldErrors.lastName ? styles.inputUnderlineError : null,
+                    ]}
                     value={lastName}
-                    onChangeText={setLastName}
+                    onChangeText={(text) => {
+                      setLastName(text);
+                      if (fieldErrors.lastName) {
+                        clearFieldError("lastName");
+                      }
+                    }}
                     placeholder="Last Name"
                     placeholderTextColor="rgba(255, 255, 255, 0.8)"
                   />
+                  {fieldErrors.lastName ? (
+                    <Text style={styles.fieldErrorText}>{fieldErrors.lastName}</Text>
+                  ) : null}
                 </View>
               </View>
 
               {/* Email Input */}
               <View style={styles.inputContainer}>
                 <TextInput
-                  style={styles.inputUnderline}
+                  style={[
+                    styles.inputUnderline,
+                    fieldErrors.email ? styles.inputUnderlineError : null,
+                  ]}
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    if (fieldErrors.email) {
+                      clearFieldError("email");
+                    }
+                  }}
                   placeholder="E-mail"
                   placeholderTextColor="rgba(255, 255, 255, 0.8)"
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
+                {fieldErrors.email ? (
+                  <Text style={styles.fieldErrorText}>{fieldErrors.email}</Text>
+                ) : null}
               </View>
 
               {/* Password Input */}
               <View style={styles.inputContainer}>
-                <View style={styles.passwordRow}>
+                <View
+                  style={[
+                    styles.passwordRow,
+                    fieldErrors.password ? styles.passwordRowError : null,
+                  ]}
+                >
                   <TextInput
                     style={styles.passwordInputUnderline}
                     value={password}
-                    onChangeText={setPassword}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      if (fieldErrors.password) {
+                        clearFieldError("password");
+                      }
+                    }}
                     placeholder="Password"
                     placeholderTextColor="rgba(255, 255, 255, 0.8)"
                     secureTextEntry={!showPassword}
@@ -173,6 +272,9 @@ export default function Signup() {
                     )}
                   </TouchableOpacity>
                 </View>
+                {fieldErrors.password ? (
+                  <Text style={styles.fieldErrorText}>{fieldErrors.password}</Text>
+                ) : null}
               </View>
 
               {/* Sign up Button */}
@@ -328,11 +430,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.7)",
   },
+  inputUnderlineError: {
+    borderBottomColor: "#ff7a7a",
+  },
   passwordRow: {
     flexDirection: "row",
     alignItems: "center",
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.7)",
+  },
+  passwordRowError: {
+    borderBottomColor: "#ff7a7a",
   },
   passwordInputUnderline: {
     flex: 1,
@@ -343,6 +451,26 @@ const styles = StyleSheet.create({
   eyeButton: {
     paddingHorizontal: 10,
     paddingVertical: 10,
+  },
+  errorBanner: {
+    marginBottom: 18,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 122, 122, 0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 122, 122, 0.45)",
+  },
+  errorBannerText: {
+    color: "#ffd4d4",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  fieldErrorText: {
+    marginTop: 6,
+    color: "#ffb4b4",
+    fontSize: 13,
+    lineHeight: 18,
   },
   signupButton: {
     backgroundColor: "#C4B5A0",
