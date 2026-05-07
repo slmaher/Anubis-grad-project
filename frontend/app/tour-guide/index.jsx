@@ -17,7 +17,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTranslation } from "react-i18next";
 import { API_URL } from "../api/baseUrl";
 
-const DEFAULT_AVATAR = "https://i.pravatar.cc/100";
+const DEFAULT_AVATAR = require("../../assets/images/profile-benjamin.png");
 
 function mapGuideFromApi(item) {
   const hourlyRate = Number(item?.hourlyRate || 0);
@@ -31,8 +31,11 @@ function mapGuideFromApi(item) {
     userId: item?.user?._id || "",
     name: item?.user?.name || "Unknown Guide",
     email: item?.user?.email || "",
-    avatar: item?.user?.avatar || DEFAULT_AVATAR,
+    avatar: item?.user?.avatar || "",
     price: `${hourlyRate} EGP/hour`,
+    hourlyRate,
+    ratingValue,
+    totalTours,
     rating: `${ratingValue.toFixed(1)} (${totalTours} tours)`,
     languages,
     languagesText:
@@ -47,71 +50,71 @@ function mapGuideFromApi(item) {
   };
 }
 
-const GuideCard = ({ guide, t, onChat }) => {
+const GuideCard = ({ guide, t, onChat, onOpenProfile }) => {
+  const avatarSource = guide.avatar ? { uri: guide.avatar } : DEFAULT_AVATAR;
+
   return (
-    <View style={styles.card}>
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.85}
+      onPress={onOpenProfile}
+    >
       <View style={styles.topRow}>
         <View style={styles.leftRow}>
-          <Image source={{ uri: guide.avatar }} style={styles.avatar} />
+          <Image source={avatarSource} style={styles.avatar} />
 
           <View style={styles.mainInfo}>
-            <Text style={styles.name}>{guide.name}</Text>
+            <Text style={styles.name} numberOfLines={1}>
+              {guide.name}
+            </Text>
 
             <View style={styles.ratingRow}>
-              <MaterialCommunityIcons name="star" size={14} color="#FFB800" />
-              <Text style={styles.rating}>
-                {guide.rating} | {t("tour_guide.available_now")}
-              </Text>
+              <MaterialCommunityIcons name="star" size={14} color="#D9A441" />
+              <Text style={styles.rating}>{guide.rating}</Text>
+            </View>
+
+            <View style={styles.tagsRow}>
+              <View style={styles.verifiedTag}>
+                <MaterialCommunityIcons
+                  name="check-decagram"
+                  size={12}
+                  color="#fff"
+                />
+                <Text style={styles.tagTextWhite}>{t("tour_guide.verified")}</Text>
+              </View>
+
+              <View style={styles.availableTag}>
+                <MaterialCommunityIcons
+                  name="circle"
+                  size={8}
+                  color="#fff"
+                />
+                <Text style={styles.tagTextWhite}>
+                  {t("tour_guide.available_now")}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
 
-        <Text style={styles.price}>{guide.price}</Text>
-      </View>
-
-      <Text style={styles.bio}>{guide.bio}</Text>
-
-      <View style={styles.infoBox}>
-        <Text style={styles.infoLabel}>Specialties</Text>
-        <Text style={styles.infoValue}>{guide.specialtiesText}</Text>
-      </View>
-
-      <View style={styles.infoBox}>
-        <Text style={styles.infoLabel}>Languages</Text>
-        <Text style={styles.infoValue}>{guide.languagesText}</Text>
-      </View>
-
-      <View style={styles.infoBox}>
-        <Text style={styles.infoLabel}>Experience</Text>
-        <Text style={styles.infoValue}>
-          {guide.experienceYears}{" "}
-          {guide.experienceYears === 1 ? "year" : "years"}
-        </Text>
-      </View>
-
-      <View style={styles.tagsRow}>
-        <View style={styles.tagGreen}>
-          <MaterialCommunityIcons name="check-circle" size={12} color="#fff" />
-          <Text style={styles.tagTextWhite}>{t("tour_guide.verified")}</Text>
-        </View>
-
-        {guide.expert ? (
-          <View style={styles.tagOrange}>
-            <MaterialCommunityIcons name="medal" size={12} color="#fff" />
-            <Text style={styles.tagTextWhite}>{t("tour_guide.expert")}</Text>
-          </View>
-        ) : null}
-
-        <View style={styles.tagPurple}>
-          <MaterialCommunityIcons name="translate" size={12} color="#fff" />
-          <Text style={styles.tagTextWhite}>{guide.languagesCount}</Text>
+        <View style={styles.rightBlock}>
+          <Text style={styles.price}>{guide.price}</Text>
+          <Text style={styles.languageCount}>{guide.languagesCount}</Text>
         </View>
       </View>
 
-      <TouchableOpacity style={styles.bookBtn} onPress={onChat}>
-        <Text style={styles.bookText}>Chat now</Text>
+      <TouchableOpacity
+        style={styles.chatBtn}
+        onPress={(e) => {
+          e.stopPropagation();
+          onChat();
+        }}
+        activeOpacity={0.85}
+      >
+        <MaterialCommunityIcons name="chat-processing-outline" size={16} color="#fff" />
+        <Text style={styles.chatText}>Chat now</Text>
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -170,17 +173,22 @@ export default function TourGuideScreen() {
     });
   };
 
+  const handleOpenProfile = (guide) => {
+    router.push({
+      pathname: "/tour-guide/guideDetails",
+      params: {
+        guide: JSON.stringify(guide),
+      },
+    });
+  };
+
   return (
     <ImageBackground
       source={require("../../assets/images/beige-background.jpeg")}
       style={styles.container}
       resizeMode="cover"
     >
-      <StatusBar
-        barStyle="dark-content"
-        translucent
-        backgroundColor="transparent"
-      />
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
 
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.pageContent}>
@@ -189,47 +197,27 @@ export default function TourGuideScreen() {
               style={styles.backButton}
               onPress={() => router.back()}
             >
-              <MaterialCommunityIcons
-                name="chevron-left"
-                size={28}
-                color="#2C2010"
-              />
+              <MaterialCommunityIcons name="chevron-left" size={28} color="#2C2010" />
             </TouchableOpacity>
 
             <Text style={styles.title}>{t("tour_guide.title")}</Text>
 
-            <TouchableOpacity style={styles.settingsButton}>
-              <MaterialCommunityIcons name="cog" size={22} color="#2C2010" />
-            </TouchableOpacity>
+            <View style={styles.settingsButton} />
           </View>
 
           <View style={styles.searchBar}>
-            <MaterialCommunityIcons
-              name="menu"
-              size={18}
-              color="#666"
-              style={styles.searchIconLeft}
-            />
+            <MaterialCommunityIcons name="magnify" size={19} color="#8B7B6C" />
 
             <TextInput
               placeholder={t("tour_guide.search_placeholder")}
-              placeholderTextColor="#888"
+              placeholderTextColor="#8B7B6C"
               style={styles.input}
               value={searchText}
               onChangeText={setSearchText}
             />
-
-            <MaterialCommunityIcons
-              name="magnify"
-              size={18}
-              color="#666"
-              style={styles.searchIconRight}
-            />
           </View>
 
-          <Text style={styles.sectionTitle}>
-            {t("tour_guide.available_guides")}
-          </Text>
+          <Text style={styles.sectionTitle}>{t("tour_guide.available_guides")}</Text>
 
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -246,6 +234,7 @@ export default function TourGuideScreen() {
                   guide={guide}
                   t={t}
                   onChat={() => handleChatNow(guide)}
+                  onOpenProfile={() => handleOpenProfile(guide)}
                 />
               ))
             )}
@@ -273,83 +262,75 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: 10,
-    marginBottom: 20,
+    marginBottom: 18,
   },
   backButton: {
     width: 40,
     height: 40,
+    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.55)",
   },
   title: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 20,
+    fontWeight: "800",
     color: "#2C2010",
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   settingsButton: {
     width: 40,
     height: 40,
-    justifyContent: "center",
-    alignItems: "center",
   },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 25,
+    backgroundColor: "rgba(255,255,255,0.88)",
+    borderRadius: 24,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 11,
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.95)",
     elevation: 3,
-  },
-  searchIconLeft: {
-    marginRight: 10,
-  },
-  searchIconRight: {
-    marginLeft: 10,
+    gap: 10,
   },
   input: {
     flex: 1,
     fontSize: 15,
-    color: "#000",
+    color: "#2C2010",
+    fontWeight: "600",
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "800",
     color: "#8B7B6C",
     marginBottom: 14,
-    marginTop: 4,
   },
   scrollContent: {
-    paddingBottom: 24,
+    paddingBottom: 28,
   },
   emptyState: {
     fontSize: 14,
     color: "#8B7B6C",
     textAlign: "center",
     marginTop: 24,
+    fontWeight: "600",
   },
   card: {
-    backgroundColor: "#F9F7F4",
-    borderRadius: 16,
-    padding: 14,
+    backgroundColor: "rgba(249,247,244,0.98)",
+    borderRadius: 20,
+    padding: 15,
     marginBottom: 14,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.95)",
+    elevation: 3,
   },
   topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 10,
+    marginBottom: 13,
   },
   leftRow: {
     flexDirection: "row",
@@ -361,15 +342,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "#E0D5CC",
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    borderWidth: 2,
+    borderColor: "#D9A441",
   },
   name: {
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "800",
     color: "#2C2010",
   },
   ratingRow: {
@@ -379,91 +360,68 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   rating: {
-    fontSize: 11,
+    fontSize: 12,
     color: "#8B7B6C",
-    fontWeight: "500",
+    fontWeight: "700",
+  },
+  rightBlock: {
+    alignItems: "flex-end",
+    marginLeft: 8,
   },
   price: {
     fontSize: 14,
-    fontWeight: "700",
-    color: "#2C2010",
+    fontWeight: "800",
+    color: "#D9A441",
     textAlign: "right",
-    marginLeft: 8,
   },
-  bio: {
-    fontSize: 12,
-    color: "#8B7B6C",
-    lineHeight: 17,
-    marginBottom: 10,
-  },
-  infoBox: {
-    backgroundColor: "rgba(184, 150, 90, 0.10)",
-    borderWidth: 1,
-    borderColor: "rgba(184, 150, 90, 0.20)",
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    marginBottom: 8,
-  },
-  infoLabel: {
+  languageCount: {
+    marginTop: 5,
     fontSize: 11,
     fontWeight: "700",
     color: "#8B7B6C",
-    marginBottom: 2,
-  },
-  infoValue: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#2C2010",
   },
   tagsRow: {
     flexDirection: "row",
-    gap: 8,
-    marginBottom: 12,
+    gap: 6,
+    marginTop: 8,
     flexWrap: "wrap",
   },
-  tagGreen: {
+  verifiedTag: {
     backgroundColor: "#1FAF38",
-    borderRadius: 18,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
   },
-  tagOrange: {
-    backgroundColor: "#F4B860",
-    borderRadius: 18,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  tagPurple: {
-    backgroundColor: "#8A2BE2",
-    borderRadius: 18,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+  availableTag: {
+    backgroundColor: "#7A9A6C",
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
   },
   tagTextWhite: {
     color: "#fff",
-    fontSize: 11,
-    fontWeight: "600",
+    fontSize: 10.5,
+    fontWeight: "800",
   },
-  bookBtn: {
+  chatBtn: {
     alignSelf: "flex-end",
-    backgroundColor: "#D4CECC",
-    borderRadius: 20,
-    paddingVertical: 7,
+    backgroundColor: "#756557",
+    borderRadius: 999,
+    paddingVertical: 8,
     paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
-  bookText: {
-    fontSize: 11,
-    color: "#2C2010",
-    fontWeight: "600",
+  chatText: {
+    fontSize: 12,
+    color: "#fff",
+    fontWeight: "800",
   },
 });
