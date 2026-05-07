@@ -1,8 +1,8 @@
 import React, { Suspense, useRef, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, PanResponder } from "react-native";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber/native";
+import { Canvas, useFrame } from "@react-three/fiber/native";
+import { useGLTF } from "@react-three/drei/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { Asset } from "expo-asset";
 
 const anubisModel = require("../../assets/models/anubis.glb");
@@ -10,7 +10,8 @@ const anubisModel = require("../../assets/models/anubis.glb");
 function Model({ rotationY }) {
   const groupRef = useRef();
   const modelAsset = Asset.fromModule(anubisModel);
-  const gltf = useLoader(GLTFLoader, modelAsset.uri);
+
+  const gltf = useGLTF(modelAsset.localUri || modelAsset.uri);
 
   useFrame(() => {
     if (groupRef.current) {
@@ -19,7 +20,7 @@ function Model({ rotationY }) {
   });
 
   return (
-    <group ref={groupRef} position={[0, 1, 0]} scale={1}>
+    <group ref={groupRef} position={[0, 0, 0]} scale={1}>
       <primitive object={gltf.scene} />
     </group>
   );

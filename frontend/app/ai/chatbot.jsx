@@ -39,7 +39,6 @@ function buildLocalFallbackReply(t) {
   return `${quotaLine}\n\n${defaultLine}`;
 }
 
-// ─── Component ─────────────────────────────────────────────────────────────────
 export default function AIChatbot() {
   const router = useRouter();
   const { t } = useTranslation();
@@ -53,7 +52,6 @@ export default function AIChatbot() {
 
   const suggestions = [t("ai_chat.suggestion_1"), t("ai_chat.suggestion_2")];
 
-  // Auto-scroll when messages or loading state changes
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
   }, [messages, isLoading]);
@@ -76,7 +74,6 @@ export default function AIChatbot() {
     setIsLoading(true);
 
     try {
-      // Detect active language (strip region suffix, e.g. "ar-EG" → "ar")
       const currentLang = (i18n.language || "en").split("-")[0];
       const aiText = await callGeminiViaBackend(updatedHistory, currentLang);
 
@@ -133,7 +130,6 @@ export default function AIChatbot() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
       >
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
@@ -143,7 +139,6 @@ export default function AIChatbot() {
           </TouchableOpacity>
         </View>
 
-        {/* AI Icon and Title (only before first message) */}
         {messages.length === 0 && (
           <View style={styles.titleSection}>
             <Image
@@ -154,7 +149,6 @@ export default function AIChatbot() {
           </View>
         )}
 
-        {/* Messages */}
         <ScrollView
           ref={scrollViewRef}
           style={styles.messagesContainer}
@@ -181,6 +175,7 @@ export default function AIChatbot() {
                     : t("ai_chat.label_ai")}
                 </Text>
               </View>
+
               <View
                 style={[
                   styles.messageBubble,
@@ -202,7 +197,6 @@ export default function AIChatbot() {
             </View>
           ))}
 
-          {/* Typing indicator */}
           {isLoading && (
             <View style={[styles.messageWrapper, styles.aiMessageWrapper]}>
               <View style={styles.messageLabelContainer}>
@@ -215,7 +209,6 @@ export default function AIChatbot() {
           )}
         </ScrollView>
 
-        {/* Suggestions */}
         {showSuggestions && messages.length === 0 && (
           <View style={styles.suggestionsSection}>
             <Text style={styles.suggestionsTitle}>
@@ -235,7 +228,6 @@ export default function AIChatbot() {
           </View>
         )}
 
-        {/* Input Section */}
         <View style={styles.inputSection}>
           <View style={styles.inputContainer}>
             <TextInput
@@ -274,114 +266,140 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
+
   container: {
     flex: 1,
   },
+
   header: {
-    paddingTop: 20,
+    paddingTop: 30,
     paddingHorizontal: 20,
     paddingBottom: 10,
   },
+
   backButton: {
     width: 40,
     height: 40,
     justifyContent: "center",
     alignItems: "flex-start",
+    marginTop: 20,
   },
+
   backIcon: {
     fontSize: 30,
     color: "#000",
     fontWeight: "600",
   },
+
   titleSection: {
     alignItems: "center",
     paddingVertical: 20,
   },
+
   sparklingIcon: {
     width: 55,
     height: 55,
     marginBottom: 15,
     tintColor: "#000",
   },
+
   title: {
     fontSize: 22,
     fontWeight: "600",
     color: "#000",
   },
-  messagesContainer: {
-    flex: 1,
-    paddingHorizontal: 10,
-  },
-  messagesContent: {
-    paddingBottom: 10,
-  },
-  messageWrapper: {
-    marginBottom: 10,
-  },
+
+messagesContainer: {
+  flex: 1,
+  paddingHorizontal: 26,
+},
+
+messagesContent: {
+  paddingTop: 20,
+  paddingBottom: 12,
+},
+
+messageWrapper: {
+  marginBottom: 10,
+},
+
   userMessageWrapper: {
     alignItems: "flex-end",
   },
+
   aiMessageWrapper: {
     alignItems: "flex-start",
   },
+
   messageLabelContainer: {
-    marginBottom: 0,
+    marginBottom: 3,
   },
+
   messageLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "rgba(0, 0, 0, 0.5)",
-    letterSpacing: 0.5,
-  },
-  messageBubble: {
-    maxWidth: "85%",
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
+  fontSize: 13,
+  fontWeight: "700",
+  color: "rgba(0, 0, 0, 0.5)",
+  letterSpacing: 0.5,
+},
+
+messageBubble: {
+  maxWidth: "72%",
+  borderRadius: 22,
+  paddingHorizontal: 14,
+  paddingVertical: 9,
+  backgroundColor: "rgba(255, 255, 255, 0.7)",
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.07,
+  shadowRadius: 4,
+  elevation: 2,
+},
   userBubble: {
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
-    borderTopRightRadius: 4,
+    borderTopRightRadius: 22,
   },
+
   aiBubble: {
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
-    borderTopLeftRadius: 4,
+    borderTopLeftRadius: 22,
   },
+
   errorBubble: {
     backgroundColor: "rgba(255, 220, 220, 0.85)",
   },
+
   messageText: {
-    fontSize: 16,
-    color: "#333",
-    lineHeight: 20,
-  },
+  fontSize: 15,
+  color: "#333",
+  lineHeight: 18,
+  fontWeight: "400",
+},
+
   errorText: {
     color: "#c0392b",
   },
+
   typingDots: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#5c5146",
     letterSpacing: 4,
   },
+
   suggestionsSection: {
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
+
   suggestionsTitle: {
-    fontSize: 13,
+    fontSize: 14,
     color: "rgba(0, 0, 0, 0.5)",
     marginBottom: 12,
   },
+
   suggestionsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
   },
+
   suggestionChip: {
     backgroundColor: "rgba(255, 255, 255, 0.7)",
     borderRadius: 20,
@@ -393,16 +411,19 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+
   suggestionText: {
-    fontSize: 13,
+    fontSize: 14,
     color: "#333",
     fontWeight: "500",
   },
+
   inputSection: {
     paddingHorizontal: 20,
     paddingBottom: 25,
     paddingTop: 10,
   },
+
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -417,26 +438,31 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
+
   input: {
     flex: 1,
     fontSize: 14,
     color: "#333",
     maxHeight: 100,
   },
+
   sendButton: {
     width: 32,
     height: 32,
     justifyContent: "center",
     alignItems: "center",
   },
+
   sendButtonDisabled: {
     opacity: 0.4,
   },
+
   sendIcon: {
     width: 24,
     height: 24,
     tintColor: "#8B7B6C",
   },
+
   sendIconDisabled: {
     tintColor: "#aaa",
   },

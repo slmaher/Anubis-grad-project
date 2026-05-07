@@ -26,6 +26,8 @@ const COLLECTION_H = COLLECTION_W * 1.55;
 
 const DARK = "#78582d";
 const MUTED = "#6E6E6E";
+const NAV_DARK = "#2C2010";
+const TAB_COUNT = 5;
 
 const featuredArtifacts = [
   {
@@ -92,6 +94,13 @@ export default function ArtifactsScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [showAllCollections, setShowAllCollections] = useState(false);
+
+  const isCompact = width < 390;
+  const isTablet = width >= 768;
+  const horizontalInset = isTablet ? 28 : isCompact ? 10 : 16;
+  const tabBarWidth = Math.min(width - horizontalInset * 2, 640);
+  const TAB_WIDTH = tabBarWidth / TAB_COUNT;
+  const labelSize = isCompact ? 9.5 : 11;
 
   const filteredArtifacts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -263,14 +272,26 @@ export default function ArtifactsScreen() {
           )}
         </ScrollView>
 
-        <View style={styles.tabBarContainer}>
-          <View style={styles.tabBar}>
-            <View style={styles.activeBubble} />
+        <View
+          style={[
+            styles.tabBarContainer,
+            { left: horizontalInset, right: horizontalInset },
+          ]}
+        >
+          <View style={[styles.tabBar, { width: tabBarWidth }]}>
+            <View
+              style={[
+                styles.activeBubble,
+                {
+                  width: Math.max(TAB_WIDTH - 6, 52),
+                },
+              ]}
+            />
 
             {tabs.map((tab, index) => (
               <TouchableOpacity
                 key={tab.key}
-                style={styles.tabButton}
+                style={[styles.tabButton, { width: TAB_WIDTH }]}
                 activeOpacity={0.8}
                 onPress={() => router.push(tab.route)}
               >
@@ -280,6 +301,7 @@ export default function ArtifactsScreen() {
                 <Text
                   style={[
                     styles.tabLabel,
+                    { fontSize: labelSize },
                     index === 0 && styles.tabLabelActive,
                   ]}
                 >
@@ -499,43 +521,37 @@ const styles = StyleSheet.create({
 
   tabBarContainer: {
     position: "absolute",
-    left: 20,
-    right: 20,
-    bottom: 28,
-    alignItems: "center",
+    bottom: 35,
+    alignSelf: "center",
   },
 
   tabBar: {
-    width: "100%",
     flexDirection: "row",
-    backgroundColor: "rgba(255, 255, 255, 0.92)",
-    borderRadius: 32,
-    paddingVertical: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.90)",
+    borderRadius: 30,
+    paddingVertical: 5,
     borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.92)",
+    borderColor: "rgba(255,255,255,0.9)",
     elevation: 12,
     alignItems: "center",
     overflow: "hidden",
     justifyContent: "space-between",
-    position: "relative",
   },
 
   activeBubble: {
     position: "absolute",
-    left: 4,
-    top: 2,
-    width: "19%",
-    height: 56,
-    borderRadius: 30,
-    backgroundColor: "rgba(255,255,255,0.96)",
+    height: 60,
+    borderRadius: 35,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    top: 1,
+    left: 2,
     elevation: 4,
   },
 
   tabButton: {
-    flex: 1,
-    height: 52,
     alignItems: "center",
     justifyContent: "center",
+    height: 52,
     zIndex: 2,
     paddingHorizontal: 2,
   },
@@ -546,14 +562,13 @@ const styles = StyleSheet.create({
   },
 
   tabLabel: {
-    fontSize: 10.5,
     fontWeight: "600",
-    color: "#2C2010",
+    color: NAV_DARK,
     marginTop: 4,
   },
 
   tabLabelActive: {
     fontWeight: "700",
-    color: "#2C2010",
+    color: NAV_DARK,
   },
 });

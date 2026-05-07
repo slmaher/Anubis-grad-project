@@ -425,12 +425,19 @@ const styles = StyleSheet.create({
     zIndex: 2,
     elevation: 20,
   },
-  backgroundLtr: {
-    left: 0,
-  },
-  backgroundRtl: {
-    right: 0,
-  },
+backgroundLtr: {
+  left: 0,
+  borderTopRightRadius: 28,
+  borderBottomRightRadius: 28,
+  overflow: "hidden",
+},
+
+backgroundRtl: {
+  right: 0,
+  borderTopLeftRadius: 28,
+  borderBottomLeftRadius: 28,
+  overflow: "hidden",
+},
   safeArea: { flex: 1 },
   header: {
     flexDirection: "row",
