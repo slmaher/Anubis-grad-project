@@ -220,6 +220,20 @@ export const api = {
       token,
     });
   },
+  updatePost(postId, payload, token) {
+  return apiRequest(`/api/posts/${postId}`, {
+    method: "PATCH",
+    body: payload,
+    token,
+  });
+},
+
+deletePost(postId, token) {
+  return apiRequest(`/api/posts/${postId}`, {
+    method: "DELETE",
+    token,
+  });
+},
 
   // Chat
   getConversations(token) {

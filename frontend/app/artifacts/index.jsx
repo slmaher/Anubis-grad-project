@@ -1,5 +1,5 @@
-import { useRouter, useLocalSearchParams } from "expo-router";
-import React from "react";
+import { useRouter } from "expo-router";
+import React, { useMemo, useState } from "react";
 import {
   Dimensions,
   Image,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -20,8 +21,11 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 const { width } = Dimensions.get("window");
 const FEATURED_W = width * 0.42;
 const FEATURED_H = FEATURED_W * 1.62;
-const COLLECTION_W = width * 0.28;
-const COLLECTION_H = COLLECTION_W * 1.5;
+const COLLECTION_W = width * 0.36;
+const COLLECTION_H = COLLECTION_W * 1.55;
+
+const DARK = "#78582d";
+const MUTED = "#6E6E6E";
 
 const featuredArtifacts = [
   {
@@ -31,13 +35,14 @@ const featuredArtifacts = [
       "Ancient Egyptian god of mummification and the afterlife, depicted with a jackal head and human body. This exquisite replica captures the mysterious essence of one of Egypt's most iconic deities.",
     image: require("../../assets/images/Anubis-Statue.png"),
     imageKey: "anubis",
+    modelKey: "anubis",
   },
   {
     id: 2,
     title: "Tutankhamun mask",
     description:
       "The legendary golden death mask of the young pharaoh Tutankhamun. This stunning piece represents one of the most famous treasures of ancient Egypt, crafted with incredible detail and historical accuracy.",
-    image: require("../../assets/images/Grand-Egyptian-Museum.png"),
+    image: require("../../assets/images/tutankhamun.jpg"),
     imageKey: "tutankhamun",
   },
 ];
@@ -85,7 +90,18 @@ const tabs = [
 
 export default function ArtifactsScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showAllCollections, setShowAllCollections] = useState(false);
+
+  const filteredArtifacts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+
+    if (!q) return featuredArtifacts;
+
+    return featuredArtifacts.filter((artifact) =>
+      `${artifact.title} ${artifact.description}`.toLowerCase().includes(q),
+    );
+  }, [searchQuery]);
 
   const handleArtifactPress = (artifact) => {
     router.push({
@@ -95,13 +111,14 @@ export default function ArtifactsScreen() {
         title: artifact.title,
         description: artifact.description,
         imageKey: artifact.imageKey,
+        modelKey: artifact.modelKey,
       },
     });
   };
 
   return (
     <ImageBackground
-      source={require("../../assets/images/bg.png")}
+      source={require("../../assets/images/beige-background.jpeg")}
       style={styles.background}
       resizeMode="cover"
     >
@@ -116,27 +133,33 @@ export default function ArtifactsScreen() {
               <Text style={styles.backIcon}>←</Text>
             </TouchableOpacity>
 
-            <View style={styles.headerIcons}>
-              <TouchableOpacity style={styles.iconBtn} activeOpacity={0.8}>
-                <Image
-                  source={require("../../assets/images/search-icon.png")}
-                  style={styles.searchIconImage}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.iconBtn} activeOpacity={0.8}>
-                <MaterialCommunityIcons
-                  name="menu"
-                  size={30}
-                  color="#4D4D4D"
-                />
-              </TouchableOpacity>
-            </View>
+            <View style={{ width: 34 }} />
           </View>
 
           <Text style={styles.headerTitle}>Artifact page</Text>
           <Text style={styles.headerSub}>View Art, Culture and History</Text>
+
+          <View style={styles.searchContainer}>
+            <MaterialCommunityIcons name="magnify" size={20} color="#8B7B6C" />
+
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search artifacts..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#999"
+            />
+
+            {searchQuery.trim().length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
+                <MaterialCommunityIcons
+                  name="close-circle"
+                  size={18}
+                  color="#8B7B6C"
+                />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         <ScrollView
@@ -148,7 +171,7 @@ export default function ArtifactsScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.featuredRow}
           >
-            {featuredArtifacts.map((item) => (
+            {filteredArtifacts.map((item) => (
               <TouchableOpacity
                 key={item.id}
                 style={styles.featuredCard}
@@ -174,33 +197,70 @@ export default function ArtifactsScreen() {
             ))}
           </ScrollView>
 
+          {filteredArtifacts.length === 0 && (
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons
+                name="magnify-close"
+                size={34}
+                color="#8B7B6C"
+              />
+              <Text style={styles.emptyTitle}>No artifacts found</Text>
+              <Text style={styles.emptyText}>
+                Try searching for another artifact name.
+              </Text>
+            </View>
+          )}
+
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Explore Collections</Text>
 
-            <TouchableOpacity activeOpacity={0.8}>
-              <Text style={styles.seeAll}>See all</Text>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => setShowAllCollections((prev) => !prev)}
+            >
+              <Text style={styles.seeAll}>
+                {showAllCollections ? "View less" : "View all"}
+              </Text>
             </TouchableOpacity>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.collectionsRow}
-          >
-            {collections.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                style={styles.collectionCard}
-                activeOpacity={0.85}
-              >
-                <Image
-                  source={item.image}
-                  style={styles.collectionImg}
-                  resizeMode="cover"
-                />
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          {showAllCollections ? (
+            <View style={styles.collectionsGrid}>
+              {collections.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.collectionCard}
+                  activeOpacity={0.85}
+                >
+                  <Image
+                    source={item.image}
+                    style={styles.collectionImg}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.collectionsRow}
+            >
+              {collections.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.collectionCard}
+                  activeOpacity={0.85}
+                >
+                  <Image
+                    source={item.image}
+                    style={styles.collectionImg}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </ScrollView>
 
         <View style={styles.tabBarContainer}>
@@ -233,9 +293,6 @@ export default function ArtifactsScreen() {
     </ImageBackground>
   );
 }
-
-const DARK = "#2C2010";
-const MUTED = "#6E6E6E";
 
 const styles = StyleSheet.create({
   background: {
@@ -275,33 +332,35 @@ const styles = StyleSheet.create({
   },
 
   headerTitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#4F4F4F",
-    marginBottom: 4,
+    fontSize: 28,
+    fontWeight: "700",
+    color: DARK,
+    marginBottom: 6,
   },
 
   headerSub: {
-    fontSize: 12,
-    color: "#7B7B7B",
+    fontSize: 15,
+    color: "#787878",
+    fontWeight: "600",
+    marginBottom: 14,
   },
 
-  headerIcons: {
+  searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.95)",
+    gap: 10,
   },
 
-  iconBtn: {
-    padding: 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  searchIconImage: {
-    width: 18,
-    height: 18,
-    tintColor: "#4D4D4D",
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: DARK,
   },
 
   scrollContent: {
@@ -346,7 +405,7 @@ const styles = StyleSheet.create({
   featuredLabelTxt: {
     fontSize: 11,
     color: "#FFFFFF",
-    fontWeight: "500",
+    fontWeight: "600",
     flex: 1,
     marginRight: 8,
   },
@@ -367,30 +426,62 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
+  emptyState: {
+    marginHorizontal: 14,
+    marginTop: 12,
+    backgroundColor: "rgba(255,255,255,0.78)",
+    borderRadius: 18,
+    padding: 20,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.95)",
+  },
+
+  emptyTitle: {
+    marginTop: 8,
+    fontSize: 16,
+    fontWeight: "800",
+    color: DARK,
+  },
+
+  emptyText: {
+    marginTop: 4,
+    fontSize: 13,
+    color: MUTED,
+    textAlign: "center",
+  },
+
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 14,
-    marginTop: 10,
-    marginBottom: 10,
+    marginTop: 14,
+    marginBottom: 12,
   },
 
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "700",
     color: DARK,
   },
 
   seeAll: {
-    fontSize: 13,
+    fontSize: 14,
     color: "#7A7A7A",
-    fontWeight: "400",
+    fontWeight: "600",
   },
 
   collectionsRow: {
     paddingHorizontal: 14,
-    gap: 10,
+    gap: 12,
+  },
+
+  collectionsGrid: {
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
   },
 
   collectionCard: {
