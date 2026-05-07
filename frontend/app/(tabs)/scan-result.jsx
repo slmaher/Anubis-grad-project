@@ -14,23 +14,309 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import * as MediaLibrary from "expo-media-library";
 import * as Sharing from "expo-sharing";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Audio } from "expo-av";
+import * as Speech from "expo-speech";
 import Entypo from "@expo/vector-icons/Entypo";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { API_BASE_URL } from "../api/baseUrl";
 import { analyzeArtifactImage } from "../api/ai";
 
 const { width } = Dimensions.get("window");
+
+const CACHE_KEY_PREFIX = "tour_guide_cache_";
+
+// In-memory cache to avoid AsyncStorage reads and duplicate network calls
+const inMemoryAudioCache = new Map(); // key -> audioUri
+const generationPromises = new Map(); // key -> Promise resolving to audioUri
+
+// Sanitization: remove JSON/debug, collapse whitespace, limit length
+const sanitizeTextForTTS = (text) => {
+  if (!text || typeof text !== "string") return "";
+
+  let s = text;
+
+  // Remove JSON-like objects and arrays
+  s = s.replace(/\{[^}]*\}|\[[^\]]*\]/g, " ");
+
+  // Remove common debug lines/markers (e.g., DEBUG:, metadata:, __meta__)
+  s = s.replace(/(^|\n)\s*(DEBUG|debug|metadata|__meta__)[^\n]*\n?/gi, " ");
+
+  // Remove HTML tags if any
+  s = s.replace(/<[^>]+>/g, " ");
+
+  // Collapse whitespace and trim
+  s = s.replace(/\s+/g, " ").trim();
+
+  // Limit length to 400 characters (configurable)
+  const maxLen = 400;
+  if (s.length > maxLen) {
+    s = s.slice(0, maxLen);
+    // Try to cut at last sentence end if possible
+    const lastPunct = Math.max(s.lastIndexOf('.'), s.lastIndexOf('!'), s.lastIndexOf('?'));
+    if (lastPunct > Math.floor(maxLen * 0.6)) {
+      s = s.slice(0, lastPunct + 1);
+    }
+  }
+
+  return s;
+};
+
+// ========================
+// TEXT GENERATION FUNCTIONS
+// ========================
+
+const generateArabicGuide = (description) => {
+  const cleanedDescription = String(description || "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const baseStory = cleanedDescription
+    ? cleanedDescription
+        .split(/(?<=[.!?])\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .join(" ")
+    : "التمثال ده جميل جدا";
+
+  const egyptianGuide =
+    `بص بقى يا صديقي، أنا حسن، دليلك السياحي بتاع النهاردة. ` +
+    `${baseStory} ` +
+    `تخيل معايا، الإيد القديمة اللي عملت الحاجة الجميلة دي. ` +
+    `كانت معاهم حكايات وأسرار من زمان. ` +
+    `شوف التفاصيل الدقيقة، كل حاجة فيها حكاية. ` +
+    `ده كنز من كنوز مصر الحلوة.`;
+
+  return egyptianGuide;
+};
+
+const generateEnglishGuide = (description) => {
+  const cleanedDescription = String(description || "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const descriptionWithoutIntro = cleanedDescription.replace(
+    /^(hello!?\s*i'?m\s+anubis,?\s*(your|ur)\s+egyptian\s+guide\s+today\.?\s*)/i,
+    ""
+  ).trim();
+
+  const baseStory = descriptionWithoutIntro
+    ? descriptionWithoutIntro
+        .split(/(?<=[.!?])\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .join(" ")
+    : "This artifact holds secrets of ancient Egypt.";
+
+  const englishGuide =
+    `I'm Anubis, your Egyptian guide today. ` +
+    `${baseStory} ` +
+    `Can you imagine the skilled hands that shaped this treasure? ` +
+    `Take a moment. Look closely. Every detail here brings the ancient past back to life. ` +
+    `This is the pride of Egypt.`;
+
+  return englishGuide;
+};
+
+// ========================
+// ELEVENLABS INTEGRATION
+// ========================
+
+const generateSpeechWithElevenLabs = async (text, language) => {
+  if (!text) {
+    throw new Error("No text provided for speech generation");
+  }
+
+  try {
+    console.log("🎤 Calling backend ElevenLabs proxy...", {
+      textLength: text.length,
+      language,
+    });
+
+    const response = await fetch(`${API_BASE_URL}/api/ai/tour-guide/speech`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text, language }),
+    });
+
+    console.log("📊 ElevenLabs proxy response status:", response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const logFn = response.status === 401 || response.status === 402 ? console.warn : console.error;
+      logFn("❌ ElevenLabs proxy error response:", {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorData,
+      });
+
+      // Handle auth errors explicitly (HTTP 401)
+      if (response.status === 401) {
+        try {
+          Alert.alert(
+            "Speech Unavailable",
+            "ElevenLabs API key is invalid or missing required permissions. Using device TTS fallback."
+          );
+        } catch (alertErr) {
+          console.warn("Could not show alert for ElevenLabs 401:", alertErr);
+        }
+
+        // Return null so callers fall back to local TTS instead of throwing
+        return null;
+      }
+
+      // Handle billing / quota errors explicitly (HTTP 402)
+      if (response.status === 402) {
+        try {
+          Alert.alert(
+            "Speech Unavailable",
+            "Speech generation failed: ElevenLabs account needs billing or has exhausted credits. Using device TTS fallback."
+          );
+        } catch (alertErr) {
+          console.warn("Could not show alert for ElevenLabs 402:", alertErr);
+        }
+
+        // Return null so callers fall back to local TTS instead of throwing
+        return null;
+      }
+
+      throw new Error(
+        errorData?.message ||
+          `ElevenLabs API error: ${response.status} - ${response.statusText}`
+      );
+    }
+
+    const payload = await response.json();
+    const audioBase64 = payload?.data?.audioBase64;
+
+    if (!audioBase64) {
+      throw new Error("ElevenLabs proxy returned no audio data");
+    }
+
+    console.log("✅ Audio received from ElevenLabs proxy");
+    return `data:audio/mpeg;base64,${audioBase64}`;
+  } catch (error) {
+    // If backend/proxy surfaced an axios-style error with status info, handle 401/402
+    try {
+      const status = error?.response?.status || (error?.message && /402/.test(error.message) ? 402 : null);
+      if (status === 401) {
+        try {
+          Alert.alert(
+            "Speech Unavailable",
+            "ElevenLabs API key is invalid or missing required permissions. Using device TTS fallback."
+          );
+        } catch (alertErr) {
+          console.warn("Could not show alert for ElevenLabs 401:", alertErr);
+        }
+
+        console.warn("⚠️ Speech generation unauthorized (401):", error);
+        return null;
+      }
+
+      if (status === 402) {
+        try {
+          Alert.alert(
+            "Speech Unavailable",
+            "Speech generation failed: ElevenLabs account needs billing or has exhausted credits. Using device TTS fallback."
+          );
+        } catch (alertErr) {
+          console.warn("Could not show alert for ElevenLabs 402:", alertErr);
+        }
+
+        console.warn("⚠️ Speech generation payment required (402):", error);
+        return null;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    console.error("❌ Speech generation error:", error);
+    throw error;
+  }
+};
+
+// ========================
+// CACHING SYSTEM
+// ========================
+
+const getCacheKey = (language, sanitizedText) => {
+  const desc = sanitizedText || "";
+  let hash = 0;
+  for (let i = 0; i < desc.length; i++) {
+    const char = desc.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // to 32bit int
+  }
+  const hashStr = Math.abs(hash).toString(36);
+  return `${CACHE_KEY_PREFIX}${language}_${hashStr}`;
+};
+
+const getCachedAudioPath = async (language, sanitizedText) => {
+  try {
+    const cacheKey = getCacheKey(language, sanitizedText);
+
+    // Check in-memory cache first
+    if (inMemoryAudioCache.has(cacheKey)) {
+      console.log("♻️ In-memory cache hit for", cacheKey);
+      return inMemoryAudioCache.get(cacheKey);
+    }
+
+    // Fallback to AsyncStorage
+    const cachedPath = await AsyncStorage.getItem(cacheKey);
+    if (cachedPath) {
+      console.log("♻️ AsyncStorage cache hit for", cacheKey);
+      inMemoryAudioCache.set(cacheKey, cachedPath);
+    }
+    return cachedPath;
+  } catch (error) {
+    console.error("Cache retrieval error:", error);
+    return null;
+  }
+};
+
+const setCachedAudioPath = async (language, sanitizedText, audioUri) => {
+  try {
+    const cacheKey = getCacheKey(language, sanitizedText);
+
+    // Update both in-memory and persistent cache
+    inMemoryAudioCache.set(cacheKey, audioUri);
+    await AsyncStorage.setItem(cacheKey, audioUri);
+    return true;
+  } catch (error) {
+    console.error("Cache storage error:", error);
+    return false;
+  }
+};
+
+// ========================
+// MAIN COMPONENT
+// ========================
 
 export default function ScanResult() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const photoUri = params.photoUri;
-  const [isSaved, setIsSaved] = useState(false);
 
+  // UI State
+  const [isSaved, setIsSaved] = useState(false);
+  const [language, setLanguage] = useState("en");
+
+  // Audio State
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const [currentAudioUri, setCurrentAudioUri] = useState(null);
+
+  // AI Analysis State
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiError, setAiError] = useState("");
   const [aiResult, setAiResult] = useState(null);
 
+  // Audio Player Reference
+  const audioPlayerRef = useRef(null);
+
+  // Run AI Analysis
   useEffect(() => {
     let isMounted = true;
 
@@ -65,10 +351,242 @@ export default function ScanResult() {
     };
   }, [photoUri]);
 
+  // Cleanup Audio on Unmount
+  useEffect(() => {
+    return () => {
+      Speech.stop();
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.unloadAsync();
+      }
+    };
+  }, []);
+
+  // Extract Description
+  const description = useMemo(() => {
+    return (
+      aiResult?.metadata?.description_en ||
+      aiResult?.description ||
+      aiResult?.recognition?.description ||
+      ""
+    );
+  }, [aiResult]);
+
+  // Generate Guide Text
+  const guideText = useMemo(() => {
+    if (!description) return "";
+    return language === "ar"
+      ? generateArabicGuide(description)
+      : generateEnglishGuide(description);
+  }, [description, language]);
+
+  // Generate and Play Audio
+  const generateAndPlayAudio = async () => {
+    if (!guideText) {
+      Alert.alert("Error", "No guide text available");
+      return;
+    }
+    // Sanitize and create cache key
+    const sanitized = sanitizeTextForTTS(guideText);
+    console.log("TTS start: sanitized preview:", sanitized.slice(0, 120));
+
+    const cacheKey = getCacheKey(language, sanitized);
+
+    // Prevent concurrent duplicate calls: reuse in-flight promise
+    if (generationPromises.has(cacheKey)) {
+      console.log("🔁 Awaiting in-flight generation for", cacheKey);
+      try {
+        setIsGeneratingAudio(true);
+        const audioUri = await generationPromises.get(cacheKey);
+        if (audioUri) {
+          setCurrentAudioUri(audioUri);
+          try {
+            router.push(
+              `/virtual-guide?audioUrl=${encodeURIComponent(audioUri)}&text=${encodeURIComponent(sanitized)}&language=${encodeURIComponent(language)}`
+            );
+          } catch (navErr) {
+            console.warn("Could not open virtual guide:", navErr);
+          }
+        } else {
+          // If promise resolved to null/undefined, fallback
+          await playWithExpoSpeech(guideText);
+        }
+      } catch (err) {
+        console.error("In-flight generation failed:", err);
+        await playWithExpoSpeech(guideText);
+      } finally {
+        setIsGeneratingAudio(false);
+      }
+
+      return;
+    }
+
+    // New generation flow
+    const generationPromise = (async () => {
+      try {
+        setIsGeneratingAudio(true);
+
+        // Check cache (in-memory / AsyncStorage)
+        const cachedAudioUri = await getCachedAudioPath(language, sanitized);
+        if (cachedAudioUri) {
+          console.log("♻️ Cache hit before network for", cacheKey);
+          return cachedAudioUri;
+        }
+
+        // Not cached: call backend ElevenLabs proxy
+        console.log("📡 No cache found — calling ElevenLabs for", cacheKey);
+        try {
+          const audioUriFromServer = await generateSpeechWithElevenLabs(
+            sanitized,
+            language
+          );
+
+          if (audioUriFromServer) {
+            await setCachedAudioPath(language, sanitized, audioUriFromServer);
+            console.log("✅ Audio cached successfully for", cacheKey);
+            return audioUriFromServer;
+          }
+          return null;
+        } catch (elevenLabsError) {
+          console.warn("⚠️ ElevenLabs generation failed:", elevenLabsError);
+          // Do not retry on 401 — backend should surface that
+          return null;
+        }
+      } finally {
+        setIsGeneratingAudio(false);
+      }
+    })();
+
+    generationPromises.set(cacheKey, generationPromise);
+
+    try {
+      const audioUri = await generationPromise;
+      if (audioUri) {
+        setCurrentAudioUri(audioUri);
+        try {
+          router.push(
+            `/virtual-guide?audioUrl=${encodeURIComponent(audioUri)}&text=${encodeURIComponent(sanitized)}&language=${encodeURIComponent(language)}`
+          );
+        } catch (navErr) {
+          console.warn("Could not open virtual guide:", navErr);
+        }
+      } else {
+        // Fallback to local TTS
+        Alert.alert(
+          "Voice Fallback",
+          "Using local voice as ElevenLabs generation failed or is unavailable."
+        );
+        await playWithExpoSpeech(guideText);
+      }
+    } catch (error) {
+      console.error("❌ Audio generation error:", error);
+      Alert.alert("Audio Error", error?.message || "Could not generate guide audio");
+      await playWithExpoSpeech(guideText);
+    } finally {
+      generationPromises.delete(cacheKey);
+      setIsGeneratingAudio(false);
+    }
+  };
+
+  // Play Audio Function
+  const playAudio = async (audioUri) => {
+    try {
+      if (audioPlayerRef.current) {
+        await audioPlayerRef.current.stopAsync();
+        await audioPlayerRef.current.unloadAsync();
+      }
+
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: audioUri },
+        { shouldPlay: true }
+      );
+
+      audioPlayerRef.current = sound;
+
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded) {
+          setIsPlayingAudio(status.isPlaying);
+          if (status.didJustFinish) {
+            setIsPlayingAudio(false);
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Playback error:", error);
+      Alert.alert("Playback Error", "Could not play audio");
+    }
+  };
+
+  // Stop Audio
+  const stopAudio = async () => {
+    try {
+      // Stop ElevenLabs audio
+      if (audioPlayerRef.current) {
+        await audioPlayerRef.current.stopAsync();
+      }
+      // Stop expo-speech audio
+      await Speech.stop();
+      setIsPlayingAudio(false);
+    } catch (error) {
+      console.error("Stop audio error:", error);
+    }
+  };
+
+  // Fallback: Play with expo-speech
+  const playWithExpoSpeech = async (text) => {
+    try {
+      console.log("🎤 Using expo-speech fallback...");
+      setIsPlayingAudio(true);
+
+      await Speech.stop();
+
+      const languageCode = language === "ar" ? "ar-EG" : "en-US";
+
+      await Speech.speak(text, {
+        language: languageCode,
+        rate: 0.75,
+        pitch: 1.0,
+        volume: 1.0,
+        onDone: () => setIsPlayingAudio(false),
+        onStopped: () => setIsPlayingAudio(false),
+        onError: (error) => {
+          console.error("expo-speech error:", error);
+          setIsPlayingAudio(false);
+        },
+      });
+    } catch (error) {
+      console.error("❌ Fallback speech error:", error);
+      setIsPlayingAudio(false);
+    }
+  };
+
+  // Auto-play on result
+  useEffect(() => {
+    if (aiResult && !loadingAI && !aiError && guideText) {
+      generateAndPlayAudio();
+    }
+
+    return () => {
+      stopAudio();
+    };
+  }, [aiResult, loadingAI, aiError, guideText]);
+
+  // Handle Language Toggle
+  const handleLanguageToggle = async () => {
+    const newLanguage = language === "en" ? "ar" : "en";
+    setLanguage(newLanguage);
+
+    // Stop current audio and generate new one
+    await stopAudio();
+
+    // The useEffect above will trigger audio generation with new language
+  };
+
+  // Handle Back
   const handleBack = () => {
     router.push("/scan");
   };
 
+  // Handle Save
   const handleSave = async () => {
     try {
       if (!photoUri || typeof photoUri !== "string") {
@@ -81,7 +599,7 @@ export default function ScanResult() {
       if (!permission.granted) {
         Alert.alert(
           "Permission Required",
-          "Please allow media access in your device settings",
+          "Please allow media access in your device settings"
         );
         return;
       }
@@ -96,6 +614,7 @@ export default function ScanResult() {
     }
   };
 
+  // Handle Share
   const handleShare = async () => {
     try {
       if (!photoUri || typeof photoUri !== "string") {
@@ -120,6 +639,7 @@ export default function ScanResult() {
     }
   };
 
+  // Handle Add to Journey
   const handleAddToJourney = async () => {
     try {
       if (!photoUri || typeof photoUri !== "string") {
@@ -155,6 +675,7 @@ export default function ScanResult() {
     }
   };
 
+  // Memoized Values
   const artifactTitle = useMemo(() => {
     return (
       aiResult?.metadata?.name ||
@@ -252,6 +773,97 @@ export default function ScanResult() {
               </View>
             ) : aiResult ? (
               <View>
+                <View style={styles.guideCard}>
+                  <View style={styles.guideAvatarColumn}>
+                    <View style={styles.guideAvatarRing}>
+                      <Text style={styles.guideAvatarEmoji}>👨</Text>
+                    </View>
+                    <Text style={styles.guideAvatarName}>
+                      Anubis - Your Guide
+                    </Text>
+                  </View>
+
+                  <View style={styles.guideBubble}>
+                    <View style={styles.guideBubbleTail} />
+
+                    <View style={styles.languageToggleContainer}>
+                      <TouchableOpacity
+                        style={[
+                          styles.languageToggle,
+                          language === "en" && styles.languageToggleActive,
+                        ]}
+                        onPress={handleLanguageToggle}
+                      >
+                        <Text
+                          style={[
+                            styles.languageToggleText,
+                            language === "en" &&
+                              styles.languageToggleTextActive,
+                          ]}
+                        >
+                          EN
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[
+                          styles.languageToggle,
+                          language === "ar" && styles.languageToggleActive,
+                        ]}
+                        onPress={handleLanguageToggle}
+                      >
+                        <Text
+                          style={[
+                            styles.languageToggleText,
+                            language === "ar" &&
+                              styles.languageToggleTextActive,
+                          ]}
+                        >
+                          AR
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    <Text style={styles.guideBubbleLabel}>Your Guide</Text>
+                    <Text style={styles.guideBubbleText}>{guideText}</Text>
+
+                    <View style={styles.guideActions}>
+                      {isGeneratingAudio ? (
+                        <View style={styles.guideActionButton}>
+                          <ActivityIndicator
+                            size="small"
+                            color="#FFF6E6"
+                          />
+                          <Text style={styles.guideActionText}>
+                            Generating...
+                          </Text>
+                        </View>
+                      ) : (
+                        <>
+                          <TouchableOpacity
+                            style={styles.guideActionButton}
+                            onPress={
+                              isPlayingAudio ? stopAudio : generateAndPlayAudio
+                            }
+                          >
+                            <Text style={styles.guideActionText}>
+                              {isPlayingAudio ? "Stop" : "Play"}
+                            </Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={styles.guideActionButtonSecondary}
+                            onPress={generateAndPlayAudio}
+                          >
+                            <Text style={styles.guideActionTextSecondary}>
+                              Replay
+                            </Text>
+                          </TouchableOpacity>
+                        </>
+                      )}
+                    </View>
+                  </View>
+                </View>
+
                 <Text style={styles.artifactMainTitle}>{artifactTitle}</Text>
 
                 {confidenceText ? (
@@ -472,6 +1084,143 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 30,
   },
+  guideCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    marginBottom: 18,
+    padding: 14,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 248, 235, 0.92)",
+    borderWidth: 1,
+    borderColor: "rgba(139, 123, 108, 0.14)",
+  },
+  guideAvatarColumn: {
+    alignItems: "center",
+    width: 92,
+  },
+  guideAvatarRing: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#5A4A3F",
+    borderWidth: 3,
+    borderColor: "#D4AF37",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  guideAvatarEmoji: {
+    fontSize: 32,
+  },
+  guideAvatarName: {
+    marginTop: 8,
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#6B5B4F",
+    textAlign: "center",
+  },
+  guideBubble: {
+    flex: 1,
+    backgroundColor: "#FFFDF8",
+    borderRadius: 18,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "rgba(139, 123, 108, 0.16)",
+  },
+  guideBubbleTail: {
+    position: "absolute",
+    left: -6,
+    top: 26,
+    width: 12,
+    height: 12,
+    backgroundColor: "#FFFDF8",
+    borderLeftWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: "rgba(139, 123, 108, 0.16)",
+    transform: [{ rotate: "45deg" }],
+  },
+  languageToggleContainer: {
+    flexDirection: "row",
+    gap: 6,
+    marginBottom: 8,
+    justifyContent: "flex-end",
+  },
+  languageToggle: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "rgba(139, 123, 108, 0.3)",
+    backgroundColor: "rgba(139, 123, 108, 0.05)",
+  },
+  languageToggleActive: {
+    backgroundColor: "#5A4A3F",
+    borderColor: "#5A4A3F",
+  },
+  languageToggleText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#6B5B4F",
+  },
+  languageToggleTextActive: {
+    color: "#FFF6E6",
+  },
+  guideBubbleLabel: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#8B7B6C",
+    marginBottom: 6,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  guideBubbleText: {
+    fontSize: 14,
+    color: "#3F342D",
+    lineHeight: 22,
+    marginBottom: 8,
+  },
+  guideActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 10,
+  },
+  guideActionButton: {
+    flex: 1,
+    minHeight: 38,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#5A4A3F",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    gap: 6,
+  },
+  guideActionButtonSecondary: {
+    flex: 1,
+    minHeight: 38,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(212, 175, 55, 0.16)",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.4)",
+  },
+  guideActionText: {
+    color: "#FFF6E6",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  guideActionTextSecondary: {
+    color: "#6B5B4F",
+    fontSize: 13,
+    fontWeight: "800",
+  },
   sectionTitle: {
     fontSize: 22,
     fontWeight: "700",
@@ -551,6 +1300,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 340,
     borderRadius: 18,
-    backgroundColor: "#EFE7DC",
+    marginTop: 12,
   },
 });

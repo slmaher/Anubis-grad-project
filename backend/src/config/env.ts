@@ -7,6 +7,8 @@ export const env = {
   port: Number(process.env.PORT) || 4000,
   mongodbUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/revive_egypt',
   groqApiKey: process.env.GROQ_API_KEY || '',
+  elevenLabsApiKey: process.env.ELEVENLABS_API_KEY || '',
+  elevenLabsVoiceId: process.env.ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB',
   jwtSecret: process.env.JWT_SECRET || 'change_me_in_production',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d'
 };
