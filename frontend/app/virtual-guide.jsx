@@ -9,7 +9,11 @@ import {
 import { WebView } from "react-native-webview";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-const buildAvatarHTML = (initialAudioUrl = "", initialText = "", initialLanguage = "en") => `
+const buildAvatarHTML = (
+  initialAudioUrl = "",
+  initialText = "",
+  initialLanguage = "en",
+) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -418,7 +422,9 @@ export default function VirtualGuide() {
   const rawTextParam = params?.text || "";
   const guideText = rawTextParam ? decodeURIComponent(rawTextParam) : "";
   const rawLanguageParam = params?.language || "";
-  const language = rawLanguageParam ? decodeURIComponent(rawLanguageParam) : "en";
+  const language = rawLanguageParam
+    ? decodeURIComponent(rawLanguageParam)
+    : "en";
 
   return (
     <View style={styles.container}>
