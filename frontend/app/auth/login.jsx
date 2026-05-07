@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -19,6 +18,8 @@ import { useTranslation } from "react-i18next";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function Login() {
   const router = useRouter();
   const { t } = useTranslation();
@@ -26,10 +27,43 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({
+    email: "",
+    password: "",
+  });
+
+  const clearFieldError = (field) => {
+    setFieldErrors((current) => ({ ...current, [field]: "" }));
+    setFormError("");
+  };
+
+  const validateForm = () => {
+    const nextErrors = {
+      email: "",
+      password: "",
+    };
+
+    if (!email.trim()) {
+      nextErrors.email = "Email is required.";
+    } else if (!EMAIL_PATTERN.test(email.trim())) {
+      nextErrors.email = "Enter a valid email address.";
+    }
+
+    if (!password) {
+      nextErrors.password = "Password is required.";
+    } else if (password.length < 6) {
+      nextErrors.password = "Password must be at least 6 characters.";
+    }
+
+    setFieldErrors(nextErrors);
+    return !nextErrors.email && !nextErrors.password;
+  };
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Missing details", "Please enter both email and password.");
+    setFormError("");
+
+    if (!validateForm()) {
       return;
     }
 
@@ -49,10 +83,7 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Login failed", error);
-      Alert.alert(
-        "Login failed",
-        error?.message || "Please check your credentials and try again.",
-      );
+      setFormError(error?.message || "Please check your credentials and try again.");
     } finally {
       setLoading(false);
     }
@@ -110,26 +141,53 @@ export default function Login() {
                 </TouchableOpacity>
               </View>
 
+              {formError ? (
+                <View style={styles.errorBanner}>
+                  <Text style={styles.errorBannerText}>{formError}</Text>
+                </View>
+              ) : null}
+
               {/* Email Input */}
               <View style={styles.inputContainer}>
                 <TextInput
-                  style={styles.inputUnderline}
+                  style={[
+                    styles.inputUnderline,
+                    fieldErrors.email ? styles.inputUnderlineError : null,
+                  ]}
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    if (fieldErrors.email) {
+                      clearFieldError("email");
+                    }
+                  }}
                   placeholder={t("auth.login.email")}
                   placeholderTextColor="rgba(255, 255, 255, 0.8)"
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
+                {fieldErrors.email ? (
+                  <Text style={styles.fieldErrorText}>{fieldErrors.email}</Text>
+                ) : null}
               </View>
 
               {/* Password Input */}
               <View style={styles.inputContainer}>
-                <View style={styles.passwordRow}>
+                <View
+                  style={[
+                    styles.passwordRow,
+                    fieldErrors.password ? styles.passwordRowError : null,
+                  ]}
+                >
                   <TextInput
                     style={styles.passwordInputUnderline}
                     value={password}
-                    onChangeText={setPassword}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      if (fieldErrors.password) {
+                        clearFieldError("password");
+                      }
+                    }}
                     placeholder={t("auth.login.password")}
                     placeholderTextColor="rgba(255, 255, 255, 0.8)"
                     secureTextEntry={!showPassword}
@@ -153,6 +211,9 @@ export default function Login() {
                     )}
                   </TouchableOpacity>
                 </View>
+                {fieldErrors.password ? (
+                  <Text style={styles.fieldErrorText}>{fieldErrors.password}</Text>
+                ) : null}
               </View>
 
               {/* Forgot Password */}
@@ -304,11 +365,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.7)",
   },
+  inputUnderlineError: {
+    borderBottomColor: "#ff7a7a",
+  },
   passwordRow: {
     flexDirection: "row",
     alignItems: "center",
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.7)",
+  },
+  passwordRowError: {
+    borderBottomColor: "#ff7a7a",
   },
   passwordInputUnderline: {
     flex: 1,
@@ -319,6 +386,26 @@ const styles = StyleSheet.create({
   eyeButton: {
     paddingHorizontal: 10,
     paddingVertical: 10,
+  },
+  errorBanner: {
+    marginBottom: 18,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 122, 122, 0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 122, 122, 0.45)",
+  },
+  errorBannerText: {
+    color: "#ffd4d4",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  fieldErrorText: {
+    marginTop: 6,
+    color: "#ffb4b4",
+    fontSize: 13,
+    lineHeight: 18,
   },
   forgotPassword: {
     alignSelf: "flex-end",
