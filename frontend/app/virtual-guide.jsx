@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
 import { WebView } from "react-native-webview";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-const AVATAR_HTML = `
+const buildAvatarHTML = (initialAudioUrl = "", initialText = "", initialLanguage = "en") => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -33,12 +33,16 @@ const AVATAR_HTML = `
 <script>
 const cv=document.getElementById('c'), ctx=cv.getContext('2d');
 const sub=document.getElementById('subtitle'), sta=document.getElementById('status');
+const INITIAL_AUDIO_URL=${JSON.stringify(initialAudioUrl)};
+const INITIAL_TEXT=${JSON.stringify(initialText)};
+const INITIAL_LANGUAGE=${JSON.stringify(initialLanguage)};
 let W,H;
 function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
 resize();window.addEventListener('resize',resize);
 
 let t=0,mouthOpen=0,mouthTarget=0,blinkT=0,nextBlink=4;
 let audioEl=null,audioCtx=null,analyser=null,dataArr=null,audioLevel=0,isSpeaking=false;
+let subtitleText='جاهز للكلام';
 const parts=[];
 
 const SK='#c8824a',SK2='#a86030',SK3='#e0a878';
@@ -358,6 +362,9 @@ loop();
 
 function startAudio(url,text){
   if(audioEl){try{audioEl.pause();audioEl.src='';}catch(e){}}
+  subtitleText=text||'';
+  sub.style.display='none';
+  sub.textContent='';
   audioEl=new Audio(url);audioEl.crossOrigin='anonymous';
   try{
     if(!audioCtx){
@@ -373,7 +380,7 @@ function startAudio(url,text){
     dataArr=new Uint8Array(analyser.frequencyBinCount);
     src.connect(analyser);analyser.connect(audioCtx.destination);
   }catch(e){console.warn("Audio context setup failed:",e);analyser=null;dataArr=null;}
-  audioEl.onloadedmetadata=()=>{sub.textContent=text||'...';};
+  audioEl.onloadedmetadata=()=>{};
   audioEl.onplay=()=>{if(audioCtx&&audioCtx.state==='suspended'){audioCtx.resume().catch(()=>{});}};
   audioEl.play().catch((err)=>{console.warn("Audio play failed:",err);});
   audioEl.onended=stopAudio;
@@ -382,14 +389,21 @@ function startAudio(url,text){
 function stopAudio(){
   isSpeaking=false;mouthTarget=0;
   if(audioCtx){try{audioCtx.close();}catch(e){}audioCtx=null;analyser=null;dataArr=null;}
-  sub.textContent='جاهز للكلام';sta.textContent='Virtual Guide Ready';
+  sub.style.display='block';
+  sub.textContent=subtitleText||'جاهز للكلام';
+  sta.textContent='Virtual Guide Ready';
 }
-window.addEventListener('message',function(ev){
+function handleIncomingMessage(ev){
   try{
     const d=typeof ev.data==='string'?JSON.parse(ev.data):ev.data;
     if(d&&d.type==='PLAY_AUDIO'&&d.audioUrl)startAudio(d.audioUrl,d.text||'');
   }catch(e){}
-});
+}
+window.addEventListener('message',handleIncomingMessage);
+document.addEventListener('message',handleIncomingMessage);
+if(INITIAL_AUDIO_URL){
+  setTimeout(()=>startAudio(INITIAL_AUDIO_URL,INITIAL_TEXT||''),100);
+}
 </script>
 </body>
 </html>
@@ -398,7 +412,6 @@ window.addEventListener('message',function(ev){
 export default function VirtualGuide() {
   const params = useLocalSearchParams();
   const router = useRouter();
-  const webRef = useRef(null);
 
   const rawAudioParam = params?.audioUrl || "";
   const audioUrl = rawAudioParam ? decodeURIComponent(rawAudioParam) : null;
@@ -406,21 +419,6 @@ export default function VirtualGuide() {
   const guideText = rawTextParam ? decodeURIComponent(rawTextParam) : "";
   const rawLanguageParam = params?.language || "";
   const language = rawLanguageParam ? decodeURIComponent(rawLanguageParam) : "en";
-
-  useEffect(() => {
-    if (audioUrl && webRef.current) {
-      const t = setTimeout(() => {
-        try {
-          webRef.current.postMessage(
-            JSON.stringify({ type: "PLAY_AUDIO", audioUrl, text: guideText, language })
-          );
-        } catch (e) {
-          console.warn("postMessage failed", e);
-        }
-      }, 600);
-      return () => clearTimeout(t);
-    }
-  }, [audioUrl, guideText, language]);
 
   return (
     <View style={styles.container}>
@@ -433,9 +431,8 @@ export default function VirtualGuide() {
       </View>
 
       <WebView
-        ref={webRef}
         originWhitelist={["*"]}
-        source={{ html: AVATAR_HTML }}
+        source={{ html: buildAvatarHTML(audioUrl, guideText, language) }}
         javaScriptEnabled={true}
         style={{ flex: 1, backgroundColor: "transparent" }}
         allowsInlineMediaPlayback={true}
