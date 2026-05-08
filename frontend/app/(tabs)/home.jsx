@@ -19,7 +19,7 @@ const MUTED = "#8B7B6C";
 const CARD_BG = "rgba(255,255,255,0.6)";
 const LIGHT = "#EDE6DF";
 const BORDER = "rgba(255,255,255,0.55)";
-const ACCENT = "#725535";
+const ACCENT = "#644b2f";
 
 const FEATURED_MUSEUM_NAMES = [
   "Grand Egyptian Museum (GEM)",
@@ -217,7 +217,7 @@ export default function Home() {
                 >
                   <Text style={styles.seeAll}>{t("home.see_all")}</Text>
                   <MaterialCommunityIcons
-                    name="arrow-left"
+                    name="arrow-right"
                     size={16}
                     color={ACCENT}
                   />

@@ -14,6 +14,7 @@ import { useState, useEffect, useCallback } from "react";
 import { api } from "../api/client";
 import { getAuthToken } from "../api/authStorage";
 import * as ImagePicker from "expo-image-picker";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 const FRIEND_RELATIONSHIP = {
   none: "none",
@@ -336,8 +337,12 @@ export default function UserProfile() {
                   <Text style={styles.actionIcon}>♡ {post.likes || 0}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}>
-                  <Text style={styles.actionIcon}>💬</Text>
-                </TouchableOpacity>
+  <MaterialCommunityIcons
+    name="chat-processing-outline"
+  size={23}
+  color="#666"
+  />
+</TouchableOpacity>
               </View>
             </View>
           ))
@@ -585,7 +590,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   postContent: {
-    fontSize: 13,
+    fontSize: 15,
     color: "#333",
     lineHeight: 20,
     marginBottom: 12,
@@ -603,7 +608,7 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   actionIcon: {
-    fontSize: 18,
+    fontSize: 20,
     color: "#666",
   },
 });

@@ -1032,8 +1032,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   postAuthor: {
-    fontSize: 14,
-    fontWeight: "800",
+    fontSize: 16,
+    fontWeight: "700",
     color: DARK,
   },
   postTime: {
@@ -1070,7 +1070,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   postContent: {
-    fontSize: 13.5,
+    fontSize: 15,
     color: "#333",
     lineHeight: 20,
     marginBottom: 12,

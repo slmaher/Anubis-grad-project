@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import {
   View,
   TouchableOpacity,
@@ -19,6 +19,7 @@ const GOLD = "#f1b900";
 const DARK = "#2C2010";
 
 function CustomTabBar({ state, descriptors, navigation }) {
+  const router = useRouter();
   const bubblePosition = useRef(new Animated.Value(0)).current;
   const shineAnim = useRef(new Animated.Value(0)).current;
 
@@ -154,16 +155,23 @@ function CustomTabBar({ state, descriptors, navigation }) {
           if (options.href === null) return null;
 
           const onPress = () => {
-            const event = navigation.emit({
-              type: "tabPress",
-              target: route.key,
-              canPreventDefault: true,
-            });
+  const event = navigation.emit({
+    type: "tabPress",
+    target: route.key,
+    canPreventDefault: true,
+  });
 
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
-          };
+  if (event.defaultPrevented) return;
+
+  if (route.name === "events") {
+    router.push("/eventScreen/eventScreen");
+    return;
+  }
+
+  if (!isFocused) {
+    navigation.navigate(route.name);
+  }
+};
 
           return (
             <TouchableOpacity
