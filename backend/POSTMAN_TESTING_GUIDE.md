@@ -15,7 +15,7 @@ npm run dev
 
 3. Make sure your API is reachable:
 - PC test: `http://localhost:4000`
-- Phone/LAN test: `http://<your-pc-ip>:4000` (example: `http://192.168.1.3:4000`)
+- Phone/LAN test: `http://<your-pc-ip>:4000`
 
 4. Open Postman desktop app.
 
