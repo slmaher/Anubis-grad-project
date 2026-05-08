@@ -54,9 +54,9 @@ So make sure the backend is running on port `4000`.
 
 `localhost` points to the phone itself, not your computer. If API requests fail on a real device:
 
-1. Find your computer local IP (for example `192.168.1.20`)
+1. Find your computer local IP (for example your LAN IP)
 2. Update `API_BASE_URL` in `app/api/client.js` to:
-   - `http://192.168.1.20:4000`
+   - `http://<your-pc-ip>:4000`
 3. Restart Expo (`npm run start`)
 
 ## Project scripts
