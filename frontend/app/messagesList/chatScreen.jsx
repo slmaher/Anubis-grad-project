@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  SafeAreaView,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
@@ -22,6 +23,8 @@ const MUTED = "#8B7B6C";
 const LIGHT = "#EDE6DF";
 const CARD_BG = "rgba(249,247,244,0.98)";
 const BORDER = "#E5DED5";
+const GOLD = "#B8965A";
+const HEADER = "#756557";
 
 const getInitial = (name) => {
   if (!name || typeof name !== "string") return "U";
@@ -47,6 +50,7 @@ export default function ChatScreen() {
     typeof params.contactAvatar === "string" && params.contactAvatar !== "null"
       ? params.contactAvatar
       : null;
+
   const targetLang = useMemo(() => {
     const lang = (i18n.language || "en").toLowerCase();
     if (lang.startsWith("ar")) return "ar";
@@ -117,9 +121,8 @@ export default function ChatScreen() {
           isSent: msg.sender._id === user?.id || msg.sender === user?.id,
           hasCheckmark: msg.isRead,
         }));
-        setChatMessages(formatted.reverse()); // Backend returns descending, we want ascending for display
+        setChatMessages(formatted.reverse());
 
-        // Mark as read
         await api.markConversationAsRead(contactId, token);
       }
     } catch (error) {
@@ -135,7 +138,6 @@ export default function ChatScreen() {
 
   const handleNewMessage = useCallback(
     (msg) => {
-      // Only add if it's from the current contact
       if (msg.sender._id === contactId || msg.sender === contactId) {
         const formatted = {
           id: msg._id,
@@ -149,7 +151,6 @@ export default function ChatScreen() {
         };
         setChatMessages((prev) => [...prev, formatted]);
 
-        // Mark as read in backend
         getAuthToken().then((token) => {
           if (token) api.markConversationAsRead(contactId, token);
         });
@@ -192,156 +193,169 @@ export default function ChatScreen() {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={0}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
-      {/* Brown Header (Empty with back button) */}
-      <View style={styles.header}>
-        <View style={styles.headerTopRow}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.headerIdentityRow}>
-          {contactAvatar ? (
-            <Image
-              source={{ uri: contactAvatar }}
-              style={styles.headerAvatar}
-            />
-          ) : (
-            <View style={styles.headerAvatarFallback}>
-              <Text style={styles.headerAvatarFallbackText}>
-                {getInitial(contactName)}
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <View style={styles.headerTopRow}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.backIcon}>←</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.headerIdentityRow}>
+            {contactAvatar ? (
+              <Image source={{ uri: contactAvatar }} style={styles.headerAvatar} />
+            ) : (
+              <View style={styles.headerAvatarFallback}>
+                <Text style={styles.headerAvatarFallbackText}>
+                  {getInitial(contactName)}
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.contactTextWrap}>
+              <Text style={styles.headerContactName} numberOfLines={1}>
+                {contactName}
               </Text>
+              <Text style={styles.headerSubtitle}>Conversation</Text>
             </View>
-          )}
-          <Text style={styles.headerContactName} numberOfLines={1}>
-            {contactName}
-          </Text>
+          </View>
         </View>
-      </View>
 
-      {/* Chat Messages */}
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.messagesContainer}
-        contentContainerStyle={styles.messagesContent}
-        showsVerticalScrollIndicator={false}
-        onContentSizeChange={() =>
-          scrollViewRef.current?.scrollToEnd({ animated: true })
-        }
-      >
-        {loading ? (
-          <ActivityIndicator size="small" color={DARK} />
-        ) : (
-          chatMessages.map((msg) => {
-            const translationState = messageTranslations[msg.id];
-            const isTranslated =
-              !!translationState &&
-              translationState.targetLang === targetLang &&
-              translationState.showTranslated;
-            const displayText = isTranslated
-              ? translationState.translatedText
-              : msg.text;
-            const isTranslating = !!translationLoading[msg.id];
-            const translationError = translationErrors[msg.id];
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.messagesContainer}
+          contentContainerStyle={styles.messagesContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          onContentSizeChange={() =>
+            scrollViewRef.current?.scrollToEnd({ animated: true })
+          }
+        >
+          {loading ? (
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator size="small" color={GOLD} />
+            </View>
+          ) : (
+            chatMessages.map((msg) => {
+              const translationState = messageTranslations[msg.id];
+              const isTranslated =
+                !!translationState &&
+                translationState.targetLang === targetLang &&
+                translationState.showTranslated;
+              const displayText = isTranslated
+                ? translationState.translatedText
+                : msg.text;
+              const isTranslating = !!translationLoading[msg.id];
+              const translationError = translationErrors[msg.id];
 
-            return (
-              <View key={msg.id} style={styles.messageWrapper}>
-                {msg.images ? (
-                  <View style={[styles.messageBubble, styles.receivedBubble]}>
-                    <View style={styles.imagesContainer}>
-                      {msg.images.map((img, index) => (
-                        <Image
-                          key={index}
-                          source={img}
-                          style={styles.chatImage}
-                        />
-                      ))}
+              return (
+                <View key={msg.id} style={styles.messageWrapper}>
+                  {msg.images ? (
+                    <View style={[styles.messageBubble, styles.receivedBubble]}>
+                      <View style={styles.imagesContainer}>
+                        {msg.images.map((img, index) => (
+                          <Image
+                            key={index}
+                            source={img}
+                            style={styles.chatImage}
+                          />
+                        ))}
+                      </View>
+                      <Text style={styles.messageTime}>{msg.time}</Text>
                     </View>
-                    <Text style={styles.messageTime}>{msg.time}</Text>
-                  </View>
-                ) : (
-                  <View
-                    style={[
-                      styles.messageBubble,
-                      msg.isSent ? styles.sentBubble : styles.receivedBubble,
-                    ]}
-                  >
-                    <Text
+                  ) : (
+                    <View
                       style={[
-                        styles.messageText,
-                        msg.isSent ? styles.sentText : styles.receivedText,
+                        styles.messageBubble,
+                        msg.isSent ? styles.sentBubble : styles.receivedBubble,
                       ]}
                     >
-                      {displayText}
-                    </Text>
-                    <View style={styles.messageFooter}>
                       <Text
                         style={[
-                          styles.messageTime,
-                          msg.isSent && styles.sentTime,
+                          styles.messageText,
+                          msg.isSent ? styles.sentText : styles.receivedText,
                         ]}
                       >
-                        {msg.time}
+                        {displayText}
                       </Text>
-                      {msg.hasCheckmark && (
-                        <Text style={styles.checkmark}>✓</Text>
-                      )}
-                    </View>
-                    <View style={styles.translationRow}>
-                      <TouchableOpacity
-                        onPress={() => handleTranslateMessage(msg)}
-                        disabled={isTranslating}
-                      >
+
+                      <View style={styles.messageFooter}>
                         <Text
                           style={[
-                            styles.translationAction,
-                            msg.isSent && styles.translationActionSent,
+                            styles.messageTime,
+                            msg.isSent && styles.sentTime,
                           ]}
                         >
-                          {isTranslating
-                            ? t("chat_pages.translating")
-                            : isTranslated
-                              ? t("chat_pages.show_original")
-                              : t("chat_pages.translate")}
+                          {msg.time}
                         </Text>
-                      </TouchableOpacity>
-                      {!!translationError && (
-                        <Text style={styles.translationError}>
-                          {translationError}
-                        </Text>
-                      )}
-                    </View>
-                  </View>
-                )}
-              </View>
-            );
-          })
-        )}
-      </ScrollView>
+                        {msg.hasCheckmark && (
+                          <Text style={styles.checkmark}>✓</Text>
+                        )}
+                      </View>
 
-      {/* Message Input */}
-      <View style={styles.inputContainer}>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            placeholder={t("chat_pages.type_message")}
-            value={message}
-            onChangeText={setMessage}
-            placeholderTextColor={MUTED}
-            multiline
-          />
-          <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-            <Image
-              source={require("../../assets/images/send-icon.png")}
-              style={styles.sendIcon}
+                      <View style={styles.translationRow}>
+                        <TouchableOpacity
+                          onPress={() => handleTranslateMessage(msg)}
+                          disabled={isTranslating}
+                        >
+                          <Text
+                            style={[
+                              styles.translationAction,
+                              msg.isSent && styles.translationActionSent,
+                            ]}
+                          >
+                            {isTranslating
+                              ? t("chat_pages.translating")
+                              : isTranslated
+                                ? t("chat_pages.show_original")
+                                : t("chat_pages.translate")}
+                          </Text>
+                        </TouchableOpacity>
+
+                        {!!translationError && (
+                          <Text style={styles.translationError}>
+                            {translationError}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                  )}
+                </View>
+              );
+            })
+          )}
+        </ScrollView>
+
+        <View style={styles.inputContainer}>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              placeholder={t("chat_pages.type_message")}
+              value={message}
+              onChangeText={setMessage}
+              placeholderTextColor={MUTED}
+              multiline
             />
-          </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.sendButton}
+              onPress={handleSend}
+              activeOpacity={0.85}
+            >
+              <Image
+                source={require("../../assets/images/send-icon.png")}
+                style={styles.sendIcon}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }
@@ -351,206 +365,272 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: LIGHT,
   },
+
+  safeArea: {
+    flex: 1,
+    backgroundColor: LIGHT,
+  },
+
   header: {
-    backgroundColor: "#756557",
-    paddingTop: 10,
-    paddingBottom: 14,
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+    backgroundColor: HEADER,
+    paddingTop: 12,
+    paddingBottom: 18,
+    paddingHorizontal: 18,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.14,
+    shadowRadius: 6,
+    elevation: 8,
   },
+
   headerTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-start",
+  position: "absolute",
+  top: 25,
+  left: 18,
+  zIndex: 10,
+},
+
+backButton: {
+  width: 38,
+  height: 38,
+  borderRadius: 19,
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: "rgba(255,255,255,0.16)",
+  borderWidth: 1,
+  borderColor: "rgba(255,255,255,0.22)",
+},
+
+  backIcon: {
+    fontSize: 25,
+    color: "#fff",
+    lineHeight: 28,
+    fontWeight: "600",
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+
   headerIdentityRow: {
-    marginTop: 4,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    paddingHorizontal: 12,
-  },
+  marginTop: 10,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "flex-start",
+  gap: 12,
+  paddingLeft: 60,
+  paddingRight: 18,
+},
+
   headerAvatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.75)",
+    borderColor: "rgba(255,255,255,0.78)",
   },
+
   headerAvatarFallback: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "rgba(255,255,255,0.22)",
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "rgba(255,255,255,0.2)",
     borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.6)",
+    borderColor: "rgba(255,255,255,0.62)",
     alignItems: "center",
     justifyContent: "center",
   },
+
   headerAvatarFallbackText: {
     color: "#fff",
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: "800",
   },
-  backIcon: {
-    fontSize: 28,
-    color: "#fff",
+
+  contactTextWrap: {
+    maxWidth: "74%",
   },
+
   headerContactName: {
     textAlign: "left",
-    fontSize: 30,
-    fontWeight: "700",
+    fontSize: 23,
+    fontWeight: "600",
     color: "#fff",
-    lineHeight: 34,
-    maxWidth: "78%",
+    lineHeight: 30,
   },
+
+  headerSubtitle: {
+    marginTop: 2,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.78)",
+  },
+
   messagesContainer: {
     flex: 1,
     backgroundColor: LIGHT,
   },
+
   messagesContent: {
-    paddingHorizontal: 15,
-    paddingVertical: 16,
-    paddingBottom: 10,
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    paddingBottom: 18,
   },
+
+  loadingWrap: {
+    paddingTop: 30,
+    alignItems: "center",
+  },
+
   messageWrapper: {
-    marginBottom: 15,
+    marginBottom: 14,
   },
+
   messageBubble: {
-    maxWidth: "65%",
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    maxWidth: "74%",
+    borderRadius: 22,
+    paddingHorizontal: 13,
+    paddingVertical: 11,
     borderWidth: 1,
   },
+
   receivedBubble: {
     alignSelf: "flex-start",
     backgroundColor: CARD_BG,
     borderColor: BORDER,
-    borderTopLeftRadius: 4,
+    borderTopLeftRadius: 7,
   },
+
   sentBubble: {
     alignSelf: "flex-end",
-    backgroundColor: "#756557",
+    backgroundColor: HEADER,
     borderColor: "#9A846E",
-    borderTopRightRadius: 4,
+    borderTopRightRadius: 7,
   },
+
   messageText: {
-    fontSize: 17,
-    lineHeight: 24,
+    fontSize: 16.5,
+    lineHeight: 23,
     fontWeight: "500",
   },
+
   receivedText: {
     color: DARK,
   },
+
   sentText: {
     color: "#fff",
   },
+
   messageFooter: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
-    marginTop: 4,
+    marginTop: 5,
     gap: 4,
   },
+
   messageTime: {
-    fontSize: 11,
+    fontSize: 11.5,
     color: MUTED,
-    marginTop: 4,
+    marginTop: 3,
+    fontWeight: "600",
   },
+
   sentTime: {
     color: "rgba(255,255,255,0.75)",
   },
+
   checkmark: {
     fontSize: 12,
     color: "#E7D3B4",
+    fontWeight: "800",
   },
+
   translationRow: {
-    marginTop: 6,
+    marginTop: 7,
     alignItems: "flex-end",
     gap: 2,
   },
+
   translationAction: {
     fontSize: 12,
-    color: "#8B7B6C",
-    fontWeight: "600",
+    color: MUTED,
+    fontWeight: "700",
   },
+
   translationActionSent: {
     color: "#F4E6D6",
   },
+
   translationError: {
     fontSize: 11,
     color: "#D1495B",
+    fontWeight: "600",
   },
+
   imagesContainer: {
     flexDirection: "row",
     gap: 8,
     marginBottom: 6,
   },
+
   chatImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
+    width: 82,
+    height: 82,
+    borderRadius: 14,
   },
+
   inputContainer: {
     backgroundColor: LIGHT,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    paddingBottom: 10,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: Platform.OS === "ios" ? 14 : 12,
     borderTopWidth: 1,
     borderTopColor: BORDER,
   },
+
   inputWrapper: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-end",
     backgroundColor: CARD_BG,
-    borderRadius: 26,
+    borderRadius: 28,
     borderWidth: 1,
     borderColor: BORDER,
     paddingHorizontal: 10,
-    paddingVertical: 0,
+    paddingVertical: 6,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    elevation: 2,
+    elevation: 3,
   },
+
   input: {
     flex: 1,
-    fontSize: 17,
+    fontSize: 16.5,
     color: DARK,
-    maxHeight: 100,
-    paddingVertical: 10,
+    maxHeight: 105,
+    minHeight: 40,
+    paddingVertical: 8,
     paddingHorizontal: 8,
+    fontWeight: "500",
   },
+
   sendButton: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: "#756557",
+    backgroundColor: HEADER,
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 6,
+    marginBottom: 1,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.16,
     shadowRadius: 4,
     elevation: 3,
   },
+
   sendIcon: {
     width: 20,
     height: 20,

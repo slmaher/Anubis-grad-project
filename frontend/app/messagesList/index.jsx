@@ -21,66 +21,89 @@ const getInitial = (name) => {
   return name.trim().charAt(0).toUpperCase() || "U";
 };
 
-// Swipeable Message Item Component
+const SWIPE_WIDTH = 110;
+
 const SwipeableMessageItem = ({ item, onPress, onDelete }) => {
   const translateX = useRef(new Animated.Value(0)).current;
+  const currentX = useRef(0);
   const [isSwiped, setIsSwiped] = useState(false);
+
+  const closeSwipe = () => {
+    currentX.current = 0;
+    translateX.setValue(0);
+    setIsSwiped(false);
+  };
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => false,
+
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dx) > 5;
+        const horizontalMove = Math.abs(gestureState.dx) > 5;
+        const moreHorizontalThanVertical =
+          Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+
+        return horizontalMove && moreHorizontalThanVertical;
       },
+
+      onPanResponderGrant: () => {
+        translateX.stopAnimation((value) => {
+          currentX.current = value;
+        });
+      },
+
       onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dx < 0) {
-          translateX.setValue(Math.max(gestureState.dx, -120));
+        let nextX = currentX.current + gestureState.dx;
+
+        if (nextX > 0) {
+          nextX = 0;
         }
+
+        if (nextX < -SWIPE_WIDTH) {
+          nextX = -SWIPE_WIDTH;
+        }
+
+        translateX.setValue(nextX);
       },
+
       onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dx < -60) {
-          Animated.spring(translateX, {
-            toValue: -120,
-            useNativeDriver: true,
-            friction: 8,
-          }).start();
-          setIsSwiped(true);
-        } else {
-          Animated.spring(translateX, {
-            toValue: 0,
-            useNativeDriver: true,
-            friction: 8,
-          }).start();
-          setIsSwiped(false);
+        let finalX = currentX.current + gestureState.dx;
+
+        if (finalX > 0) {
+          finalX = 0;
         }
+
+        if (finalX < -SWIPE_WIDTH) {
+          finalX = -SWIPE_WIDTH;
+        }
+
+        currentX.current = finalX;
+        translateX.setValue(finalX);
+        setIsSwiped(finalX < -5);
+      },
+
+      onPanResponderTerminate: () => {
+        translateX.setValue(currentX.current);
+        setIsSwiped(currentX.current < -5);
       },
     }),
   ).current;
 
-  const closeSwipe = () => {
-    Animated.spring(translateX, {
-      toValue: 0,
-      useNativeDriver: true,
-      friction: 8,
-    }).start();
-    setIsSwiped(false);
-  };
-
   const handlePress = () => {
     if (isSwiped) {
-      closeSwipe();
-    } else {
-      onPress();
+      return;
     }
+
+    onPress();
   };
 
   return (
     <View style={styles.messageItemContainer}>
-      {/* Action Buttons (Behind) */}
       <View style={styles.swipeActions}>
         <TouchableOpacity style={styles.swipeActionButton} onPress={closeSwipe}>
           <Text style={styles.swipeActionIcon}>⋮</Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.swipeActionButton}
           onPress={() => {
@@ -95,7 +118,6 @@ const SwipeableMessageItem = ({ item, onPress, onDelete }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Message Item (Swipeable) */}
       <Animated.View
         style={[styles.messageItemWrapper, { transform: [{ translateX }] }]}
         {...panResponder.panHandlers}
@@ -103,7 +125,7 @@ const SwipeableMessageItem = ({ item, onPress, onDelete }) => {
         <TouchableOpacity
           style={styles.messageItem}
           onPress={handlePress}
-          activeOpacity={0.7}
+          activeOpacity={0.75}
         >
           {item.avatar ? (
             <Image source={{ uri: item.avatar }} style={styles.messageAvatar} />
@@ -117,7 +139,10 @@ const SwipeableMessageItem = ({ item, onPress, onDelete }) => {
 
           <View style={styles.messageContent}>
             <View style={styles.messageHeader}>
-              <Text style={styles.messageName}>{item.name}</Text>
+              <Text style={styles.messageName} numberOfLines={1}>
+                {item.name}
+              </Text>
+
               <Text style={styles.messageTime}>{item.time}</Text>
             </View>
           </View>
@@ -153,6 +178,7 @@ export default function MessagesList() {
           avatar: conv.user?.avatar || null,
           unread: conv.unreadCount > 0,
         }));
+
         setConversations(formatted);
       }
     } catch (error) {
@@ -166,18 +192,14 @@ export default function MessagesList() {
     fetchConversations();
   }, [fetchConversations]);
 
-  const handleNewMessage = useCallback(
-    (message) => {
-      // Refresh conversations list when a new message arrives
-      fetchConversations();
-    },
-    [fetchConversations],
-  );
+  const handleNewMessage = useCallback(() => {
+    fetchConversations();
+  }, [fetchConversations]);
 
   useChatSocket(handleNewMessage);
 
   const handleDelete = (id) => {
-    setConversations(conversations.filter((msg) => msg.id !== id));
+    setConversations((prev) => prev.filter((msg) => msg.id !== id));
   };
 
   const handleChatPress = (contact) => {
@@ -201,9 +223,7 @@ export default function MessagesList() {
 
   return (
     <View style={styles.container}>
-      {/* Header Section */}
       <View style={styles.header}>
-        {/* Back Button */}
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.push("/community")}
@@ -216,7 +236,6 @@ export default function MessagesList() {
         </Text>
       </View>
 
-      {/* Messages List */}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#6B5B4F" />
@@ -228,6 +247,8 @@ export default function MessagesList() {
           keyExtractor={(item) => item.id.toString()}
           style={styles.messagesList}
           contentContainerStyle={styles.messagesContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>
@@ -246,16 +267,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#EDE6DF",
   },
+
   header: {
     backgroundColor: "#6B5B4F",
-    paddingTop: 60,
+    paddingTop: 80,
     paddingBottom: 18,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
   },
+
   backButton: {
     position: "absolute",
-    top: 55,
+    top: 75,
     left: 20,
     width: 40,
     height: 40,
@@ -263,10 +286,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     zIndex: 10,
   },
+
   backIcon: {
     fontSize: 28,
     color: "#fff",
   },
+
   headerTitle: {
     fontSize: 20,
     fontWeight: "bold",
@@ -277,14 +302,17 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     paddingRight: 24,
   },
+
   messagesList: {
     flex: 1,
     backgroundColor: "#EDE6DF",
   },
+
   messagesContent: {
     paddingBottom: 30,
     paddingTop: 14,
   },
+
   messageItemContainer: {
     position: "relative",
     backgroundColor: "rgba(249,247,244,0.98)",
@@ -297,9 +325,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E5DED5",
   },
+
   messageItemWrapper: {
     backgroundColor: "rgba(249,247,244,0.98)",
   },
+
   messageItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -307,12 +337,14 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 20,
   },
+
   messageAvatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
     marginRight: 15,
   },
+
   messageAvatarFallback: {
     width: 50,
     height: 50,
@@ -322,63 +354,78 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   messageAvatarFallbackText: {
     color: "#fff",
     fontSize: 18,
     fontWeight: "700",
   },
+
   messageContent: {
     flex: 1,
   },
+
   messageHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 0,
+    gap: 12,
   },
+
   messageName: {
-    fontSize: 15,
+    flex: 1,
+    fontSize: 18,
     fontWeight: "600",
     color: "#2C2010",
   },
+
   messageTime: {
-    fontSize: 12,
+    fontSize: 15,
     color: "#9A8C7A",
   },
+
   swipeActions: {
     position: "absolute",
     right: 0,
     top: 0,
     bottom: 0,
+    width: SWIPE_WIDTH,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "#FF4444",
-    paddingHorizontal: 15,
-    gap: 15,
+    gap: 10,
   },
+
   swipeActionButton: {
-    width: 40,
-    height: 40,
+    width: 42,
+    height: 42,
     justifyContent: "center",
     alignItems: "center",
   },
+
   swipeActionIcon: {
     fontSize: 24,
     color: "#fff",
   },
+
   trashIcon: {
     width: 22,
     height: 22,
     tintColor: "#fff",
   },
+
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
+
   emptyContainer: {
     padding: 20,
     alignItems: "center",
   },
+
   emptyText: {
     color: "#8B7B6C",
     fontSize: 16,

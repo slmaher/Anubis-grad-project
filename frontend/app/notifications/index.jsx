@@ -11,6 +11,9 @@ import {
   View,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import Feather from "@expo/vector-icons/Feather";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { api } from "../api/client";
 import { getAuthToken, getAuthUser } from "../api/authStorage";
 import {
@@ -20,13 +23,52 @@ import {
   updateLocalNotification,
 } from "../api/notificationsStorage";
 
+const DARK = "#2C2010";
+const GOLD = "#B8965A";
+const MUTED = "#8B7B6C";
+const CARD_BG = "rgba(255, 255, 255, 0.82)";
+const CARD_BORDER = "rgba(255, 255, 255, 0.95)";
+const DIVIDER = "rgba(180,160,130,0.22)";
+const DANGER = "#A33C2E";
+
 const iconByType = {
-  friend_request: "🤝",
-  like: "♡",
-  comment: "💬",
-  message: "✉",
-  default: "🔔",
+  friend_request: {
+    family: "MaterialCommunityIcons",
+    name: "account-plus-outline",
+  },
+  like: {
+    family: "MaterialCommunityIcons",
+    name: "heart-outline",
+  },
+  comment: {
+    family: "MaterialCommunityIcons",
+    name: "comment-text-outline",
+  },
+  message: {
+    family: "Feather",
+    name: "mail",
+  },
+  default: {
+    family: "Ionicons",
+    name: "notifications-outline",
+  },
 };
+
+function NotificationIcon({ type }) {
+  const icon = iconByType[type] || iconByType.default;
+
+  return (
+    <View style={styles.iconBox}>
+      {icon.family === "Feather" ? (
+        <Feather name={icon.name} size={20} color={GOLD} />
+      ) : icon.family === "Ionicons" ? (
+        <Ionicons name={icon.name} size={21} color={GOLD} />
+      ) : (
+        <MaterialCommunityIcons name={icon.name} size={22} color={GOLD} />
+      )}
+    </View>
+  );
+}
 
 function formatTime(isoDate) {
   if (!isoDate) return "Now";
@@ -246,18 +288,28 @@ export default function NotificationsScreen() {
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.backBtn}
+            activeOpacity={0.8}
           >
-            <Text style={styles.backArrow}>‹</Text>
+            <Ionicons name="chevron-back" size={26} color={DARK} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Notifications</Text>
-          <TouchableOpacity onPress={handleClearLocal} style={styles.clearBtn}>
+
+          <View style={styles.headerTextWrap}>
+            <Text style={styles.headerTitle}>Notifications</Text>
+            <Text style={styles.headerSubtitle}>Your latest updates</Text>
+          </View>
+
+          <TouchableOpacity
+            onPress={handleClearLocal}
+            style={styles.clearBtn}
+            activeOpacity={0.8}
+          >
             <Text style={styles.clearText}>Clear</Text>
           </TouchableOpacity>
         </View>
 
         {loading ? (
           <View style={styles.centered}>
-            <ActivityIndicator size="large" color="#6B5B4F" />
+            <ActivityIndicator size="large" color={GOLD} />
           </View>
         ) : (
           <FlatList
@@ -267,30 +319,45 @@ export default function NotificationsScreen() {
             refreshing={refreshing}
             onRefresh={refreshNotifications}
             ListEmptyComponent={
-              <View style={styles.centered}>
-                <Text style={styles.emptyText}>No notifications yet.</Text>
+              <View style={styles.emptyCard}>
+                <View style={styles.emptyIconBox}>
+                  <Ionicons
+                    name="notifications-off-outline"
+                    size={28}
+                    color={GOLD}
+                  />
+                </View>
+                <Text style={styles.emptyTitle}>No notifications yet</Text>
+                <Text style={styles.emptyText}>
+                  New activity will appear here when you receive updates.
+                </Text>
               </View>
             }
             renderItem={({ item }) => {
-              const icon = iconByType[item.type] || iconByType.default;
               const isPendingFriendRequest =
                 item.type === "friend_request" &&
                 item.requestStatus === "pending";
               const acceptLoading = actionLoadingId === `accept:${item.id}`;
               const rejectLoading = actionLoadingId === `reject:${item.id}`;
+
               return (
                 <View style={[styles.card, item.read && styles.cardRead]}>
-                  <Text style={styles.cardIcon}>{icon}</Text>
+                  <NotificationIcon type={item.type} />
+
                   <View style={styles.cardBody}>
-                    <Text style={styles.cardTitle}>
-                      {item.title || "Notification"}
-                    </Text>
+                    <View style={styles.cardTopRow}>
+                      <Text style={styles.cardTitle}>
+                        {item.title || "Notification"}
+                      </Text>
+                      <Text style={styles.cardTime}>
+                        {formatTime(item.createdAt)}
+                      </Text>
+                    </View>
+
                     <Text style={styles.cardText}>
                       {item.body || "You have a new update."}
                     </Text>
-                    <Text style={styles.cardTime}>
-                      {formatTime(item.createdAt)}
-                    </Text>
+
                     {isPendingFriendRequest && (
                       <View style={styles.actionsRow}>
                         <TouchableOpacity
@@ -299,17 +366,20 @@ export default function NotificationsScreen() {
                             handleFriendRequestAction(item, "accept")
                           }
                           disabled={Boolean(actionLoadingId)}
+                          activeOpacity={0.85}
                         >
                           <Text style={styles.actionText}>
                             {acceptLoading ? "Accepting..." : "Accept"}
                           </Text>
                         </TouchableOpacity>
+
                         <TouchableOpacity
                           style={[styles.actionBtn, styles.rejectBtn]}
                           onPress={() =>
                             handleFriendRequestAction(item, "reject")
                           }
                           disabled={Boolean(actionLoadingId)}
+                          activeOpacity={0.85}
                         >
                           <Text style={styles.actionText}>
                             {rejectLoading ? "Rejecting..." : "Reject"}
@@ -328,116 +398,205 @@ export default function NotificationsScreen() {
   );
 }
 
-const DARK = "#2C2010";
-const MUTED = "#9A8C7A";
-
 const styles = StyleSheet.create({
-  background: { flex: 1, width: "100%", height: "100%" },
-  safeArea: { flex: 1 },
+  background: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
+
+  safeArea: {
+    flex: 1,
+  },
+
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingHorizontal: 18,
+    paddingTop: 10,
+    paddingBottom: 14,
   },
+
   backBtn: {
-    width: 40,
-    height: 34,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.78)",
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
   },
-  backArrow: {
-    fontSize: 30,
-    color: DARK,
-    lineHeight: 34,
+
+  headerTextWrap: {
+    flex: 1,
+    alignItems: "center",
   },
+
   headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 22,
+    fontWeight: "800",
     color: DARK,
+    letterSpacing: 0.2,
   },
+
+  headerSubtitle: {
+    marginTop: 3,
+    fontSize: 13,
+    fontWeight: "600",
+    color: MUTED,
+  },
+
   clearBtn: {
-    minWidth: 42,
-    alignItems: "flex-end",
+    minWidth: 48,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(184, 150, 90, 0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(184, 150, 90, 0.28)",
   },
+
   clearText: {
     fontSize: 13,
-    color: "#6B5B4F",
-    fontWeight: "600",
+    color: DARK,
+    fontWeight: "800",
   },
+
   listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 30,
+    paddingHorizontal: 18,
+    paddingBottom: 34,
+    paddingTop: 4,
   },
+
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingTop: 30,
   },
+
+  emptyCard: {
+    marginTop: 40,
+    backgroundColor: CARD_BG,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    elevation: 5,
+  },
+
+  emptyIconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 20,
+    backgroundColor: "rgba(184, 150, 90, 0.16)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+
+  emptyTitle: {
+    color: DARK,
+    fontSize: 17,
+    fontWeight: "800",
+    marginBottom: 6,
+  },
+
   emptyText: {
     color: MUTED,
     fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+    fontWeight: "600",
   },
+
   card: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.72)",
+    backgroundColor: CARD_BG,
     borderWidth: 1,
-    borderColor: "rgba(180,160,130,0.35)",
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    marginBottom: 10,
+    borderColor: CARD_BORDER,
+    borderRadius: 22,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+    elevation: 5,
   },
+
   cardRead: {
-    opacity: 0.65,
+    opacity: 0.72,
   },
-  cardIcon: {
-    width: 28,
-    textAlign: "center",
-    fontSize: 18,
-    marginTop: 2,
-    marginRight: 8,
+
+  iconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 16,
+    backgroundColor: "rgba(184, 150, 90, 0.16)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
   },
+
   cardBody: {
     flex: 1,
   },
-  cardTitle: {
-    color: DARK,
-    fontSize: 15,
-    fontWeight: "600",
-    marginBottom: 2,
+
+  cardTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 10,
+    marginBottom: 4,
   },
+
+  cardTitle: {
+    flex: 1,
+    color: DARK,
+    fontSize: 15.5,
+    fontWeight: "800",
+  },
+
   cardText: {
     color: DARK,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "500",
   },
+
   cardTime: {
-    marginTop: 5,
     color: MUTED,
     fontSize: 12,
+    fontWeight: "700",
+    marginTop: 2,
   },
+
   actionsRow: {
     flexDirection: "row",
-    marginTop: 8,
+    marginTop: 12,
     gap: 8,
   },
+
   actionBtn: {
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
   },
+
   acceptBtn: {
     backgroundColor: "#7A9A6C",
   },
+
   rejectBtn: {
-    backgroundColor: "#B06B5C",
+    backgroundColor: DANGER,
   },
+
   actionText: {
     color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 12.5,
+    fontWeight: "800",
   },
 });
