@@ -47,7 +47,9 @@ function extractHost(value) {
 }
 
 function isPrivateNetworkHost(host) {
-  const normalized = String(host || "").trim().toLowerCase();
+  const normalized = String(host || "")
+    .trim()
+    .toLowerCase();
 
   if (!normalized) {
     return false;

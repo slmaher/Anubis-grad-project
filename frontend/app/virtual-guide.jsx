@@ -477,8 +477,6 @@ function updateArmIdle(dt, elapsed) {
   }
 }
 
-
-
 function setupLipSync(root) {
   collectMorphTargets(root);
   prioritizeMouthTargets();

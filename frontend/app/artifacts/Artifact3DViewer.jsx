@@ -1,5 +1,11 @@
 import React, { Suspense, useRef, useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, PanResponder } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  PanResponder,
+} from "react-native";
 import { Canvas, useFrame, useThree } from "@react-three/fiber/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Asset } from "expo-asset";
@@ -40,7 +46,7 @@ function Model({ rotationY, modelUrl }) {
         setModel(loadedScene);
       },
       undefined,
-      (error) => console.error("Model loading error:", error)
+      (error) => console.error("Model loading error:", error),
     );
   }, [modelUrl]);
 
@@ -78,58 +84,58 @@ export default function Artifact3DViewer() {
   const velocity = useRef(0);
   const animationRef = useRef(null);
 
-const stopInertia = () => {
-  if (animationRef.current) {
-    cancelAnimationFrame(animationRef.current);
-    animationRef.current = null;
-  }
-};
-
-const startInertia = () => {
-  stopInertia();
-
-  const animate = () => {
-    velocity.current *= 0.94; // lower = stops faster
-
-    setRotationY((prev) => prev + velocity.current);
-
-    if (Math.abs(velocity.current) > 0.0015) {
-      animationRef.current = requestAnimationFrame(animate);
+  const stopInertia = () => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
     }
   };
 
-  animationRef.current = requestAnimationFrame(animate);
-};
+  const startInertia = () => {
+    stopInertia();
 
-const panResponder = useRef(
-  PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
+    const animate = () => {
+      velocity.current *= 0.94; // lower = stops faster
 
-    onPanResponderGrant: (event) => {
-      stopInertia();
-      lastX.current = event.nativeEvent.pageX;
-      velocity.current = 0;
-    },
+      setRotationY((prev) => prev + velocity.current);
 
-    onPanResponderMove: (event) => {
-      const currentX = event.nativeEvent.pageX;
-      const deltaX = currentX - lastX.current;
+      if (Math.abs(velocity.current) > 0.0015) {
+        animationRef.current = requestAnimationFrame(animate);
+      }
+    };
 
-      const sensitivity = 0.008; // lower = slower drag
-      const rotationAmount = deltaX * sensitivity;
+    animationRef.current = requestAnimationFrame(animate);
+  };
 
-      setRotationY((prev) => prev + rotationAmount);
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
 
-      velocity.current = rotationAmount;
-      lastX.current = currentX;
-    },
+      onPanResponderGrant: (event) => {
+        stopInertia();
+        lastX.current = event.nativeEvent.pageX;
+        velocity.current = 0;
+      },
 
-    onPanResponderRelease: () => {
-      startInertia();
-    },
-  })
-).current;
+      onPanResponderMove: (event) => {
+        const currentX = event.nativeEvent.pageX;
+        const deltaX = currentX - lastX.current;
+
+        const sensitivity = 0.008; // lower = slower drag
+        const rotationAmount = deltaX * sensitivity;
+
+        setRotationY((prev) => prev + rotationAmount);
+
+        velocity.current = rotationAmount;
+        lastX.current = currentX;
+      },
+
+      onPanResponderRelease: () => {
+        startInertia();
+      },
+    }),
+  ).current;
 
   return (
     <View style={styles.container}>

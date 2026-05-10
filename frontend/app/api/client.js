@@ -97,7 +97,7 @@ async function apiRequest(path, options = {}) {
     });
   } catch (error) {
     const networkError = new Error(
-      `Unable to reach the backend at ${API_BASE_URL}${path}. Make sure the API server is running and accessible from this device.`
+      `Unable to reach the backend at ${API_BASE_URL}${path}. Make sure the API server is running and accessible from this device.`,
     );
     networkError.cause = error;
     networkError.code = "NETWORK_ERROR";
@@ -231,19 +231,19 @@ export const api = {
     });
   },
   updatePost(postId, payload, token) {
-  return apiRequest(`/api/posts/${postId}`, {
-    method: "PATCH",
-    body: payload,
-    token,
-  });
-},
+    return apiRequest(`/api/posts/${postId}`, {
+      method: "PATCH",
+      body: payload,
+      token,
+    });
+  },
 
-deletePost(postId, token) {
-  return apiRequest(`/api/posts/${postId}`, {
-    method: "DELETE",
-    token,
-  });
-},
+  deletePost(postId, token) {
+    return apiRequest(`/api/posts/${postId}`, {
+      method: "DELETE",
+      token,
+    });
+  },
 
   // Chat
   getConversations(token) {
