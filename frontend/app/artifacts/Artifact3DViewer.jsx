@@ -1,17 +1,48 @@
-import React, { Suspense, useRef, useState } from "react";
+import React, { Suspense, useRef, useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, PanResponder } from "react-native";
-import { Canvas, useFrame } from "@react-three/fiber/native";
-import { useGLTF } from "@react-three/drei/native";
+import { Canvas, useFrame, useThree } from "@react-three/fiber/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Asset } from "expo-asset";
+import * as THREE from "three";
 
 const anubisModel = require("../../assets/models/anubis.glb");
 
-function Model({ rotationY }) {
+function Model({ rotationY, modelUrl }) {
   const groupRef = useRef();
-  const modelAsset = Asset.fromModule(anubisModel);
+  const [model, setModel] = useState(null);
+  const { scene } = useThree();
 
-  const gltf = useGLTF(modelAsset.localUri || modelAsset.uri);
+  useEffect(() => {
+    if (!modelUrl) return;
+
+    const loader = new THREE.GLTFLoader();
+    loader.load(
+      modelUrl,
+      (gltf) => {
+        const loadedScene = gltf.scene;
+        // Auto-center and scale
+        const box = new THREE.Box3().setFromObject(loadedScene);
+        const center = box.getCenter(new THREE.Vector3());
+        loadedScene.position.sub(center);
+
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 4 / maxDim;
+        loadedScene.scale.multiplyScalar(scale);
+
+        loadedScene.traverse((child) => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+
+        setModel(loadedScene);
+      },
+      undefined,
+      (error) => console.error("Model loading error:", error)
+    );
+  }, [modelUrl]);
 
   useFrame(() => {
     if (groupRef.current) {
@@ -20,8 +51,8 @@ function Model({ rotationY }) {
   });
 
   return (
-    <group ref={groupRef} position={[0, 0, 0]} scale={1}>
-      <primitive object={gltf.scene} />
+    <group ref={groupRef} position={[0, 0, 0]}>
+      {model && <primitive object={model} />}
     </group>
   );
 }
@@ -29,13 +60,23 @@ function Model({ rotationY }) {
 export default function Artifact3DViewer() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const [modelUrl, setModelUrl] = useState("");
 
   const title = params.title || "Anubis statue";
   const [rotationY, setRotationY] = useState(0);
 
-const lastX = useRef(0);
-const velocity = useRef(0);
-const animationRef = useRef(null);
+  useEffect(() => {
+    try {
+      const modelAsset = Asset.fromModule(anubisModel);
+      setModelUrl(modelAsset.localUri || modelAsset.uri);
+    } catch (error) {
+      console.error("Failed to resolve model asset:", error);
+    }
+  }, []);
+
+  const lastX = useRef(0);
+  const velocity = useRef(0);
+  const animationRef = useRef(null);
 
 const stopInertia = () => {
   if (animationRef.current) {
@@ -103,7 +144,7 @@ const panResponder = useRef(
           <directionalLight position={[-3, 2, 4]} intensity={1.2} />
 
           <Suspense fallback={null}>
-            <Model rotationY={rotationY} />
+            <Model rotationY={rotationY} modelUrl={modelUrl} />
           </Suspense>
         </Canvas>
       </View>

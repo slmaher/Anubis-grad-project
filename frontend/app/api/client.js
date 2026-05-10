@@ -88,11 +88,21 @@ async function apiRequest(path, options = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (error) {
+    const networkError = new Error(
+      `Unable to reach the backend at ${API_BASE_URL}${path}. Make sure the API server is running and accessible from this device.`
+    );
+    networkError.cause = error;
+    networkError.code = "NETWORK_ERROR";
+    throw networkError;
+  }
 
   let data;
   try {

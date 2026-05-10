@@ -31,13 +31,62 @@ function getExpoHost() {
   return String(hostUri).split(":")[0];
 }
 
+function extractHost(value) {
+  if (!value) {
+    return "";
+  }
+
+  try {
+    return new URL(value).hostname;
+  } catch {
+    return String(value)
+      .replace(/^https?:\/\//i, "")
+      .split(":")[0]
+      .split("/")[0];
+  }
+}
+
+function isPrivateNetworkHost(host) {
+  const normalized = String(host || "").trim().toLowerCase();
+
+  if (!normalized) {
+    return false;
+  }
+
+  if (
+    normalized === "localhost" ||
+    normalized === "127.0.0.1" ||
+    normalized === "::1"
+  ) {
+    return true;
+  }
+
+  if (/^10\./.test(normalized) || /^192\.168\./.test(normalized)) {
+    return true;
+  }
+
+  const match = normalized.match(/^172\.(\d{1,3})\./);
+  if (!match) {
+    return false;
+  }
+
+  const secondOctet = Number(match[1]);
+  return secondOctet >= 16 && secondOctet <= 31;
+}
+
 function resolveApiBaseUrl() {
   const envBase = normalizeBaseUrl(process.env.EXPO_PUBLIC_API_BASE_URL);
+  const expoHost = getExpoHost();
+
   if (envBase) {
+    const envHost = extractHost(envBase);
+    if (expoHost && isPrivateNetworkHost(envHost) && envHost !== expoHost) {
+      return `http://${expoHost}:4000`;
+    }
+
     return envBase;
   }
 
-  const expoHost = getExpoHost();
   if (expoHost) {
     return `http://${expoHost}:4000`;
   }
