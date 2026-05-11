@@ -19,6 +19,7 @@ import { Audio } from "expo-av";
 import * as Speech from "expo-speech";
 import Entypo from "@expo/vector-icons/Entypo";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { API_BASE_URL } from "../api/baseUrl";
 import { analyzeArtifactImage } from "../api/ai";
 
@@ -559,16 +560,11 @@ export default function ScanResult() {
     }
   };
 
-  // Auto-play on result
   useEffect(() => {
-    if (aiResult && !loadingAI && !aiError && guideText) {
-      generateAndPlayAudio();
-    }
-
     return () => {
       stopAudio();
     };
-  }, [aiResult, loadingAI, aiError, guideText]);
+  }, []);
 
   // Handle Language Toggle
   const handleLanguageToggle = async () => {
@@ -690,6 +686,19 @@ export default function ScanResult() {
     return `${(value * 100).toFixed(1)}%`;
   }, [aiResult]);
 
+  const modelType = useMemo(() => {
+    if (!aiResult) return null;
+    const name = artifactTitle.toLowerCase();
+    if (
+      name.includes("tutankhamun") ||
+      name.includes("mask") ||
+      name.includes("king")
+    )
+      return "king_tut";
+    if (name.includes("anubis")) return "anubis";
+    return "king_tut"; // Default for demonstration
+  }, [aiResult, artifactTitle]);
+
   const restoredImageUrl = aiResult?.restoration?.final_image_url || null;
 
   return (
@@ -773,32 +782,21 @@ export default function ScanResult() {
               </View>
             ) : aiResult ? (
               <View>
-                <View style={styles.guideCard}>
-                  <View style={styles.guideAvatarColumn}>
-                    <View style={styles.guideAvatarRing}>
-                      <Text style={styles.guideAvatarEmoji}>👨</Text>
-                    </View>
-                    <Text style={styles.guideAvatarName}>
-                      Anubis - Your Guide
-                    </Text>
-                  </View>
-
-                  <View style={styles.guideBubble}>
-                    <View style={styles.guideBubbleTail} />
-
-                    <View style={styles.languageToggleContainer}>
+                <View style={styles.virtualTourSection}>
+                  <View style={styles.sectionHeaderRow}>
+                    <Text style={styles.virtualTourLabel}>Experience in 3D</Text>
+                    <View style={styles.languageToggleContainerSmall}>
                       <TouchableOpacity
                         style={[
-                          styles.languageToggle,
-                          language === "en" && styles.languageToggleActive,
+                          styles.langBtn,
+                          language === "en" && styles.langBtnActive,
                         ]}
                         onPress={handleLanguageToggle}
                       >
                         <Text
                           style={[
-                            styles.languageToggleText,
-                            language === "en" &&
-                              styles.languageToggleTextActive,
+                            styles.langBtnText,
+                            language === "en" && styles.langBtnTextActive,
                           ]}
                         >
                           EN
@@ -806,63 +804,53 @@ export default function ScanResult() {
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[
-                          styles.languageToggle,
-                          language === "ar" && styles.languageToggleActive,
+                          styles.langBtn,
+                          language === "ar" && styles.langBtnActive,
                         ]}
                         onPress={handleLanguageToggle}
                       >
                         <Text
                           style={[
-                            styles.languageToggleText,
-                            language === "ar" &&
-                              styles.languageToggleTextActive,
+                            styles.langBtnText,
+                            language === "ar" && styles.langBtnTextActive,
                           ]}
                         >
                           AR
                         </Text>
                       </TouchableOpacity>
                     </View>
+                  </View>
 
-                    <Text style={styles.guideBubbleLabel}>Your Guide</Text>
-                    <Text style={styles.guideBubbleText}>{guideText}</Text>
-
-                    <View style={styles.guideActions}>
+                  <TouchableOpacity
+                    style={styles.virtualTourCard}
+                    onPress={generateAndPlayAudio}
+                    disabled={isGeneratingAudio}
+                  >
+                    <View style={styles.virtualTourContent}>
+                      <View style={styles.virtualTourIconContainer}>
+                        <Image
+                          source={require("../../assets/images/tour-guide-icon.png")}
+                          style={styles.virtualTourIcon}
+                        />
+                      </View>
+                      <View style={styles.virtualTourTextContainer}>
+                        <Text style={styles.virtualTourTitle}>
+                          Take a Virtual Tour Guide
+                        </Text>
+                        <Text style={styles.virtualTourSubtitle}>
+                          Anubis will guide you through the history
+                        </Text>
+                      </View>
                       {isGeneratingAudio ? (
-                        <View style={styles.guideActionButton}>
-                          <ActivityIndicator
-                            size="small"
-                            color="#FFF6E6"
-                          />
-                          <Text style={styles.guideActionText}>
-                            Generating...
-                          </Text>
-                        </View>
+                        <ActivityIndicator size="small" color="#8B7B6C" />
                       ) : (
-                        <>
-                          <TouchableOpacity
-                            style={styles.guideActionButton}
-                            onPress={
-                              isPlayingAudio ? stopAudio : generateAndPlayAudio
-                            }
-                          >
-                            <Text style={styles.guideActionText}>
-                              {isPlayingAudio ? "Stop" : "Play"}
-                            </Text>
-                          </TouchableOpacity>
-
-                          <TouchableOpacity
-                            style={styles.guideActionButtonSecondary}
-                            onPress={generateAndPlayAudio}
-                          >
-                            <Text style={styles.guideActionTextSecondary}>
-                              Replay
-                            </Text>
-                          </TouchableOpacity>
-                        </>
+                        <AntDesign name="right" size={20} color="#8B7B6C" />
                       )}
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 </View>
+
+
 
                 <Text style={styles.artifactMainTitle}>{artifactTitle}</Text>
 
@@ -1084,143 +1072,88 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 30,
   },
-  guideCard: {
+  virtualTourSection: {
+    marginBottom: 20,
+  },
+  sectionHeaderRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-    marginBottom: 18,
-    padding: 14,
-    borderRadius: 22,
-    backgroundColor: "rgba(255, 248, 235, 0.92)",
-    borderWidth: 1,
-    borderColor: "rgba(139, 123, 108, 0.14)",
-  },
-  guideAvatarColumn: {
+    justifyContent: "space-between",
     alignItems: "center",
-    width: 92,
+    marginBottom: 12,
   },
-  guideAvatarRing: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: "#5A4A3F",
-    borderWidth: 3,
-    borderColor: "#D4AF37",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  guideAvatarEmoji: {
-    fontSize: 32,
-  },
-  guideAvatarName: {
-    marginTop: 8,
-    fontSize: 11,
+  virtualTourLabel: {
+    fontSize: 16,
     fontWeight: "700",
     color: "#6B5B4F",
-    textAlign: "center",
   },
-  guideBubble: {
-    flex: 1,
-    backgroundColor: "#FFFDF8",
-    borderRadius: 18,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "rgba(139, 123, 108, 0.16)",
-  },
-  guideBubbleTail: {
-    position: "absolute",
-    left: -6,
-    top: 26,
-    width: 12,
-    height: 12,
-    backgroundColor: "#FFFDF8",
-    borderLeftWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: "rgba(139, 123, 108, 0.16)",
-    transform: [{ rotate: "45deg" }],
-  },
-  languageToggleContainer: {
+  languageToggleContainerSmall: {
     flexDirection: "row",
-    gap: 6,
-    marginBottom: 8,
-    justifyContent: "flex-end",
+    backgroundColor: "rgba(139, 123, 108, 0.1)",
+    borderRadius: 8,
+    padding: 2,
   },
-  languageToggle: {
+  langBtn: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "rgba(139, 123, 108, 0.3)",
-    backgroundColor: "rgba(139, 123, 108, 0.05)",
   },
-  languageToggleActive: {
+  langBtnActive: {
     backgroundColor: "#5A4A3F",
-    borderColor: "#5A4A3F",
   },
-  languageToggleText: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: "#6B5B4F",
-  },
-  languageToggleTextActive: {
-    color: "#FFF6E6",
-  },
-  guideBubbleLabel: {
-    fontSize: 13,
-    fontWeight: "800",
+  langBtnText: {
+    fontSize: 11,
+    fontWeight: "700",
     color: "#8B7B6C",
-    marginBottom: 6,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
-  guideBubbleText: {
-    fontSize: 14,
-    color: "#3F342D",
-    lineHeight: 22,
-    marginBottom: 8,
-  },
-  guideActions: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 10,
-  },
-  guideActionButton: {
-    flex: 1,
-    minHeight: 38,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#5A4A3F",
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    flexDirection: "row",
-    gap: 6,
-  },
-  guideActionButtonSecondary: {
-    flex: 1,
-    minHeight: 38,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(212, 175, 55, 0.16)",
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: "rgba(212, 175, 55, 0.4)",
-  },
-  guideActionText: {
+  langBtnTextActive: {
     color: "#FFF6E6",
-    fontSize: 13,
-    fontWeight: "800",
   },
-  guideActionTextSecondary: {
-    color: "#6B5B4F",
-    fontSize: 13,
-    fontWeight: "800",
+  virtualTourCard: {
+    backgroundColor: "#FFFDF8",
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(139, 123, 108, 0.15)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
   },
+  virtualTourContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  virtualTourIconContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: "rgba(212, 175, 55, 0.12)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  virtualTourIcon: {
+    width: 30,
+    height: 30,
+    tintColor: "#D4AF37",
+  },
+  virtualTourTextContainer: {
+    flex: 1,
+  },
+  virtualTourTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#3F342D",
+    marginBottom: 2,
+  },
+  virtualTourSubtitle: {
+    fontSize: 13,
+    color: "#8B7B6C",
+    fontWeight: "500",
+  },
+
+
   sectionTitle: {
     fontSize: 22,
     fontWeight: "700",

@@ -1,54 +1,89 @@
-import React, { Suspense, useRef, useState, useEffect } from "react";
+import React, { Suspense, useRef, useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   PanResponder,
+  ActivityIndicator,
 } from "react-native";
 import { Canvas, useFrame, useThree } from "@react-three/fiber/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Asset } from "expo-asset";
 import * as THREE from "three";
+import { loadAsync } from "expo-three";
 
-const anubisModel = require("../../assets/models/anubis.glb");
+const MODEL_ASSETS = {
+  anubis: require("../../assets/models/anubis.glb"),
+  king_tut: require("../../assets/models/king_tut_-_3d_scan_higher_quality-v1.glb"),
+};
 
-function Model({ rotationY, modelUrl }) {
+function Model({ rotationY, modelAsset }) {
   const groupRef = useRef();
-  const [model, setModel] = useState(null);
-  const { scene } = useThree();
+  const [scene, setScene] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!modelUrl) return;
+    if (!modelAsset) return;
+    
+    let isMounted = true;
+    setScene(null);
+    setError(null);
+    console.log("Model component: loading asset:", modelAsset);
+    
+    // loadAsync can take the asset module (require) directly
+    loadAsync(modelAsset)
+      .then((gltf) => {
+        if (!isMounted) return;
 
-    const loader = new THREE.GLTFLoader();
-    loader.load(
-      modelUrl,
-      (gltf) => {
-        const loadedScene = gltf.scene;
-        // Auto-center and scale
-        const box = new THREE.Box3().setFromObject(loadedScene);
-        const center = box.getCenter(new THREE.Vector3());
-        loadedScene.position.sub(center);
+        console.log("Model loaded successfully");
+        const loadedScene = gltf.scene || gltf;
 
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 4 / maxDim;
-        loadedScene.scale.multiplyScalar(scale);
-
+        // Diagnostic: check for meshes
+        let meshCount = 0;
         loadedScene.traverse((child) => {
           if (child.isMesh) {
+            meshCount++;
             child.castShadow = true;
             child.receiveShadow = true;
+            if (child.material) {
+              child.material.side = THREE.DoubleSide;
+              child.material.precision = "mediump";
+            }
           }
         });
+        console.log(`Found ${meshCount} meshes in model`);
 
-        setModel(loadedScene);
-      },
-      undefined,
-      (error) => console.error("Model loading error:", error),
-    );
-  }, [modelUrl]);
+        if (meshCount === 0) {
+          console.warn("No meshes found in model!");
+        }
+
+        const box = new THREE.Box3().setFromObject(loadedScene);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        
+        console.log("Model Bounds - Center:", center, "Size:", size);
+        
+        loadedScene.position.set(-center.x, -center.y, -center.z);
+
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 5 / (maxDim || 1); // slightly larger
+        console.log("Calculated scale:", scale);
+        loadedScene.scale.setScalar(scale);
+
+        setScene(loadedScene);
+      })
+      .catch((err) => {
+        if (isMounted) {
+          console.error("Error loading model in component:", err);
+          setError(err.message);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [modelAsset]);
 
   useFrame(() => {
     if (groupRef.current) {
@@ -58,7 +93,20 @@ function Model({ rotationY, modelUrl }) {
 
   return (
     <group ref={groupRef} position={[0, 0, 0]}>
-      {model && <primitive object={model} />}
+      {scene ? (
+        <primitive object={scene} key={modelAsset} />
+      ) : error ? (
+        <mesh>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="orange" wireframe />
+        </mesh>
+      ) : (
+        /* Loading indicator in 3D space */
+        <mesh>
+          <sphereGeometry args={[0.5, 16, 16]} />
+          <meshStandardMaterial color="#D4AF37" wireframe />
+        </mesh>
+      )}
     </group>
   );
 }
@@ -66,19 +114,21 @@ function Model({ rotationY, modelUrl }) {
 export default function Artifact3DViewer() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const [modelUrl, setModelUrl] = useState("");
-
-  const title = params.title || "Anubis statue";
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [rotationY, setRotationY] = useState(0);
+  const title = params.title || "Artifact View";
+  
+  const modelType = useMemo(
+    () => params.modelType || "king_tut",
+    [params.modelType],
+  );
 
   useEffect(() => {
-    try {
-      const modelAsset = Asset.fromModule(anubisModel);
-      setModelUrl(modelAsset.localUri || modelAsset.uri);
-    } catch (error) {
-      console.error("Failed to resolve model asset:", error);
-    }
-  }, []);
+    const selected = MODEL_ASSETS[modelType] || MODEL_ASSETS.anubis;
+    setSelectedAsset(selected);
+    setIsLoading(false);
+  }, [modelType]);
 
   const lastX = useRef(0);
   const velocity = useRef(0);
@@ -144,18 +194,39 @@ export default function Artifact3DViewer() {
       </TouchableOpacity>
 
       <View style={styles.canvasWrapper} {...panResponder.panHandlers}>
-        <Canvas camera={{ position: [0, 0.6, 6], fov: 45 }}>
-          <ambientLight intensity={1.8} />
-          <directionalLight position={[3, 5, 5]} intensity={2.2} />
-          <directionalLight position={[-3, 2, 4]} intensity={1.2} />
+        <Canvas 
+          camera={{ position: [0, 0, 7], fov: 45 }}
+          onCreated={({ scene }) => {
+            console.log("Canvas onCreated called");
+            scene.background = new THREE.Color('#1a1108');
+          }}
+        >
+          <ambientLight intensity={1.5} />
+          <pointLight position={[10, 10, 10]} intensity={2} />
+          <directionalLight position={[0, 5, 5]} intensity={1.5} />
 
           <Suspense fallback={null}>
-            <Model rotationY={rotationY} modelUrl={modelUrl} />
+            {selectedAsset ? (
+              <Model rotationY={rotationY} modelAsset={selectedAsset} />
+            ) : (
+              /* Fallback if no asset */
+              <mesh>
+                <boxGeometry args={[1, 1, 1]} />
+                <meshStandardMaterial color="red" />
+              </mesh>
+            )}
           </Suspense>
         </Canvas>
       </View>
 
-      <Text style={styles.hint}>Drag left or right to rotate</Text>
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#D4AF37" />
+          <Text style={styles.loadingText}>Loading 3D Model...</Text>
+        </View>
+      )}
+
+      <Text style={styles.hint}>Drag left or right to rotate • Model: {modelType}</Text>
     </View>
   );
 }
@@ -186,5 +257,18 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.85)",
     fontSize: 14,
     fontWeight: "700",
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(26, 17, 8, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 20,
+  },
+  loadingText: {
+    color: "#D4AF37",
+    marginTop: 15,
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

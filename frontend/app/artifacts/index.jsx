@@ -225,10 +225,10 @@ export default function ArtifactsScreen() {
 
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={() => setShowAllCollections((prev) => !prev)}
+              onPress={() => router.push("/artifacts/ArtifactsScreen")}
             >
               <Text style={styles.seeAll}>
-                {showAllCollections ? "View less" : "View all"}
+                View all
               </Text>
             </TouchableOpacity>
           </View>
@@ -240,6 +240,7 @@ export default function ArtifactsScreen() {
                   key={item.id}
                   style={styles.collectionCard}
                   activeOpacity={0.85}
+                  onPress={() => router.push("/artifacts/ArtifactsScreen")}
                 >
                   <Image
                     source={item.image}
@@ -260,6 +261,7 @@ export default function ArtifactsScreen() {
                   key={item.id}
                   style={styles.collectionCard}
                   activeOpacity={0.85}
+                  onPress={() => router.push("/artifacts/ArtifactsScreen")}
                 >
                   <Image
                     source={item.image}
