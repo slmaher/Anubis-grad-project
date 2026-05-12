@@ -23,7 +23,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { api } from "../api/client";
 import { getAuthToken, getAuthUser } from "../api/authStorage";
 
-const DARK = "#815317";
+const DARK = "#644b2f";
 const MUTED = "#8B7B6C";
 const ACCENT = "#46392c";
 const GOLD = "#D4AF37";
@@ -1071,7 +1071,7 @@ const styles = StyleSheet.create({
   },
   postContent: {
     fontSize: 15,
-    color: "#333",
+    color: DARK,
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -1137,7 +1137,7 @@ const styles = StyleSheet.create({
   },
   commentContent: {
     fontSize: 13,
-    color: "#333",
+    color: DARK,
     lineHeight: 18,
   },
   replyTargetBox: {
@@ -1170,7 +1170,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    color: "#333",
+    color: DARK,
     fontSize: 14,
   },
   sendCommentButton: {
@@ -1315,7 +1315,7 @@ const styles = StyleSheet.create({
   postInput: {
     flex: 1,
     fontSize: 16,
-    color: "#333",
+    color: DARK,
     textAlignVertical: "top",
     minHeight: 150,
   },

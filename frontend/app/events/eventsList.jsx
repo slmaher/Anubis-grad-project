@@ -156,7 +156,7 @@ export default function EventsListScreen() {
         <View
           style={[styles.content, { paddingHorizontal: horizontalPadding }]}
         >
-          <View style={styles.header}>
+          <View style={styles.tabsBar}>
             <TouchableOpacity
               style={styles.headerIconButton}
               onPress={() => router.back()}
@@ -169,28 +169,28 @@ export default function EventsListScreen() {
                 color={DARK}
               />
             </TouchableOpacity>
-          </View>
 
-          <View style={styles.tabs}>
-            {tabs.map((tab) => (
-              <TouchableOpacity
-                key={tab.key}
-                style={[
-                  styles.tabItem,
-                  activeFilter === tab.key && styles.tabItemActive,
-                ]}
-                onPress={() => setActiveFilter(tab.key)}
-              >
-                <Text
+            <View style={styles.tabsInline}>
+              {tabs.map((tab) => (
+                <TouchableOpacity
+                  key={tab.key}
                   style={[
-                    styles.tabText,
-                    activeFilter === tab.key && styles.tabTextActive,
+                    styles.tabItem,
+                    activeFilter === tab.key && styles.tabItemActive,
                   ]}
+                  onPress={() => setActiveFilter(tab.key)}
                 >
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeFilter === tab.key && styles.tabTextActive,
+                    ]}
+                  >
+                    {tab.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
 
           <View style={styles.titleRow}>
@@ -280,12 +280,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 14,
+    gap: 6,
+  },
+  tabsBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 14,
     backgroundColor: CARD_BG,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: BORDER,
-    padding: 4,
-    gap: 6,
+    padding: 6,
+    gap: 8,
+  },
+  tabsInline: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   tabItem: {
     flex: 1,
