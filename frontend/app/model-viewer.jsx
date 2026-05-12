@@ -62,7 +62,7 @@ export default function ModelViewerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000000ff",
+    backgroundColor: "#050302",
   },
   floatingBackButton: {
     position: "absolute",
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   },
   webviewWrapper: {
     flex: 1,
-    backgroundColor: "#1A1108",
+    backgroundColor: "#050302",
   },
   webview: {
     flex: 1,
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#1A1108",
+    backgroundColor: "#050302",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,

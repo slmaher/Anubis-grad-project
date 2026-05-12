@@ -83,12 +83,14 @@ const generateArabicGuide = (description) => {
     : "التمثال ده جميل جدا";
 
   const egyptianGuide =
-    `بص بقى يا صديقي، أنا حسن، دليلك السياحي بتاع النهاردة. ` +
+    
+       `أهلاً بيك يا صديقي، أنا نَوَّار، مرشدك السياحي . ` + 
     `${baseStory} ` +
     `تخيل معايا، الإيد القديمة اللي عملت الحاجة الجميلة دي. ` +
     `كانت معاهم حكايات وأسرار من زمان. ` +
     `شوف التفاصيل الدقيقة، كل حاجة فيها حكاية. ` +
     `ده كنز من كنوز مصر الحلوة.`;
+
 
   return egyptianGuide;
 };
@@ -99,7 +101,7 @@ const generateEnglishGuide = (description) => {
     .trim();
 
   const descriptionWithoutIntro = cleanedDescription.replace(
-    /^(hello!?\s*i'?m\s+anubis,?\s*(your|ur)\s+egyptian\s+guide\s+today\.?\s*)/i,
+    /^(hello!?\s*i'?m\s+nawwar,?\s*(your|ur)\s+egyptian\s+guide\s+today\.?\s*)/i,
     ""
   ).trim();
 
@@ -112,7 +114,7 @@ const generateEnglishGuide = (description) => {
     : "This artifact holds secrets of ancient Egypt.";
 
   const englishGuide =
-    `I'm Anubis, your Egyptian guide today. ` +
+    `I'm Nawwar, your Egyptian guide today. ` +
     `${baseStory} ` +
     `Can you imagine the skilled hands that shaped this treasure? ` +
     `Take a moment. Look closely. Every detail here brings the ancient past back to life. ` +
@@ -364,8 +366,8 @@ export default function ScanResult() {
     };
   }, []);
 
-  // Extract Description
-  const description = useMemo(() => {
+  // Extract Descriptions
+  const descriptionEn = useMemo(() => {
     return (
       aiResult?.metadata?.description_en ||
       aiResult?.description ||
@@ -374,13 +376,18 @@ export default function ScanResult() {
     );
   }, [aiResult]);
 
+  const descriptionAr = useMemo(() => {
+    return aiResult?.metadata?.description_ar || "";
+  }, [aiResult]);
+
   // Generate Guide Text
   const guideText = useMemo(() => {
-    if (!description) return "";
-    return language === "ar"
-      ? generateArabicGuide(description)
-      : generateEnglishGuide(description);
-  }, [description, language]);
+    if (language === "ar") {
+      const base = descriptionAr || descriptionEn;
+      return base ? generateArabicGuide(base) : "";
+    }
+    return descriptionEn ? generateEnglishGuide(descriptionEn) : "";
+  }, [descriptionEn, descriptionAr, language]);
 
   // Generate and Play Audio
   const generateAndPlayAudio = async () => {
@@ -677,8 +684,8 @@ export default function ScanResult() {
   const artifactTitle = useMemo(() => {
     return (
       aiResult?.metadata?.name ||
-      aiResult?.recognition?.name ||
-      "Artifact picture"
+      aiResult?.recognition?.artifact_name ||
+      "Artifact"
     );
   }, [aiResult]);
 
@@ -727,7 +734,7 @@ export default function ScanResult() {
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-            <Text style={styles.backIcon}>←</Text>
+            <AntDesign name="left" size={24} color="#5A4A3F" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Scan Result</Text>
           <View style={styles.placeholder} />
@@ -755,37 +762,10 @@ export default function ScanResult() {
             </View>
           </View>
 
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleSave}>
-              <View style={[styles.actionIcon, isSaved && styles.savedIcon]}>
-                <Image
-                  source={require("../../assets/images/save.png")}
-                  style={styles.iconImage}
-                />
-              </View>
-              <Text style={styles.actionLabel}>Save</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-              <View style={styles.actionIcon}>
-                <Entypo name="share" size={28} color="#333" />
-              </View>
-              <Text style={styles.actionLabel}>Share</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handleAddToJourney}
-            >
-              <View style={styles.actionIcon}>
-                <AntDesign name="plus" size={28} color="#333" />
-              </View>
-              <Text style={styles.actionLabel}>Add to Journey</Text>
-            </TouchableOpacity>
-          </View>
+          
 
           <View style={styles.aiCard}>
-            <Text style={styles.sectionTitle}>AI Analysis</Text>
+            
 
             {loadingAI ? (
               <View style={styles.loadingContainer}>
@@ -799,6 +779,83 @@ export default function ScanResult() {
               </View>
             ) : aiResult ? (
               <View>
+                
+
+
+
+                <Text style={styles.artifactMainTitle}>{artifactTitle}</Text>
+
+<View style={styles.actionButtons}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleSave}>
+              <View style={[styles.actionIcon, isSaved && styles.savedIcon]}>
+                <Image
+                  source={require("../../assets/images/save.png")}
+                  style={[styles.iconImage, isSaved && styles.savedIconImage]}
+                />
+              </View>
+              <Text style={styles.actionLabel}>Save</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
+              <View style={styles.actionIcon}>
+                <Entypo name="share" size={26} color="#000" />
+              </View>
+              <Text style={styles.actionLabel}>Share</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleAddToJourney}
+            >
+              <View style={styles.actionIcon}>
+                <AntDesign name="plus" size={26} color="#000" />
+              </View>
+              <Text style={styles.actionLabel}>Add to Journey</Text>
+            </TouchableOpacity>
+          </View>
+
+
+
+                {descriptionEn ? (
+                  <View style={styles.descriptionBlock}>
+                    <Text style={styles.virtualTourLabel}>Description</Text>
+                    <Text style={styles.descriptionText}>{descriptionEn}</Text>
+                  </View>
+                ) : null}
+
+                <View style={styles.metricsList}>
+                  <View style={styles.metricRow}>
+                    <View style={styles.metricIconCircleSmall}>
+                      <MaterialCommunityIcons name="shape-outline" size={16} color="#D4AF37" />
+                    </View>
+                    <Text style={styles.metricLabelSmall}>Type:</Text>
+                    <Text style={styles.metricValueSmall}>
+                      {aiResult?.metadata?.artifact_type || aiResult?.recognition?.artifact_type || "Unknown"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.metricRow}>
+                    <View style={styles.metricIconCircleSmall}>
+                      <MaterialCommunityIcons name="bank-outline" size={16} color="#D4AF37" />
+                    </View>
+                    <Text style={styles.metricLabelSmall}>Museum:</Text>
+                    <Text style={styles.metricValueSmall}>
+                      {aiResult?.metadata?.museum || "Unknown"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.metricRow}>
+                    <View style={styles.metricIconCircleSmall}>
+                      <MaterialCommunityIcons name="texture" size={16} color="#D4AF37" />
+                    </View>
+                    <Text style={styles.metricLabelSmall}>Material:</Text>
+                    <Text style={styles.metricValueSmall}>
+                      {aiResult?.metadata?.material || "Unknown"}
+                    </Text>
+                  </View>
+                </View>
+
+
                 <View style={styles.virtualTourSection}>
                   <View style={styles.sectionHeaderRow}>
                     <Text style={styles.virtualTourLabel}>Experience in 3D</Text>
@@ -852,10 +909,10 @@ export default function ScanResult() {
                       </View>
                       <View style={styles.virtualTourTextContainer}>
                         <Text style={styles.virtualTourTitle}>
-                          Take a Virtual Tour Guide
+                          Talk to Nawwar (نَوَّار)
                         </Text>
                         <Text style={styles.virtualTourSubtitle}>
-                          Anubis will guide you through the history
+                          Nawwar will guide you through the history
                         </Text>
                       </View>
                       {isGeneratingAudio ? (
@@ -888,48 +945,6 @@ export default function ScanResult() {
                     </TouchableOpacity>
                   ) : null}
                 </View>
-
-
-
-                <Text style={styles.artifactMainTitle}>{artifactTitle}</Text>
-
-                <View style={styles.metricsGrid}>
-                  <View style={styles.metricCard}>
-                    <MaterialCommunityIcons name="shape-outline" size={24} color="#D4AF37" />
-                    <Text style={styles.metricLabel}>Type</Text>
-                    <Text style={styles.metricValue} numberOfLines={2}>
-                      {aiResult?.metadata?.artifact_type ||
-                        aiResult?.recognition?.artifact_type ||
-                        "Unknown"}
-                    </Text>
-                  </View>
-
-                  <View style={styles.metricCard}>
-                    <MaterialCommunityIcons name="bank-outline" size={24} color="#D4AF37" />
-                    <Text style={styles.metricLabel}>Museum</Text>
-                    <Text style={styles.metricValue} numberOfLines={2}>
-                      {aiResult?.metadata?.museum || "Unknown"}
-                    </Text>
-                  </View>
-
-                  <View style={styles.metricCard}>
-                    <MaterialCommunityIcons name="texture" size={24} color="#D4AF37" />
-                    <Text style={styles.metricLabel}>Material</Text>
-                    <Text style={styles.metricValue} numberOfLines={2}>
-                      {aiResult?.metadata?.material || "Unknown"}
-                    </Text>
-                  </View>
-                </View>
-
-                {aiResult?.metadata?.description_en ? (
-                  <View style={styles.descriptionBlock}>
-                    <Text style={styles.infoLabel}>Description</Text>
-                    <Text style={styles.descriptionText}>
-                      {aiResult.metadata.description_en}
-                    </Text>
-                  </View>
-                ) : null}
-
 
                 {restoredImageUrl ? (
                   <View style={styles.restorationSection}>
@@ -974,9 +989,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 60,
+    paddingTop: 50,
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 10,
     backgroundColor: "transparent",
   },
   backButton: {
@@ -987,7 +1002,7 @@ const styles = StyleSheet.create({
   },
   backIcon: {
     fontSize: 28,
-    color: "#8B7B6C",
+    color: "#644b2f",
   },
   headerTitle: {
     fontSize: 24,
@@ -1005,26 +1020,27 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   imageContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 30,
-    alignItems: "center",
     width: "100%",
+    height: 420,
+    justifyContent: "center",
+    alignItems: "center",
   },
   artifactImage: {
     width: width - 40,
-    height: (width - 40) * 1.1,
+    height: 380,
     borderRadius: 30,
     overflow: "hidden",
     backgroundColor: "#1a2332",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 10,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 6,
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+    borderWidth: 2,
+    borderColor: "rgba(212, 175, 55, 0.3)", // Subtle gold border
   },
   capturedImage: {
     width: "100%",
@@ -1047,11 +1063,10 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
     width: "100%",
-    gap: 40,
+    paddingHorizontal: 10,
     marginBottom: 25,
   },
   actionButton: {
@@ -1059,43 +1074,53 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   actionIcon: {
-    width: 65,
-    height: 65,
-    borderRadius: 32.5,
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.8)",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#FFFDF8",
+    borderWidth: 1.5,
+    borderColor: "#E5E5E5",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 4,
   },
   savedIcon: {
-    backgroundColor: "rgba(255, 232, 197, 0.84)",
-    borderColor: "rgba(255, 232, 197, 0.84)",
+    backgroundColor: "#D4AF37",
+    borderColor: "#D4AF37",
   },
   iconImage: {
-    width: 28,
-    height: 28,
-    tintColor: "#333",
+    width: 26,
+    height: 26,
+    tintColor: "#000",
+  },
+  savedIconImage: {
+    tintColor: "#FFFDF8",
   },
   actionLabel: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#6B5B4F",
-    fontWeight: "600",
+    fontWeight: "700",
+    marginTop: 4,
   },
   aiCard: {
-    width: width - 30,
-    backgroundColor: "rgba(255,255,255,0.72)",
-    borderRadius: 24,
-    padding: 18,
-    marginBottom: 30,
+    width: width,
+    backgroundColor: "#FFFDF8",
+    borderTopLeftRadius: 35,
+    borderTopRightRadius: 35,
+    marginTop: -40,
+    paddingHorizontal: 24,
+    paddingTop: 30,
+    paddingBottom: 40,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -5 },
+    shadowOpacity: 0.08,
+    shadowRadius: 15,
+    elevation: 10,
+    minHeight: "60%",
   },
   virtualTourSection: {
     marginBottom: 20,
@@ -1217,45 +1242,47 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   artifactMainTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "800",
     color: "#5A4A3F",
-    marginBottom: 10,
+    marginBottom: 15,
+    textAlign: "center",
   },
-  metricsGrid: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
+  metricsList: {
+    marginTop: 5,
+    marginBottom: 20,
     gap: 8,
-    marginBottom: 16,
   },
-  metricCard: {
-    width: "31%",
-    backgroundColor: "#FFFDF8",
-    borderRadius: 14,
-    padding: 10,
+  metricRow: {
+    flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#FFFDF8",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "rgba(139, 123, 108, 0.15)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: "rgba(139, 123, 108, 0.1)",
   },
-  metricLabel: {
-    fontSize: 11,
+  metricIconCircleSmall: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(212, 175, 55, 0.08)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+  metricLabelSmall: {
+    fontSize: 12,
     fontWeight: "700",
     color: "#8B7B6C",
-    marginTop: 8,
-    marginBottom: 2,
-    textAlign: "center",
+    width: 70,
   },
-  metricValue: {
-    fontSize: 13,
-    fontWeight: "800",
+  metricValueSmall: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "600",
     color: "#3F342D",
-    textAlign: "center",
   },
   descriptionBlock: {
     marginTop: 8,
@@ -1265,6 +1292,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#3F342D",
     lineHeight: 24,
+    
   },
   restorationSection: {
     marginTop: 18,
