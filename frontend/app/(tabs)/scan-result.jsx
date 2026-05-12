@@ -22,6 +22,8 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { API_BASE_URL } from "../api/baseUrl";
 import { analyzeArtifactImage } from "../api/ai";
+import { WebView } from "react-native-webview";
+import artifactModels from "../../src/data/artifactModels";
 
 const { width } = Dimensions.get("window");
 
@@ -686,6 +688,21 @@ export default function ScanResult() {
     return `${(value * 100).toFixed(1)}%`;
   }, [aiResult]);
 
+  const sketchfabUrl = useMemo(() => {
+    if (!artifactTitle) return null;
+    const exactMatch = artifactModels[artifactTitle];
+    if (exactMatch) return exactMatch;
+    
+    // Fallback: try finding a key that is a substring
+    const titleLower = artifactTitle.toLowerCase();
+    for (const key of Object.keys(artifactModels)) {
+      if (titleLower.includes(key.toLowerCase()) || key.toLowerCase().includes(titleLower)) {
+        return artifactModels[key];
+      }
+    }
+    return null;
+  }, [artifactTitle]);
+
   const modelType = useMemo(() => {
     if (!aiResult) return null;
     const name = artifactTitle.toLowerCase();
@@ -848,53 +865,60 @@ export default function ScanResult() {
                       )}
                     </View>
                   </TouchableOpacity>
+
+                  {sketchfabUrl ? (
+                    <TouchableOpacity
+                      style={[styles.virtualTourCard, { marginTop: 12 }]}
+                      onPress={() => router.push(`/model-viewer?url=${encodeURIComponent(sketchfabUrl)}`)}
+                    >
+                      <View style={styles.virtualTourContent}>
+                        <View style={styles.virtualTourIconContainer}>
+                          <MaterialCommunityIcons name="cube-scan" size={28} color="#D4AF37" />
+                        </View>
+                        <View style={styles.virtualTourTextContainer}>
+                          <Text style={styles.virtualTourTitle}>
+                            View 3D Model
+                          </Text>
+                          <Text style={styles.virtualTourSubtitle}>
+                            Interact with the artifact in 3D
+                          </Text>
+                        </View>
+                        <AntDesign name="right" size={20} color="#8B7B6C" />
+                      </View>
+                    </TouchableOpacity>
+                  ) : null}
                 </View>
 
 
 
                 <Text style={styles.artifactMainTitle}>{artifactTitle}</Text>
 
-                {confidenceText ? (
-                  <Text style={styles.confidenceText}>
-                    Confidence: {confidenceText}
-                  </Text>
-                ) : null}
+                <View style={styles.metricsGrid}>
+                  <View style={styles.metricCard}>
+                    <MaterialCommunityIcons name="shape-outline" size={24} color="#D4AF37" />
+                    <Text style={styles.metricLabel}>Type</Text>
+                    <Text style={styles.metricValue} numberOfLines={2}>
+                      {aiResult?.metadata?.artifact_type ||
+                        aiResult?.recognition?.artifact_type ||
+                        "Unknown"}
+                    </Text>
+                  </View>
 
-                <View style={styles.infoBlock}>
-                  <Text style={styles.infoLabel}>Type</Text>
-                  <Text style={styles.infoValue}>
-                    {aiResult?.metadata?.artifact_type ||
-                      aiResult?.recognition?.artifact_type ||
-                      "Unknown"}
-                  </Text>
-                </View>
+                  <View style={styles.metricCard}>
+                    <MaterialCommunityIcons name="bank-outline" size={24} color="#D4AF37" />
+                    <Text style={styles.metricLabel}>Museum</Text>
+                    <Text style={styles.metricValue} numberOfLines={2}>
+                      {aiResult?.metadata?.museum || "Unknown"}
+                    </Text>
+                  </View>
 
-                <View style={styles.infoBlock}>
-                  <Text style={styles.infoLabel}>Museum</Text>
-                  <Text style={styles.infoValue}>
-                    {aiResult?.metadata?.museum || "Unknown"}
-                  </Text>
-                </View>
-
-                <View style={styles.infoBlock}>
-                  <Text style={styles.infoLabel}>Era</Text>
-                  <Text style={styles.infoValue}>
-                    {aiResult?.metadata?.era || "Unknown"}
-                  </Text>
-                </View>
-
-                <View style={styles.infoBlock}>
-                  <Text style={styles.infoLabel}>Dynasty</Text>
-                  <Text style={styles.infoValue}>
-                    {aiResult?.metadata?.dynasty || "Unknown"}
-                  </Text>
-                </View>
-
-                <View style={styles.infoBlock}>
-                  <Text style={styles.infoLabel}>Material</Text>
-                  <Text style={styles.infoValue}>
-                    {aiResult?.metadata?.material || "Unknown"}
-                  </Text>
+                  <View style={styles.metricCard}>
+                    <MaterialCommunityIcons name="texture" size={24} color="#D4AF37" />
+                    <Text style={styles.metricLabel}>Material</Text>
+                    <Text style={styles.metricValue} numberOfLines={2}>
+                      {aiResult?.metadata?.material || "Unknown"}
+                    </Text>
+                  </View>
                 </View>
 
                 {aiResult?.metadata?.description_en ? (
@@ -905,6 +929,7 @@ export default function ScanResult() {
                     </Text>
                   </View>
                 ) : null}
+
 
                 {restoredImageUrl ? (
                   <View style={styles.restorationSection}>
@@ -1197,25 +1222,40 @@ const styles = StyleSheet.create({
     color: "#5A4A3F",
     marginBottom: 10,
   },
-  confidenceText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#7A6A5A",
+  metricsGrid: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8,
     marginBottom: 16,
   },
-  infoBlock: {
-    marginBottom: 12,
+  metricCard: {
+    width: "31%",
+    backgroundColor: "#FFFDF8",
+    borderRadius: 14,
+    padding: 10,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(139, 123, 108, 0.15)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  infoLabel: {
-    fontSize: 14,
+  metricLabel: {
+    fontSize: 11,
     fontWeight: "700",
     color: "#8B7B6C",
-    marginBottom: 4,
+    marginTop: 8,
+    marginBottom: 2,
+    textAlign: "center",
   },
-  infoValue: {
-    fontSize: 16,
+  metricValue: {
+    fontSize: 13,
+    fontWeight: "800",
     color: "#3F342D",
-    lineHeight: 22,
+    textAlign: "center",
   },
   descriptionBlock: {
     marginTop: 8,
@@ -1234,5 +1274,18 @@ const styles = StyleSheet.create({
     height: 340,
     borderRadius: 18,
     marginTop: 12,
+  },
+  modelSection: {
+    marginTop: 18,
+  },
+  webviewContainer: {
+    width: "100%",
+    height: 300,
+    borderRadius: 18,
+    overflow: "hidden",
+    marginTop: 12,
+  },
+  webview: {
+    flex: 1,
   },
 });

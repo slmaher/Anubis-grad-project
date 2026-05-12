@@ -15,7 +15,6 @@ import { loadAsync } from "expo-three";
 
 const MODEL_ASSETS = {
   anubis: require("../../assets/models/anubis.glb"),
-  king_tut: require("../../assets/models/king_tut_-_3d_scan_higher_quality-v1.glb"),
 };
 
 function Model({ rotationY, modelAsset }) {
