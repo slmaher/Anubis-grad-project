@@ -65,24 +65,27 @@ The platform provides:
 
 The following table summarizes major technologies and tools used across the project.
 
-| Layer               | Technology / Tool                                            | Purpose                                                                |
-| ------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| Frontend            | React Native, Expo                                           | Cross-platform mobile application                                      |
-| Frontend            | Expo Router                                                  | Navigation and screen management                                       |
-| Frontend (3D)       | three.js, @react-three/fiber, @react-three/drei, expo-three      | 3D model viewing and interactive WebGL viewers (Sketchfab embeds, GLTF/GLB) |
-| Assets / Formats    | glTF/GLB, USDZ, OBJ, Draco compression                       | 3D model formats and optimized delivery                                |
-| Backend             | Node.js, Express.js, TypeScript                              | RESTful API and business logic                                         |
-| Backend             | MongoDB, Mongoose                                            | Database and ORM                                                       |
-| Backend             | Socket.IO                                                    | Real-time messaging                                                    |
-| Backend             | JWT                                                          | Authentication and authorization                                       |
-| AI Service          | Python FastAPI                                               | AI microservice endpoint                                               |
-| AI Service          | DINOv2                                                       | Artifact recognition                                                   |
-| AI Service          | Stable Diffusion                                             | Artifact visual reconstruction                                         |
-| Tools               | Blender, glTF-Pipeline                                       | 3D model creation and optimization tools                               |
-| Tools               | Blender, glTF-Pipeline                                       | 3D model creation and optimization tools                               |
-| TTS / Voice         | ElevenLabs                                                   | Text-to-speech voice agent; cached audio in `tmp/elevenlabs_tts_cache` |
-| External APIs       | Google Maps API, Sketchfab API                               | Navigation, location, and hosted 3D models                             |
-| DevOps              | GitHub Actions, Docker                                       | CI/CD and containerization                                             |
+| Layer            | Technology / Tool                                           | Purpose                                                                     |
+| ---------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Frontend         | React Native, Expo                                          | Cross-platform mobile application                                           |
+| Frontend         | Expo Router                                                 | Navigation and screen management                                            |
+| Frontend (3D)    | three.js, @react-three/fiber, @react-three/drei, expo-three | 3D model viewing and interactive WebGL viewers (Sketchfab embeds, GLTF/GLB) |
+| Assets / Formats | glTF/GLB, USDZ, OBJ, Draco compression                      | 3D model formats and optimized delivery                                     |
+| Backend          | Node.js, Express.js, TypeScript                             | RESTful API and business logic                                              |
+| Backend          | MongoDB, Mongoose                                           | Database and ORM                                                            |
+| Backend          | Socket.IO                                                   | Real-time messaging                                                         |
+| Backend          | JWT                                                         | Authentication and authorization                                            |
+| AI Service       | Python FastAPI                                              | AI microservice endpoint                                                    |
+| AI Service       | DINOv2                                                      | Artifact recognition                                                        |
+| AI Service       | Stable Diffusion                                            | Artifact visual reconstruction                                              |
+| Tools            | Blender, glTF-Pipeline                                      | 3D model creation and optimization tools                                    |
+| Tools            | Blender, glTF-Pipeline                                      | 3D model creation and optimization tools                                    |
+| TTS / Voice      | ElevenLabs                                                  | Text-to-speech voice agent; cached audio in `tmp/elevenlabs_tts_cache`      |
+| External APIs    | Google Maps API, Sketchfab API                              | Navigation, location, and hosted 3D models                                  |
+| Chatbot / Assistant | Groq LLM, Groq Chat Completions API, @google/generative-ai, MyMemory Translation API | Conversational AI backend used by `/api/assistant/chat`; translation helper via MyMemory |
+| Charts / Analytics  | Recharts                                                     | Frontend charting library used in admin dashboard (bar charts, KPI cards)   |
+| CSV Logging & Export| Frontend CSV builder (admin), Python `csv` module (AI_Enhancement) | Admin CSV export (`frontend/app/admin/index.jsx`) and AI experiment tracking (`AI_Enhancement/app/services/local_reconstruction_utils.py`) |
+| DevOps           | GitHub Actions, Docker                                      | CI/CD and containerization                                                  |
 
 ## 2. Role-Based Feature Catalog
 
@@ -936,36 +939,3 @@ Current implementation is primarily UI/local flow in ticket screens.
 - Admin pages call protected endpoints with bearer token.
 - Admin actions mutate central domain entities (users, content, moderation, campaigns, opportunities, products).
 - Changes propagate to visitor experiences through shared data sources.
-
-## 11. Implementation Gaps and Priority Notes
-
-These are observed from current code and should be considered in planning:
-
-1. Password reset flow mismatch
-
-- Frontend auth screens call api.forgotPassword, api.verifyResetToken, api.resetPassword.
-- These methods are not implemented in frontend/app/api/client.js.
-- Backend auth routes currently expose only register and login.
-
-2. Donation campaign contribution mismatch
-
-- Frontend api client includes POST /api/donations/campaigns/:id/contribute.
-- Backend donations routes do not define this endpoint.
-
-3. Ticket booking integration gap
-
-- Backend ticket CRUD exists.
-- Current ticket UI screens are local and do not post ticket purchases to backend endpoints.
-
-4. Marketplace checkout integration gap
-
-- Product listing is backend-backed.
-- Cart and checkout are local storage/UI oriented; no order/payment backend module is implemented.
-
-5. Admin analytics scope
-
-- Dashboard analytics are summary operational counts, not a dedicated analytics service/module.
-
----
-
-This document is generated directly from the current repository implementation and reflects the end-to-end behavior in code as of April 22, 2026.
