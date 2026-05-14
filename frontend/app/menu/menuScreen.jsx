@@ -95,21 +95,21 @@ export default function MenuScreen({ onClose }) {
       iconName: "account-group-outline",
       route: "/friends",
     },
-{
-  id: "museums",
-  label: t("menu.museums"),
-  iconLib: "material",
-  iconName: "bank-outline",
-  route: "/(tabs)/explore",
-},
+    {
+      id: "museums",
+      label: t("menu.museums"),
+      iconLib: "material",
+      iconName: "bank-outline",
+      route: "/(tabs)/explore",
+    },
 
-{
-  id: "map",
-  label: t("menu.map"),
-  iconLib: "ion",
-  iconName: "location-outline",
-  route: "/map",
-},
+    {
+      id: "map",
+      label: t("menu.map"),
+      iconLib: "ion",
+      iconName: "location-outline",
+      route: "/map",
+    },
   ];
 
   const [counts, setCounts] = React.useState({
@@ -283,7 +283,7 @@ export default function MenuScreen({ onClose }) {
           }).start();
         },
       }),
-    [isRTL, dragAnim, closeMenu]
+    [isRTL, dragAnim, closeMenu],
   );
 
   return (
@@ -425,19 +425,19 @@ const styles = StyleSheet.create({
     zIndex: 2,
     elevation: 20,
   },
-backgroundLtr: {
-  left: 0,
-  borderTopRightRadius: 28,
-  borderBottomRightRadius: 28,
-  overflow: "hidden",
-},
+  backgroundLtr: {
+    left: 0,
+    borderTopRightRadius: 28,
+    borderBottomRightRadius: 28,
+    overflow: "hidden",
+  },
 
-backgroundRtl: {
-  right: 0,
-  borderTopLeftRadius: 28,
-  borderBottomLeftRadius: 28,
-  overflow: "hidden",
-},
+  backgroundRtl: {
+    right: 0,
+    borderTopLeftRadius: 28,
+    borderBottomLeftRadius: 28,
+    overflow: "hidden",
+  },
   safeArea: { flex: 1 },
   header: {
     flexDirection: "row",

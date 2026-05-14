@@ -249,13 +249,9 @@ export default function AdminDashboard() {
     });
 
     const values = Object.values(bucketMap);
-    const max = values.reduce((highest, item) => {
-      return item.count > highest ? item.count : highest;
-    }, 1);
-
     return values.map((item) => ({
       ...item,
-      heightPercent: Math.max(6, Math.round((item.count / max) * 100)),
+      heightPercent: Math.max(6, Math.round((item.count / Math.max(1, values.reduce((highest, current) => (current.count > highest ? current.count : highest), 1))) * 100)),
     }));
   }, [filteredActivity, i18n.language]);
 
@@ -274,6 +270,100 @@ export default function AdminDashboard() {
     [filteredActivity, visibleActivityCount],
   );
 
+  const suspiciousLogEntries = useMemo(() => {
+    if (!Array.isArray(filteredActivity) || filteredActivity.length === 0) {
+      return [];
+    }
+
+    const entries = [];
+    const seen = new Set();
+
+    const pushEntry = (key, title, details, occurredAt, severity = "medium") => {
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      entries.push({ key, title, details, occurredAt, severity });
+    };
+
+    filteredActivity.forEach((item) => {
+      const searchable = [item?.category, item?.action, item?.subject, item?.details]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      const isAuthFailure = /(invalid credentials|failed sign[- ]?in|login failed|unauthorized|authentication failed)/.test(searchable);
+      const isRemoval = /(removed|deleted|deactivated|inactive)/.test(searchable);
+      const isPrivilegeChange = /(role|permission|privilege|admin action)/.test(searchable);
+      const isOperationalFailure = /(error|failed|exception|denied|suspicious)/.test(searchable);
+      const isSystemActor = !item?.actor?.name || String(item?.actor?.role || "").toLowerCase() === "system";
+
+      if (isAuthFailure) {
+        pushEntry(
+          `auth-${item.id}`,
+          "Repeated invalid credentials",
+          "Multiple failed sign-in attempts were detected in the current activity window.",
+          item?.occurredAt,
+          "high",
+        );
+      }
+
+      if (isRemoval) {
+        pushEntry(
+          `removal-${item.id}`,
+          `${item.category} removal or deactivation`,
+          item.subject ? `${item.subject} was marked as removed or inactive.` : "A record was removed or disabled.",
+          item?.occurredAt,
+          "high",
+        );
+      }
+
+      if (isPrivilegeChange) {
+        pushEntry(
+          `priv-${item.id}`,
+          `${item.category} role or permission change`,
+          item.subject ? `${item.subject} changed access-sensitive fields.` : "A role or permission change was recorded.",
+          item?.occurredAt,
+          "medium",
+        );
+      }
+
+      if (isOperationalFailure) {
+        pushEntry(
+          `ops-${item.id}`,
+          `${item.category} operational warning`,
+          item.details || item.action || "An operational warning appeared in the activity feed.",
+          item?.occurredAt,
+          "medium",
+        );
+      }
+
+      if (isSystemActor) {
+        pushEntry(
+          `sys-${item.id}`,
+          "System-generated activity",
+          item.subject ? `${item.subject} was created or changed without an identified actor.` : "An activity event came from a system or unknown actor.",
+          item?.occurredAt,
+          "low",
+        );
+      }
+    });
+
+    const repeatedUpdates = filteredActivity.filter((item) =>
+      /(updated|modified|edited)/.test([item?.action, item?.details].filter(Boolean).join(" ").toLowerCase()),
+    );
+
+    if (repeatedUpdates.length >= 4) {
+      pushEntry(
+        "bulk-updates",
+        "Bulk updates in a short period",
+        `${repeatedUpdates.length} update-style actions were observed in the selected period.`,
+        repeatedUpdates[0]?.occurredAt,
+        "medium",
+      );
+    }
+
+    return entries.sort((a, b) => toDateMillis(b.occurredAt) - toDateMillis(a.occurredAt));
+  }, [filteredActivity]);
+
   const analyticsSummary = useMemo(() => {
     const totalLogs = filteredActivity.length;
     const uniqueActors = new Set(
@@ -290,13 +380,7 @@ export default function AdminDashboard() {
         .filter(Boolean),
     ).size;
 
-    const suspiciousLogs = filteredActivity.filter((item) => {
-      const searchable = [item?.category, item?.action, item?.details]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return /(error|fail|exception|denied|inactive|removed)/.test(searchable);
-    }).length;
+    const suspiciousLogs = suspiciousLogEntries.length;
 
     const busiest = trendChartData.reduce(
       (best, point) => (point.count > best.count ? point : best),
@@ -315,7 +399,7 @@ export default function AdminDashboard() {
       busiestLabel: busiest.label || "-",
       busiestCount: busiest.count || 0,
     };
-  }, [filteredActivity, trendChartData, selectedPeriodDays]);
+  }, [filteredActivity, suspiciousLogEntries, trendChartData, selectedPeriodDays]);
 
   const linePath = (points) => {
     if (!points.length) return "";
@@ -1254,14 +1338,26 @@ export default function AdminDashboard() {
             {analyticsSummary.avgPerDay}
           </Text>
         </View>
-        <View style={styles.analyticsCard}>
-          <Text style={styles.analyticsLabel}>
-            {t("admin.dashboard.visualizations.suspicious_logs")}
-          </Text>
+        <TouchableOpacity
+          style={[styles.analyticsCard, styles.suspiciousCard]}
+          onPress={() => router.push("/admin/suspicious-logs")}
+        >
+          <View style={styles.suspiciousCardHeader}>
+            <Text style={styles.analyticsLabel}>
+              {t("admin.dashboard.visualizations.suspicious_logs")}
+            </Text>
+            <MaterialCommunityIcons
+              name="open-in-new"
+              size={18}
+              color="#8A631A"
+            />
+          </View>
           <Text style={styles.analyticsValueDanger}>
             {analyticsSummary.suspiciousLogs}
           </Text>
-        </View>
+          <Text style={styles.analyticsHint}>
+          </Text>
+        </TouchableOpacity>
         <View style={styles.analyticsCard}>
           <Text style={styles.analyticsLabel}>
             {t("admin.dashboard.visualizations.busiest_day")}
@@ -1458,12 +1554,24 @@ const styles = StyleSheet.create({
   analyticsCard: {
     flex: 1,
     minWidth: 150,
+    height: 90,
     backgroundColor: "#fff",
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#EFE4D5",
     paddingVertical: 12,
     paddingHorizontal: 14,
+    justifyContent: "flex-start",
+  },
+  suspiciousCard: {
+    height: 90,
+    justifyContent: "space-between",
+  },
+  suspiciousCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
   },
   analyticsLabel: {
     fontSize: 11,
@@ -1480,6 +1588,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: "#D05E46",
     fontWeight: "700",
+  },
+  analyticsHint: {
+    marginTop: 6,
+    fontSize: 11,
+    color: "#9B8B7C",
+    fontWeight: "500",
   },
   chartStack: {
     gap: 10,

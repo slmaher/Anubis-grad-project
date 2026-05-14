@@ -64,6 +64,11 @@ export default function AdminLayout() {
   const menuItems = [
     { name: t("admin.menu.dashboard"), icon: "view-dashboard", path: "/admin" },
     {
+      name: t("admin.menu.suspicious_logs"),
+      icon: "shield-alert-outline",
+      path: "/admin/suspicious-logs",
+    },
+    {
       name: t("admin.menu.users"),
       icon: "account-group",
       path: "/admin/users",

@@ -71,7 +71,9 @@ export default function FriendsScreen() {
       )}
 
       <View style={styles.info}>
-        <Text style={styles.name}>{item.name || item.username || "Friend"}</Text>
+        <Text style={styles.name}>
+          {item.name || item.username || "Friend"}
+        </Text>
         {item.mutualCount != null && (
           <Text style={styles.subtitle}>{`${item.mutualCount} mutual`}</Text>
         )}
@@ -124,13 +126,39 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 28,
     alignItems: "center",
   },
-  backButton: { position: "absolute", top: 75, left: 20, width: 40, height: 40, justifyContent: "center", alignItems: "center", zIndex: 10 },
+  backButton: {
+    position: "absolute",
+    top: 75,
+    left: 20,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
   backIcon: { fontSize: 28, color: "#fff" },
   title: { fontSize: 20, fontWeight: "bold", color: "#fff" },
   listContent: { padding: 12, paddingBottom: 40 },
-  row: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", padding: 12, borderRadius: 12, marginBottom: 10, borderWidth: 1, borderColor: "#E5DED5" },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#E5DED5",
+  },
   avatar: { width: 56, height: 56, borderRadius: 28, marginRight: 12 },
-  fallbackAvatar: { width: 56, height: 56, borderRadius: 28, marginRight: 12, backgroundColor: "#C4B5A0", alignItems: "center", justifyContent: "center" },
+  fallbackAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginRight: 12,
+    backgroundColor: "#C4B5A0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   fallbackText: { color: "#fff", fontSize: 18, fontWeight: "700" },
   info: { flex: 1 },
   name: { fontSize: 16, fontWeight: "600", color: "#2C2010" },

@@ -92,7 +92,10 @@ export default function UserProfile() {
             if (friendCount == null) {
               try {
                 const myFriendsResp = await api.getFriends(token);
-                if (myFriendsResp?.success && Array.isArray(myFriendsResp.data)) {
+                if (
+                  myFriendsResp?.success &&
+                  Array.isArray(myFriendsResp.data)
+                ) {
                   setFriendCount(myFriendsResp.data.length);
                 }
               } catch (e) {
@@ -104,7 +107,10 @@ export default function UserProfile() {
             // if profile belongs to another user and no friends count present, try to read from profile metadata
             if (friendCount == null) {
               // some APIs include a summary object for counts
-              const cnt = response.data?.friendsCount || response.data?.friendCount || null;
+              const cnt =
+                response.data?.friendsCount ||
+                response.data?.friendCount ||
+                null;
               if (typeof cnt === "number") setFriendCount(cnt);
             }
           }
@@ -294,8 +300,10 @@ export default function UserProfile() {
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
-                <Text style={styles.statNumber}>{friendCount != null ? friendCount : "-"}</Text>
-                <Text style={styles.statLabel}>Friends</Text>
+              <Text style={styles.statNumber}>
+                {friendCount != null ? friendCount : "-"}
+              </Text>
+              <Text style={styles.statLabel}>Friends</Text>
             </View>
           </View>
 
@@ -361,12 +369,12 @@ export default function UserProfile() {
                   <Text style={styles.actionIcon}>♡ {post.likes || 0}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}>
-  <MaterialCommunityIcons
-    name="chat-processing-outline"
-  size={23}
-  color="#666"
-  />
-</TouchableOpacity>
+                  <MaterialCommunityIcons
+                    name="chat-processing-outline"
+                    size={23}
+                    color="#666"
+                  />
+                </TouchableOpacity>
               </View>
             </View>
           ))
