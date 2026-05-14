@@ -33,17 +33,22 @@ function createEmbedHtml(embedUrl, title) {
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <style>
-          html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #050302; }
-          iframe { border: 0; width: 100%; height: 100%; }
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000000 !important; }
+          iframe { border: 0; width: 100%; height: 100%; background: #000000 !important; }
+          div, section, nav, header, footer { background: #000000 !important; }
         </style>
       </head>
-      <body>
-        <iframe
-          title="${title}"
-          src="${embedUrl}"
-          allow="autoplay; fullscreen; xr-spatial-tracking"
-          allowfullscreen
-        ></iframe>
+      <body style="background: #000000 !important;">
+        <div style="width: 100%; height: 100%; background: #000000;">
+          <iframe
+            title="${title}"
+            src="${embedUrl}"
+            allow="autoplay; fullscreen; xr-spatial-tracking"
+            allowfullscreen
+            style="background: #000000 !important;"
+          ></iframe>
+        </div>
       </body>
     </html>
   `;
@@ -52,14 +57,13 @@ function createEmbedHtml(embedUrl, title) {
 export default function ArtifactDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  
 
   const collectionKey = params.collection || "rosicrucian";
   const collection = COLLECTIONS[collectionKey] || COLLECTIONS.rosicrucian;
 
   const viewerUrl = useMemo(() => {
     const separator = collection.embedUrl.includes("?") ? "&" : "?";
-    return `${collection.embedUrl}${separator}autostart=1&transparent=1&ui_theme=dark&ui_infos=0&ui_watermark=0&ui_stop=0&ui_inspector=0&ui_settings=0&ui_vr=0&ui_fullscreen=0&ui_annotations=0&ui_hint=2`;
+    return `${collection.embedUrl}${separator}autostart=1&ui_theme=dark&ui_infos=0&ui_watermark=0&ui_stop=0&ui_inspector=0&ui_settings=0&ui_vr=0&ui_fullscreen=0&ui_annotations=0&ui_hint=0&ui_loading_screen=0&ui_controls=0`;
   }, [collection.embedUrl]);
 
   const viewerHtml = useMemo(
@@ -69,7 +73,7 @@ export default function ArtifactDetailScreen() {
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#050302" />
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
 
       <View style={styles.viewerWrap}>
         <WebView
@@ -87,28 +91,6 @@ export default function ArtifactDetailScreen() {
           <Text style={styles.backLabel}>{collection.title}</Text>
         </TouchableOpacity>
       </View>
-
-      <View style={styles.sheet}>
-        <View style={styles.content}>
-          <Text style={styles.title}>{collection.title}</Text>
-          <Text style={styles.subtitle}>{collection.subtitle}</Text>
-          <Text style={styles.body}>
-            This is the customized artifact screen for the selected 3D
-            collection. It opens the embedded Sketchfab list directly with no
-            static photos or local GLB files.
-          </Text>
-        </View>
-
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.secondaryBtn}
-            onPress={() => router.push("/artifacts")}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.secondaryBtnText}>Back to collections</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
     </View>
   );
 }
@@ -116,11 +98,11 @@ export default function ArtifactDetailScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#1A1108",
+    backgroundColor: "#000000",
   },
   viewerWrap: {
-    flex: 0.64,
-    backgroundColor: "#050302",
+    flex: 1,
+    backgroundColor: "#000000",
     position: "relative",
   },
   viewer: {
@@ -158,7 +140,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   sheet: {
-    flex: 1,
+    display: "none",
     backgroundColor: "#362411",
     paddingHorizontal: 20,
     paddingTop: 18,

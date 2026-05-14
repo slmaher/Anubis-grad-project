@@ -126,17 +126,26 @@ export default function ArtifactsScreen() {
                 }}
               >
                 <View style={styles.tabRowTop}>
-                  <View style={[
-                    styles.tabIconWrap,
-                    isActive ? { backgroundColor: collection.accent } : { backgroundColor: "rgba(255,255,255,0.06)" },
-                  ]}>
+                  <View
+                    style={[
+                      styles.tabIconWrap,
+                      isActive
+                        ? { backgroundColor: collection.accent }
+                        : { backgroundColor: "rgba(255,255,255,0.06)" },
+                    ]}
+                  >
                     <MaterialCommunityIcons
                       name="cube-outline"
                       size={18}
                       color={isActive ? "#1C1208" : "#CDB9A4"}
                     />
                   </View>
-                  <Text style={[styles.tabTitle, isActive && { color: collection.accent }]}>
+                  <Text
+                    style={[
+                      styles.tabTitle,
+                      isActive && { color: collection.accent },
+                    ]}
+                  >
                     {collection.title}
                   </Text>
                 </View>

@@ -256,8 +256,10 @@ export default function Home() {
 
             <View style={styles.artifactSection}>
               <View style={styles.featuredHeader}>
-                  <Text style={styles.featuredTitle}>{t("home.egyptian_artifacts_abroad")}</Text>
-                </View>
+                <Text style={styles.featuredTitle}>
+                  {t("home.egyptian_artifacts_abroad")}
+                </Text>
+              </View>
 
               <ScrollView
                 horizontal
@@ -276,10 +278,16 @@ export default function Home() {
                 >
                   <View style={{ padding: 16 }}>
                     <View style={styles.artifactCardIconWrap}>
-                      <MaterialCommunityIcons name="cube-outline" size={24} color="#1C1208" />
+                      <MaterialCommunityIcons
+                        name="cube-outline"
+                        size={24}
+                        color="#1C1208"
+                      />
                     </View>
                     <Text style={styles.artifactCardTitle}>British Museum</Text>
-                    <Text style={styles.artifactCardText}>{t('home_artifacts.british_desc')}</Text>
+                    <Text style={styles.artifactCardText}>
+                      {t("home_artifacts.british_desc")}
+                    </Text>
                   </View>
                 </TouchableOpacity>
 
@@ -295,10 +303,28 @@ export default function Home() {
                 >
                   <View style={{ padding: 16 }}>
                     <View style={styles.artifactCardIconWrapAlt}>
-                      <MaterialCommunityIcons name="cube-outline" size={24} color="#F6E6BC" />
+                      <MaterialCommunityIcons
+                        name="cube-outline"
+                        size={24}
+                        color="#F6E6BC"
+                      />
                     </View>
-                    <Text style={[styles.artifactCardTitle, styles.artifactCardTitleLight]}>Rosicrucian Museum</Text>
-                    <Text style={[styles.artifactCardText, styles.artifactCardTextLight]}>{t('home_artifacts.rosicrucian_desc')}</Text>
+                    <Text
+                      style={[
+                        styles.artifactCardTitle,
+                        styles.artifactCardTitleLight,
+                      ]}
+                    >
+                      Rosicrucian Museum
+                    </Text>
+                    <Text
+                      style={[
+                        styles.artifactCardText,
+                        styles.artifactCardTextLight,
+                      ]}
+                    >
+                      {t("home_artifacts.rosicrucian_desc")}
+                    </Text>
                   </View>
                 </TouchableOpacity>
               </ScrollView>
@@ -507,7 +533,7 @@ const styles = StyleSheet.create({
     paddingRight: 16,
     paddingBottom: 12,
   },
-  
+
   museumCard: {
     width: 220,
     height: 300,
@@ -564,14 +590,14 @@ const styles = StyleSheet.create({
     elevation: 7,
   },
   artifactCardGold: {
-    backgroundColor: "#D8B864",
+    backgroundColor: CARD_BG,
     borderWidth: 1,
-    borderColor: "rgba(28,18,8,0.08)",
+    borderColor: ACCENT,
   },
   artifactCardDark: {
-    backgroundColor: "#3C2716",
+    backgroundColor: ACCENT,
     borderWidth: 1,
-    borderColor: "rgba(246,230,188,0.08)",
+    borderColor: "rgba(255,255,255,0.08)",
   },
   artifactCardIconWrap: {
     width: 50,
