@@ -115,7 +115,9 @@ export default function Home() {
                   style={styles.tourGuideButton}
                   onPress={() => router.push("/tour-guide")}
                 >
-                  <Text style={styles.tourGuideButtonText}>Need a Tour Guide?</Text>
+                  <Text style={styles.tourGuideButtonText}>
+                    Need a Tour Guide?
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -254,19 +256,8 @@ export default function Home() {
 
             <View style={styles.artifactSection}>
               <View style={styles.featuredHeader}>
-                <Text style={styles.featuredTitle}>3D Artifact Collections</Text>
-                <TouchableOpacity
-                  style={styles.seeAllButton}
-                  onPress={() => router.push("/artifacts")}
-                >
-                  <Text style={styles.seeAll}>Open gallery</Text>
-                  <MaterialCommunityIcons
-                    name="arrow-right"
-                    size={16}
-                    color={ACCENT}
-                  />
-                </TouchableOpacity>
-              </View>
+                  <Text style={styles.featuredTitle}>{t("home.egyptian_artifacts_abroad")}</Text>
+                </View>
 
               <ScrollView
                 horizontal
@@ -275,40 +266,40 @@ export default function Home() {
               >
                 <TouchableOpacity
                   style={[styles.artifactCard, styles.artifactCardGold]}
-                  onPress={() => router.push("/artifacts")}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/artifacts/artifactDetailsScreen",
+                      params: { collection: "british" },
+                    })
+                  }
                   activeOpacity={0.9}
                 >
-                  <View style={styles.artifactCardIconWrap}>
-                    <MaterialCommunityIcons
-                      name="cube-outline"
-                      size={30}
-                      color="#1C1208"
-                    />
+                  <View style={{ padding: 16 }}>
+                    <View style={styles.artifactCardIconWrap}>
+                      <MaterialCommunityIcons name="cube-outline" size={24} color="#1C1208" />
+                    </View>
+                    <Text style={styles.artifactCardTitle}>British Museum</Text>
+                    <Text style={styles.artifactCardText}>{t('home_artifacts.british_desc')}</Text>
                   </View>
-                  <Text style={styles.artifactCardTitle}>British Museum</Text>
-                  <Text style={styles.artifactCardText}>
-                    Open the embedded Egyptian objects collection.
-                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={[styles.artifactCard, styles.artifactCardDark]}
-                  onPress={() => router.push("/artifacts")}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/artifacts/artifactDetailsScreen",
+                      params: { collection: "rosicrucian" },
+                    })
+                  }
                   activeOpacity={0.9}
                 >
-                  <View style={styles.artifactCardIconWrapAlt}>
-                    <MaterialCommunityIcons
-                      name="rotate-3d-variant"
-                      size={30}
-                      color="#F6E6BC"
-                    />
+                  <View style={{ padding: 16 }}>
+                    <View style={styles.artifactCardIconWrapAlt}>
+                      <MaterialCommunityIcons name="cube-outline" size={24} color="#F6E6BC" />
+                    </View>
+                    <Text style={[styles.artifactCardTitle, styles.artifactCardTitleLight]}>Rosicrucian Museum</Text>
+                    <Text style={[styles.artifactCardText, styles.artifactCardTextLight]}>{t('home_artifacts.rosicrucian_desc')}</Text>
                   </View>
-                  <Text style={[styles.artifactCardTitle, styles.artifactCardTitleLight]}>
-                    Rosicrucian Museum
-                  </Text>
-                  <Text style={[styles.artifactCardText, styles.artifactCardTextLight]}>
-                    Jump into the second curated 3D collection.
-                  </Text>
                 </TouchableOpacity>
               </ScrollView>
             </View>
@@ -395,27 +386,27 @@ const styles = StyleSheet.create({
     marginTop: 2,
     maxWidth: 62,
   },
-tourGuideButton: {
-  backgroundColor: "rgba(255,255,255,0.88)",
-  borderRadius: 18,
-  paddingHorizontal: 12,
-  paddingVertical: 0,
-  height: 30,
-  alignItems: "center",
-  justifyContent: "center",
-  minWidth: 150,
-  borderWidth: 1,
-  borderColor: "rgba(208, 208, 208, 0.95)",
-},
+  tourGuideButton: {
+    backgroundColor: "rgba(255,255,255,0.88)",
+    borderRadius: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 0,
+    height: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 150,
+    borderWidth: 1,
+    borderColor: "rgba(208, 208, 208, 0.95)",
+  },
 
-tourGuideButtonText: {
-  color: MUTED,
-  fontSize: 13,
-  fontWeight: "700",
-  textAlign: "center",
-  lineHeight: 15,
-  includeFontPadding: false,
-},
+  tourGuideButtonText: {
+    color: MUTED,
+    fontSize: 13,
+    fontWeight: "700",
+    textAlign: "center",
+    lineHeight: 15,
+    includeFontPadding: false,
+  },
   scrollView: {
     flex: 1,
   },
@@ -516,6 +507,7 @@ tourGuideButtonText: {
     paddingRight: 16,
     paddingBottom: 12,
   },
+  
   museumCard: {
     width: 220,
     height: 300,
@@ -557,11 +549,11 @@ tourGuideButtonText: {
     textAlign: "left",
   },
   artifactCard: {
-    width: 170,
-    minHeight: 182,
+    width: 200,
+    minHeight: 190,
     borderRadius: 28,
-    padding: 16,
-    justifyContent: "space-between",
+    padding: 0,
+    justifyContent: "flex-end",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -573,9 +565,13 @@ tourGuideButtonText: {
   },
   artifactCardGold: {
     backgroundColor: "#D8B864",
+    borderWidth: 1,
+    borderColor: "rgba(28,18,8,0.08)",
   },
   artifactCardDark: {
     backgroundColor: "#3C2716",
+    borderWidth: 1,
+    borderColor: "rgba(246,230,188,0.08)",
   },
   artifactCardIconWrap: {
     width: 50,
@@ -594,21 +590,56 @@ tourGuideButtonText: {
     backgroundColor: "rgba(255,255,255,0.12)",
   },
   artifactCardTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "800",
     color: "#1C1208",
-    marginTop: 10,
+    marginTop: 12,
   },
   artifactCardTitleLight: {
     color: "#F6E6BC",
   },
   artifactCardText: {
-    fontSize: 12.5,
-    lineHeight: 17,
+    fontSize: 12,
+    lineHeight: 16,
     color: "rgba(28, 18, 8, 0.8)",
-    marginTop: 6,
+    marginTop: 8,
   },
   artifactCardTextLight: {
     color: "rgba(246,230,188,0.78)",
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  cardContent: {
+    padding: 16,
+  },
+  cardOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: 12,
+    backgroundColor: "rgba(18, 17, 15, 0.28)",
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
+  cardOverlayText: {
+    color: "#FFF8E8",
+    fontSize: 12.5,
+    fontWeight: "700",
   },
 });

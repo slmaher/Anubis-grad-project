@@ -1,5 +1,5 @@
 import { useRouter, useLocalSearchParams } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   SafeAreaView,
   StatusBar,
@@ -52,7 +52,7 @@ function createEmbedHtml(embedUrl, title) {
 export default function ArtifactDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const [isLoading, setIsLoading] = useState(true);
+  
 
   const collectionKey = params.collection || "rosicrucian";
   const collection = COLLECTIONS[collectionKey] || COLLECTIONS.rosicrucian;
@@ -80,20 +80,12 @@ export default function ArtifactDetailScreen() {
           domStorageEnabled
           allowsInlineMediaPlayback
           originWhitelist={["*"]}
-          onLoadStart={() => setIsLoading(true)}
-          onLoadEnd={() => setIsLoading(false)}
         />
 
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Text style={styles.backArrow}>‹</Text>
           <Text style={styles.backLabel}>{collection.title}</Text>
         </TouchableOpacity>
-
-        {isLoading ? (
-          <View style={styles.loadingOverlay}>
-            <Text style={styles.loadingText}>Loading embedded 3D model...</Text>
-          </View>
-        ) : null}
       </View>
 
       <View style={styles.sheet}>
@@ -101,7 +93,9 @@ export default function ArtifactDetailScreen() {
           <Text style={styles.title}>{collection.title}</Text>
           <Text style={styles.subtitle}>{collection.subtitle}</Text>
           <Text style={styles.body}>
-            This is the customized artifact screen for the selected 3D collection. It opens the embedded Sketchfab list directly with no static photos or local GLB files.
+            This is the customized artifact screen for the selected 3D
+            collection. It opens the embedded Sketchfab list directly with no
+            static photos or local GLB files.
           </Text>
         </View>
 

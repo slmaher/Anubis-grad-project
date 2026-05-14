@@ -59,10 +59,11 @@ function createEmbedHtml(embedUrl, title) {
 export default function ArtifactsScreen() {
   const router = useRouter();
   const [activeCollection, setActiveCollection] = useState(COLLECTIONS[0].key);
-  const [isLoading, setIsLoading] = useState(true);
 
   const active = useMemo(
-    () => COLLECTIONS.find((item) => item.key === activeCollection) || COLLECTIONS[0],
+    () =>
+      COLLECTIONS.find((item) => item.key === activeCollection) ||
+      COLLECTIONS[0],
     [activeCollection],
   );
 
@@ -82,18 +83,26 @@ export default function ArtifactsScreen() {
 
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => router.back()}
+          >
             <Text style={styles.backArrow}>‹</Text>
           </TouchableOpacity>
 
           <View style={styles.headerCopy}>
             <View style={styles.badge}>
-              <MaterialCommunityIcons name="cube-scan" size={16} color="#D4AF37" />
+              <MaterialCommunityIcons
+                name="cube-scan"
+                size={16}
+                color="#D4AF37"
+              />
               <Text style={styles.badgeText}>3D collections</Text>
             </View>
             <Text style={styles.title}>Artifact Models</Text>
             <Text style={styles.subtitle}>
-              Switch between two curated 3D artifact lists and open the collection that fits your visit.
+              Switch between two curated 3D artifact lists and open the
+              collection that fits your visit.
             </Text>
           </View>
         </View>
@@ -106,17 +115,31 @@ export default function ArtifactsScreen() {
                 key={collection.key}
                 style={[
                   styles.tab,
-                  isActive && { borderColor: collection.accent, backgroundColor: "rgba(255,255,255,0.08)" },
+                  isActive && {
+                    borderColor: collection.accent,
+                    backgroundColor: "rgba(0,0,0,0.12)",
+                  },
                 ]}
                 activeOpacity={0.85}
                 onPress={() => {
                   setActiveCollection(collection.key);
-                  setIsLoading(true);
                 }}
               >
-                <Text style={[styles.tabTitle, isActive && styles.tabTitleActive]}>
-                  {collection.title}
-                </Text>
+                <View style={styles.tabRowTop}>
+                  <View style={[
+                    styles.tabIconWrap,
+                    isActive ? { backgroundColor: collection.accent } : { backgroundColor: "rgba(255,255,255,0.06)" },
+                  ]}>
+                    <MaterialCommunityIcons
+                      name="cube-outline"
+                      size={18}
+                      color={isActive ? "#1C1208" : "#CDB9A4"}
+                    />
+                  </View>
+                  <Text style={[styles.tabTitle, isActive && { color: collection.accent }]}>
+                    {collection.title}
+                  </Text>
+                </View>
                 <Text style={styles.tabSubtitle}>{collection.subtitle}</Text>
               </TouchableOpacity>
             );
@@ -132,31 +155,29 @@ export default function ArtifactsScreen() {
             domStorageEnabled
             allowsInlineMediaPlayback
             originWhitelist={["*"]}
-            onLoadStart={() => setIsLoading(true)}
-            onLoadEnd={() => setIsLoading(false)}
           />
-
-          {isLoading ? (
-            <View style={styles.loadingOverlay}>
-              <Text style={styles.loadingText}>Loading {active.title}...</Text>
-            </View>
-          ) : null}
         </View>
 
         <View style={styles.footer}>
           <View style={styles.footerInfo}>
             <Text style={styles.footerTitle}>{active.title}</Text>
             <Text style={styles.footerText}>
-              {active.subtitle} is now shown as an embedded collection. No static photo cards or local GLB files are used here.
+              {active.subtitle} is now shown as an embedded collection. No
+              static photo cards or local GLB files are used here.
             </Text>
           </View>
 
           <TouchableOpacity
             style={styles.openButton}
-            onPress={() => router.push("/artifacts/artifactDetailsScreen")}
+            onPress={() =>
+              router.push({
+                pathname: "/artifacts/artifactDetailsScreen",
+                params: { collection: active.key },
+              })
+            }
             activeOpacity={0.9}
           >
-            <Text style={styles.openButtonText}>Open Screen</Text>
+            <Text style={styles.openButtonText}>Open {active.title}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -233,9 +254,9 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     paddingHorizontal: 14,
     paddingVertical: 14,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: "rgba(255,255,255,0.03)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+    borderColor: "rgba(255,255,255,0.06)",
   },
   tabTitle: {
     color: "#F7F2EA",
@@ -250,6 +271,25 @@ const styles = StyleSheet.create({
     color: "#CDB9A4",
     fontSize: 11,
     lineHeight: 15,
+  },
+  tabRowTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 6,
+  },
+  tabSwatch: {
+    width: 10,
+    height: 10,
+    borderRadius: 3,
+  },
+  tabIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
   },
   viewerShell: {
     flex: 1,
