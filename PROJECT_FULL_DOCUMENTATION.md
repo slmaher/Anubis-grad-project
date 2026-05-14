@@ -60,29 +60,30 @@ The platform provides:
 - Admin Dashboard
   - Implemented as admin routes inside Expo app (works on web/desktop responsive layout)
   - Folder: frontend/app/admin
- 
+
 ### Technology Stack
 
 The following table summarizes major technologies and tools used across the project.
 
-| Layer | Technology / Tool | Purpose |
-| --- | --- | --- |
-| Frontend | React Native, Expo | Cross-platform mobile application |
-| Frontend | Expo Router | Navigation and screen management |
-| Frontend (3D/AR/VR) | model-viewer, three.js, react-three-fiber, Babylon.js, WebXR | 3D/AR/VR model viewing and interactive virtual tours |
-| Assets / Formats | glTF/GLB, USDZ, OBJ, Draco compression | 3D model formats and optimized delivery |
-| Backend | Node.js, Express.js, TypeScript | RESTful API and business logic |
-| Backend | MongoDB, Mongoose | Database and ORM |
-| Backend | Socket.IO | Real-time messaging |
-| Backend | JWT | Authentication and authorization |
-| AI Service | Python FastAPI | AI microservice endpoint |
-| AI Service | DINOv2 | Artifact recognition |
-| AI Service | Stable Diffusion | Artifact visual reconstruction |
-| Tools | Blender, glTF-Pipeline | 3D model creation and optimization tools |
-| Tools | Blender, glTF-Pipeline | 3D model creation and optimization tools |
-| TTS / Voice | ElevenLabs | Text-to-speech voice agent; cached audio in `tmp/elevenlabs_tts_cache` |
-| External APIs | Google Maps API, Sketchfab API | Navigation, location, and hosted 3D models |
-| DevOps | GitHub Actions, Docker | CI/CD and containerization |
+| Layer               | Technology / Tool                                            | Purpose                                                                |
+| ------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| Frontend            | React Native, Expo                                           | Cross-platform mobile application                                      |
+| Frontend            | Expo Router                                                  | Navigation and screen management                                       |
+| Frontend (3D)       | three.js, @react-three/fiber, @react-three/drei, expo-three      | 3D model viewing and interactive WebGL viewers (Sketchfab embeds, GLTF/GLB) |
+| Assets / Formats    | glTF/GLB, USDZ, OBJ, Draco compression                       | 3D model formats and optimized delivery                                |
+| Backend             | Node.js, Express.js, TypeScript                              | RESTful API and business logic                                         |
+| Backend             | MongoDB, Mongoose                                            | Database and ORM                                                       |
+| Backend             | Socket.IO                                                    | Real-time messaging                                                    |
+| Backend             | JWT                                                          | Authentication and authorization                                       |
+| AI Service          | Python FastAPI                                               | AI microservice endpoint                                               |
+| AI Service          | DINOv2                                                       | Artifact recognition                                                   |
+| AI Service          | Stable Diffusion                                             | Artifact visual reconstruction                                         |
+| Tools               | Blender, glTF-Pipeline                                       | 3D model creation and optimization tools                               |
+| Tools               | Blender, glTF-Pipeline                                       | 3D model creation and optimization tools                               |
+| TTS / Voice         | ElevenLabs                                                   | Text-to-speech voice agent; cached audio in `tmp/elevenlabs_tts_cache` |
+| External APIs       | Google Maps API, Sketchfab API                               | Navigation, location, and hosted 3D models                             |
+| DevOps              | GitHub Actions, Docker                                       | CI/CD and containerization                                             |
+
 ## 2. Role-Based Feature Catalog
 
 This section groups all product capabilities by primary actor.
