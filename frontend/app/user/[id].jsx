@@ -35,6 +35,7 @@ export default function UserProfile() {
   const [friendRequestLoading, setFriendRequestLoading] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
   const [isCurrentUser, setIsCurrentUser] = useState(false);
+  const [friendCount, setFriendCount] = useState(null);
   const [isUpdatingPhoto, setIsUpdatingPhoto] = useState(false);
 
   const loadFriendRelationship = useCallback(async (token, targetId) => {
@@ -73,6 +74,12 @@ export default function UserProfile() {
 
         if (response.success && response.data) {
           setProfile(response.data);
+          // derive friends count from profile if provided by API
+          if (Array.isArray(response.data.friends)) {
+            setFriendCount(response.data.friends.length);
+          } else if (typeof response.data.friendsCount === "number") {
+            setFriendCount(response.data.friendsCount);
+          }
           setUserPosts(postsResponse.data || []);
 
           const isMe =
@@ -81,8 +88,25 @@ export default function UserProfile() {
 
           if (isMe) {
             setFriendRelationship(FRIEND_RELATIONSHIP.self);
+            // if viewing own profile and no friends count found, fetch accepted friends
+            if (friendCount == null) {
+              try {
+                const myFriendsResp = await api.getFriends(token);
+                if (myFriendsResp?.success && Array.isArray(myFriendsResp.data)) {
+                  setFriendCount(myFriendsResp.data.length);
+                }
+              } catch (e) {
+                // ignore
+              }
+            }
           } else {
             await loadFriendRelationship(token, response.data._id);
+            // if profile belongs to another user and no friends count present, try to read from profile metadata
+            if (friendCount == null) {
+              // some APIs include a summary object for counts
+              const cnt = response.data?.friendsCount || response.data?.friendCount || null;
+              if (typeof cnt === "number") setFriendCount(cnt);
+            }
           }
         } else {
           Alert.alert("Error", "Failed to load user profile.");
@@ -270,8 +294,8 @@ export default function UserProfile() {
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
-              <Text style={styles.statNumber}>128</Text>
-              <Text style={styles.statLabel}>Friends</Text>
+                <Text style={styles.statNumber}>{friendCount != null ? friendCount : "-"}</Text>
+                <Text style={styles.statLabel}>Friends</Text>
             </View>
           </View>
 

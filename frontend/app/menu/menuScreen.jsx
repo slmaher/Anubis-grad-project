@@ -93,7 +93,7 @@ export default function MenuScreen({ onClose }) {
       label: t("menu.friends"),
       iconLib: "material",
       iconName: "account-group-outline",
-      route: "/messagesList",
+      route: "/friends",
     },
 {
   id: "museums",
