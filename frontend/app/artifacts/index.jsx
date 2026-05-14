@@ -1,576 +1,324 @@
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-  Dimensions,
-  Image,
-  ImageBackground,
+  Platform,
   SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { WebView } from "react-native-webview";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
-const { width } = Dimensions.get("window");
-const FEATURED_W = width * 0.42;
-const FEATURED_H = FEATURED_W * 1.62;
-const COLLECTION_W = width * 0.36;
-const COLLECTION_H = COLLECTION_W * 1.55;
-
-const DARK = "#78582d";
-const MUTED = "#6E6E6E";
-const NAV_DARK = "#2C2010";
-const TAB_COUNT = 5;
-
-const featuredArtifacts = [
+const COLLECTIONS = [
   {
-    id: 1,
-    title: "Anubis statue",
-    description:
-      "Ancient Egyptian god of mummification and the afterlife, depicted with a jackal head and human body. This exquisite replica captures the mysterious essence of one of Egypt's most iconic deities.",
-    image: require("../../assets/images/Anubis-Statue.png"),
-    imageKey: "anubis",
-    modelKey: "anubis",
+    key: "british",
+    title: "British Museum",
+    subtitle: "Egyptian objects collection",
+    embedUrl:
+      "https://sketchfab.com/playlists/embed?collection=451a426bdae644029d99e46f5022cd87&autostart=0",
+    accent: "#D4AF37",
   },
   {
-    id: 2,
-    title: "Tutankhamun mask",
-    description:
-      "The legendary golden death mask of the young pharaoh Tutankhamun. This stunning piece represents one of the most famous treasures of ancient Egypt, crafted with incredible detail and historical accuracy.",
-    image: require("../../assets/images/tutankhamun.jpg"),
-    imageKey: "tutankhamun",
+    key: "rosicrucian",
+    title: "Rosicrucian Egyptian Museum",
+    subtitle: "Curated 3D artifact collection",
+    // Use the canonical playlist embed src provided by the museum
+    embedUrl:
+      "https://sketchfab.com/playlists/embed?collection=6d9c2aef43ec4e1d83f64f0ae36e61c8&autostart=0",
+    accent: "#B9874E",
   },
 ];
 
-const collections = [
-  { id: 1, image: require("../../assets/images/exploreCollection1.png") },
-  { id: 2, image: require("../../assets/images/exploreCollection2.png") },
-  { id: 3, image: require("../../assets/images/exploreCollection3.png") },
-];
-
-const tabs = [
-  {
-    key: "home",
-    label: "Home",
-    route: "/(tabs)/home",
-    Icon: () => <Feather name="home" size={24} color="#2C2010" />,
-  },
-  {
-    key: "explore",
-    label: "Explore",
-    route: "/(tabs)/explore",
-    Icon: () => <MaterialIcons name="explore" size={24} color="#2C2010" />,
-  },
-  {
-    key: "scan",
-    label: "Scan",
-    route: "/(tabs)/scan",
-    Icon: () => <Ionicons name="scan" size={24} color="#2C2010" />,
-  },
-  {
-    key: "events",
-    label: "Events",
-    route: "/eventScreen/eventScreen",
-    Icon: () => (
-      <MaterialIcons name="event-available" size={24} color="#2C2010" />
-    ),
-  },
-  {
-    key: "community",
-    label: "Community",
-    route: "/(tabs)/community",
-    Icon: () => <FontAwesome name="group" size={22} color="#2C2010" />,
-  },
-];
+function createEmbedHtml(embedUrl, title) {
+  return `
+    <!doctype html>
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <style>
+          html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #050302; }
+          iframe { border: 0; width: 100%; height: 100%; }
+        </style>
+      </head>
+      <body>
+        <iframe
+          title="${title}"
+          src="${embedUrl}"
+          allow="autoplay; fullscreen; xr-spatial-tracking"
+          allowfullscreen
+        ></iframe>
+      </body>
+    </html>
+  `;
+}
 
 export default function ArtifactsScreen() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showAllCollections, setShowAllCollections] = useState(false);
+  const [activeCollection, setActiveCollection] = useState(COLLECTIONS[0].key);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const isCompact = width < 390;
-  const isTablet = width >= 768;
-  const horizontalInset = isTablet ? 28 : isCompact ? 10 : 16;
-  const tabBarWidth = Math.min(width - horizontalInset * 2, 640);
-  const TAB_WIDTH = tabBarWidth / TAB_COUNT;
-  const labelSize = isCompact ? 9.5 : 11;
+  const active = useMemo(
+    () => COLLECTIONS.find((item) => item.key === activeCollection) || COLLECTIONS[0],
+    [activeCollection],
+  );
 
-  const filteredArtifacts = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+  const viewerUrl = useMemo(() => {
+    const separator = active.embedUrl.includes("?") ? "&" : "?";
+    return `${active.embedUrl}${separator}autostart=1&transparent=1&ui_theme=dark&ui_infos=0&ui_watermark=0&ui_stop=0&ui_inspector=0&ui_settings=0&ui_vr=0&ui_fullscreen=0&ui_annotations=0&ui_hint=2`;
+  }, [active.embedUrl]);
 
-    if (!q) return featuredArtifacts;
-
-    return featuredArtifacts.filter((artifact) =>
-      `${artifact.title} ${artifact.description}`.toLowerCase().includes(q),
-    );
-  }, [searchQuery]);
-
-  const handleArtifactPress = (artifact) => {
-    router.push({
-      pathname: "/artifacts/artifactDetailsScreen",
-      params: {
-        id: artifact.id,
-        title: artifact.title,
-        description: artifact.description,
-        imageKey: artifact.imageKey,
-        modelKey: artifact.modelKey,
-      },
-    });
-  };
+  const viewerHtml = useMemo(
+    () => createEmbedHtml(viewerUrl, active.title),
+    [active.title, viewerUrl],
+  );
 
   return (
-    <ImageBackground
-      source={require("../../assets/images/beige-background.jpeg")}
-      style={styles.background}
-      resizeMode="cover"
-    >
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" backgroundColor="#1A1108" />
+
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-          <View style={styles.headerTopRow}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.back()}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.backIcon}>←</Text>
-            </TouchableOpacity>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <Text style={styles.backArrow}>‹</Text>
+          </TouchableOpacity>
 
-            <View style={{ width: 34 }} />
-          </View>
-
-          <Text style={styles.headerTitle}>Artifact page</Text>
-          <Text style={styles.headerSub}>View Art, Culture and History</Text>
-
-          <View style={styles.searchContainer}>
-            <MaterialCommunityIcons name="magnify" size={20} color="#8B7B6C" />
-
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search artifacts..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholderTextColor="#999"
-            />
-
-            {searchQuery.trim().length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
-                <MaterialCommunityIcons
-                  name="close-circle"
-                  size={18}
-                  color="#8B7B6C"
-                />
-              </TouchableOpacity>
-            )}
+          <View style={styles.headerCopy}>
+            <View style={styles.badge}>
+              <MaterialCommunityIcons name="cube-scan" size={16} color="#D4AF37" />
+              <Text style={styles.badgeText}>3D collections</Text>
+            </View>
+            <Text style={styles.title}>Artifact Models</Text>
+            <Text style={styles.subtitle}>
+              Switch between two curated 3D artifact lists and open the collection that fits your visit.
+            </Text>
           </View>
         </View>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.featuredRow}
-          >
-            {filteredArtifacts.map((item) => (
+        <View style={styles.tabRow}>
+          {COLLECTIONS.map((collection) => {
+            const isActive = collection.key === activeCollection;
+            return (
               <TouchableOpacity
-                key={item.id}
-                style={styles.featuredCard}
-                onPress={() => handleArtifactPress(item)}
-                activeOpacity={0.9}
+                key={collection.key}
+                style={[
+                  styles.tab,
+                  isActive && { borderColor: collection.accent, backgroundColor: "rgba(255,255,255,0.08)" },
+                ]}
+                activeOpacity={0.85}
+                onPress={() => {
+                  setActiveCollection(collection.key);
+                  setIsLoading(true);
+                }}
               >
-                <Image
-                  source={item.image}
-                  style={styles.featuredImg}
-                  resizeMode="cover"
-                />
-
-                <View style={styles.featuredLabel}>
-                  <Text style={styles.featuredLabelTxt} numberOfLines={1}>
-                    {item.title}
-                  </Text>
-
-                  <View style={styles.featuredArrow}>
-                    <Text style={styles.featuredArrowTxt}>›</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          {filteredArtifacts.length === 0 && (
-            <View style={styles.emptyState}>
-              <MaterialCommunityIcons
-                name="magnify-close"
-                size={34}
-                color="#8B7B6C"
-              />
-              <Text style={styles.emptyTitle}>No artifacts found</Text>
-              <Text style={styles.emptyText}>
-                Try searching for another artifact name.
-              </Text>
-            </View>
-          )}
-
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Explore Collections</Text>
-
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => router.push("/artifacts/ArtifactsScreen")}
-            >
-              <Text style={styles.seeAll}>
-                View all
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {showAllCollections ? (
-            <View style={styles.collectionsGrid}>
-              {collections.map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={styles.collectionCard}
-                  activeOpacity={0.85}
-                  onPress={() => router.push("/artifacts/ArtifactsScreen")}
-                >
-                  <Image
-                    source={item.image}
-                    style={styles.collectionImg}
-                    resizeMode="cover"
-                  />
-                </TouchableOpacity>
-              ))}
-            </View>
-          ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.collectionsRow}
-            >
-              {collections.map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={styles.collectionCard}
-                  activeOpacity={0.85}
-                  onPress={() => router.push("/artifacts/ArtifactsScreen")}
-                >
-                  <Image
-                    source={item.image}
-                    style={styles.collectionImg}
-                    resizeMode="cover"
-                  />
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
-        </ScrollView>
-
-        <View
-          style={[
-            styles.tabBarContainer,
-            { left: horizontalInset, right: horizontalInset },
-          ]}
-        >
-          <View style={[styles.tabBar, { width: tabBarWidth }]}>
-            <View
-              style={[
-                styles.activeBubble,
-                {
-                  width: Math.max(TAB_WIDTH - 6, 52),
-                },
-              ]}
-            />
-
-            {tabs.map((tab, index) => (
-              <TouchableOpacity
-                key={tab.key}
-                style={[styles.tabButton, { width: TAB_WIDTH }]}
-                activeOpacity={0.8}
-                onPress={() => router.push(tab.route)}
-              >
-                <View style={styles.iconContainer}>
-                  <tab.Icon />
-                </View>
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    { fontSize: labelSize },
-                    index === 0 && styles.tabLabelActive,
-                  ]}
-                >
-                  {tab.label}
+                <Text style={[styles.tabTitle, isActive && styles.tabTitleActive]}>
+                  {collection.title}
                 </Text>
+                <Text style={styles.tabSubtitle}>{collection.subtitle}</Text>
               </TouchableOpacity>
-            ))}
+            );
+          })}
+        </View>
+
+        <View style={styles.viewerShell}>
+          <WebView
+            key={viewerUrl}
+            source={{ html: viewerHtml }}
+            style={styles.viewer}
+            javaScriptEnabled
+            domStorageEnabled
+            allowsInlineMediaPlayback
+            originWhitelist={["*"]}
+            onLoadStart={() => setIsLoading(true)}
+            onLoadEnd={() => setIsLoading(false)}
+          />
+
+          {isLoading ? (
+            <View style={styles.loadingOverlay}>
+              <Text style={styles.loadingText}>Loading {active.title}...</Text>
+            </View>
+          ) : null}
+        </View>
+
+        <View style={styles.footer}>
+          <View style={styles.footerInfo}>
+            <Text style={styles.footerTitle}>{active.title}</Text>
+            <Text style={styles.footerText}>
+              {active.subtitle} is now shown as an embedded collection. No static photo cards or local GLB files are used here.
+            </Text>
           </View>
+
+          <TouchableOpacity
+            style={styles.openButton}
+            onPress={() => router.push("/artifacts/artifactDetailsScreen")}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.openButtonText}>Open Screen</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
+  root: {
     flex: 1,
-    width: "100%",
-    height: "100%",
+    backgroundColor: "#1A1108",
   },
-
   safeArea: {
     flex: 1,
+    paddingHorizontal: 16,
   },
-
   header: {
-    paddingHorizontal: 14,
     paddingTop: 8,
-    paddingBottom: 10,
-  },
-
-  headerTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-
-  backButton: {
-    width: 34,
-    height: 34,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  backIcon: {
-    fontSize: 28,
-    color: "#6B6B6B",
-    fontWeight: "400",
-  },
-
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: DARK,
-    marginBottom: 6,
-  },
-
-  headerSub: {
-    fontSize: 15,
-    color: "#787878",
-    fontWeight: "600",
     marginBottom: 14,
   },
-
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.9)",
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.95)",
-    gap: 10,
-  },
-
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: DARK,
-  },
-
-  scrollContent: {
-    paddingBottom: 120,
-  },
-
-  featuredRow: {
-    paddingHorizontal: 14,
-    gap: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-
-  featuredCard: {
-    width: FEATURED_W,
-    height: FEATURED_H,
-    borderRadius: 20,
-    overflow: "hidden",
-    backgroundColor: "#2a1e0e",
-  },
-
-  featuredImg: {
-    width: "100%",
-    height: "100%",
-  },
-
-  featuredLabel: {
-    position: "absolute",
-    left: 10,
-    right: 10,
-    bottom: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "rgba(34, 27, 18, 0.58)",
-    borderRadius: 18,
-    paddingLeft: 12,
-    paddingRight: 8,
-    paddingVertical: 7,
-  },
-
-  featuredLabelTxt: {
-    fontSize: 11,
-    color: "#FFFFFF",
-    fontWeight: "600",
-    flex: 1,
-    marginRight: 8,
-  },
-
-  featuredArrow: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.18)",
+  backBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    marginBottom: 14,
   },
-
-  featuredArrowTxt: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    lineHeight: 18,
-    fontWeight: "500",
+  backArrow: {
+    color: "#F7F2EA",
+    fontSize: 28,
+    lineHeight: 28,
   },
-
-  emptyState: {
-    marginHorizontal: 14,
-    marginTop: 12,
-    backgroundColor: "rgba(255,255,255,0.78)",
-    borderRadius: 18,
-    padding: 20,
+  headerCopy: {
+    gap: 8,
+  },
+  badge: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.06)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.95)",
+    borderColor: "rgba(212,175,55,0.2)",
   },
-
-  emptyTitle: {
-    marginTop: 8,
+  badgeText: {
+    color: "#EAD9B8",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  title: {
+    fontSize: 30,
+    lineHeight: 34,
+    fontWeight: "800",
+    color: "#F7F2EA",
+    letterSpacing: -0.6,
+  },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#D2C4B3",
+  },
+  tabRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 14,
+  },
+  tab: {
+    flex: 1,
+    borderRadius: 22,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  tabTitle: {
+    color: "#F7F2EA",
+    fontSize: 13,
+    fontWeight: "800",
+    marginBottom: 4,
+  },
+  tabTitleActive: {
+    color: "#FFFFFF",
+  },
+  tabSubtitle: {
+    color: "#CDB9A4",
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  viewerShell: {
+    flex: 1,
+    borderRadius: 28,
+    overflow: "hidden",
+    backgroundColor: "#050302",
+    borderWidth: 1,
+    borderColor: "rgba(212,175,55,0.14)",
+    marginBottom: 14,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOpacity: 0.24,
+        shadowRadius: 18,
+        shadowOffset: { width: 0, height: 10 },
+      },
+      android: {
+        elevation: 12,
+      },
+    }),
+  },
+  viewer: {
+    flex: 1,
+    backgroundColor: "transparent",
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(5,3,2,0.72)",
+  },
+  loadingText: {
+    color: "#D4AF37",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  footer: {
+    paddingBottom: 12,
+    gap: 12,
+  },
+  footerInfo: {
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderRadius: 22,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  footerTitle: {
+    color: "#F7F2EA",
     fontSize: 16,
     fontWeight: "800",
-    color: DARK,
+    marginBottom: 6,
   },
-
-  emptyText: {
-    marginTop: 4,
+  footerText: {
+    color: "#D0C2B2",
     fontSize: 13,
-    color: MUTED,
-    textAlign: "center",
+    lineHeight: 19,
   },
-
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  openButton: {
+    alignSelf: "flex-start",
     paddingHorizontal: 14,
-    marginTop: 14,
-    marginBottom: 12,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: "#D4AF37",
   },
-
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: DARK,
-  },
-
-  seeAll: {
-    fontSize: 14,
-    color: "#7A7A7A",
-    fontWeight: "600",
-  },
-
-  collectionsRow: {
-    paddingHorizontal: 14,
-    gap: 12,
-  },
-
-  collectionsGrid: {
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-
-  collectionCard: {
-    width: COLLECTION_W,
-    height: COLLECTION_H,
-    borderRadius: 18,
-    overflow: "hidden",
-    backgroundColor: "#2a1e0e",
-  },
-
-  collectionImg: {
-    width: "100%",
-    height: "100%",
-  },
-
-  tabBarContainer: {
-    position: "absolute",
-    bottom: 35,
-    alignSelf: "center",
-  },
-
-  tabBar: {
-    flexDirection: "row",
-    backgroundColor: "rgba(255, 255, 255, 0.90)",
-    borderRadius: 30,
-    paddingVertical: 5,
-    borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.9)",
-    elevation: 12,
-    alignItems: "center",
-    overflow: "hidden",
-    justifyContent: "space-between",
-  },
-
-  activeBubble: {
-    position: "absolute",
-    height: 60,
-    borderRadius: 35,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    top: 1,
-    left: 2,
-    elevation: 4,
-  },
-
-  tabButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    height: 52,
-    zIndex: 2,
-    paddingHorizontal: 2,
-  },
-
-  iconContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  tabLabel: {
-    fontWeight: "600",
-    color: NAV_DARK,
-    marginTop: 4,
-  },
-
-  tabLabelActive: {
-    fontWeight: "700",
-    color: NAV_DARK,
+  openButtonText: {
+    color: "#1C1208",
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.4,
   },
 });

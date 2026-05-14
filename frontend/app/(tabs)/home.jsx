@@ -251,6 +251,67 @@ export default function Home() {
                 ))}
               </ScrollView>
             </View>
+
+            <View style={styles.artifactSection}>
+              <View style={styles.featuredHeader}>
+                <Text style={styles.featuredTitle}>3D Artifact Collections</Text>
+                <TouchableOpacity
+                  style={styles.seeAllButton}
+                  onPress={() => router.push("/artifacts")}
+                >
+                  <Text style={styles.seeAll}>Open gallery</Text>
+                  <MaterialCommunityIcons
+                    name="arrow-right"
+                    size={16}
+                    color={ACCENT}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.artifactCardsContainer}
+              >
+                <TouchableOpacity
+                  style={[styles.artifactCard, styles.artifactCardGold]}
+                  onPress={() => router.push("/artifacts")}
+                  activeOpacity={0.9}
+                >
+                  <View style={styles.artifactCardIconWrap}>
+                    <MaterialCommunityIcons
+                      name="cube-outline"
+                      size={30}
+                      color="#1C1208"
+                    />
+                  </View>
+                  <Text style={styles.artifactCardTitle}>British Museum</Text>
+                  <Text style={styles.artifactCardText}>
+                    Open the embedded Egyptian objects collection.
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.artifactCard, styles.artifactCardDark]}
+                  onPress={() => router.push("/artifacts")}
+                  activeOpacity={0.9}
+                >
+                  <View style={styles.artifactCardIconWrapAlt}>
+                    <MaterialCommunityIcons
+                      name="rotate-3d-variant"
+                      size={30}
+                      color="#F6E6BC"
+                    />
+                  </View>
+                  <Text style={[styles.artifactCardTitle, styles.artifactCardTitleLight]}>
+                    Rosicrucian Museum
+                  </Text>
+                  <Text style={[styles.artifactCardText, styles.artifactCardTextLight]}>
+                    Jump into the second curated 3D collection.
+                  </Text>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
           </ScrollView>
         </View>
       </View>
@@ -411,6 +472,12 @@ tourGuideButtonText: {
     paddingLeft: 16,
     paddingRight: 0,
   },
+  artifactSection: {
+    paddingLeft: 16,
+    paddingRight: 0,
+    marginTop: 8,
+    marginBottom: 10,
+  },
   featuredHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -443,6 +510,11 @@ tourGuideButtonText: {
     gap: 16,
     paddingRight: 16,
     paddingBottom: 10,
+  },
+  artifactCardsContainer: {
+    gap: 14,
+    paddingRight: 16,
+    paddingBottom: 12,
   },
   museumCard: {
     width: 220,
@@ -483,5 +555,60 @@ tourGuideButtonText: {
     fontWeight: "800",
     lineHeight: 20,
     textAlign: "left",
+  },
+  artifactCard: {
+    width: 170,
+    minHeight: 182,
+    borderRadius: 28,
+    padding: 16,
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.16,
+    shadowRadius: 14,
+    elevation: 7,
+  },
+  artifactCardGold: {
+    backgroundColor: "#D8B864",
+  },
+  artifactCardDark: {
+    backgroundColor: "#3C2716",
+  },
+  artifactCardIconWrap: {
+    width: 50,
+    height: 50,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.55)",
+  },
+  artifactCardIconWrapAlt: {
+    width: 50,
+    height: 50,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.12)",
+  },
+  artifactCardTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#1C1208",
+    marginTop: 10,
+  },
+  artifactCardTitleLight: {
+    color: "#F6E6BC",
+  },
+  artifactCardText: {
+    fontSize: 12.5,
+    lineHeight: 17,
+    color: "rgba(28, 18, 8, 0.8)",
+    marginTop: 6,
+  },
+  artifactCardTextLight: {
+    color: "rgba(246,230,188,0.78)",
   },
 });
