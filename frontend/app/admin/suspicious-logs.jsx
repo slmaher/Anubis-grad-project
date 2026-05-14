@@ -141,7 +141,10 @@ export default function SuspiciousLogsScreen() {
       }, {});
 
       const userActivities = users.map((user) => {
-        const wasUpdated = hasMeaningfulUpdate(user?.createdAt, user?.updatedAt);
+        const wasUpdated = hasMeaningfulUpdate(
+          user?.createdAt,
+          user?.updatedAt,
+        );
         const isDeactivated = user?.isActive === false;
         let action = "Joined platform";
         let occurredAt = user?.createdAt;
@@ -198,9 +201,12 @@ export default function SuspiciousLogsScreen() {
       const artifactActivities = artifacts.map((artifact) => ({
         id: `a-${toId(artifact?._id || artifact?.id) || Math.random()}`,
         category: "Artifact",
-        action: artifact?.isActive === false ? "Removed artifact" : "Added artifact",
+        action:
+          artifact?.isActive === false ? "Removed artifact" : "Added artifact",
         subject: artifact?.name || artifact?.title || "Unknown artifact",
-        details: artifact?.museum?.name ? `Museum: ${artifact.museum.name}` : "",
+        details: artifact?.museum?.name
+          ? `Museum: ${artifact.museum.name}`
+          : "",
         actor: resolveActorInfo(
           {
             createdBy: artifact?.createdBy,
@@ -217,7 +223,10 @@ export default function SuspiciousLogsScreen() {
         category: "Event",
         action: event?.isActive === false ? "Removed event" : "Created event",
         subject: event?.title || "Event",
-        details: event?.museum?.name || event?.location ? [event?.museum?.name, event?.location].filter(Boolean).join(" - ") : "",
+        details:
+          event?.museum?.name || event?.location
+            ? [event?.museum?.name, event?.location].filter(Boolean).join(" - ")
+            : "",
         actor: resolveActorInfo(
           {
             createdBy: event?.createdBy,
@@ -238,19 +247,34 @@ export default function SuspiciousLogsScreen() {
 
       const entries = [];
       const seen = new Set();
-      const pushEntry = (key, title, details, occurredAt, severity = "medium") => {
+      const pushEntry = (
+        key,
+        title,
+        details,
+        occurredAt,
+        severity = "medium",
+      ) => {
         if (!key || seen.has(key)) return;
         seen.add(key);
         entries.push({ key, title, details, occurredAt, severity });
       };
 
       activity.forEach((item) => {
-        const searchable = [item?.category, item?.action, item?.subject, item?.details]
+        const searchable = [
+          item?.category,
+          item?.action,
+          item?.subject,
+          item?.details,
+        ]
           .filter(Boolean)
           .join(" ")
           .toLowerCase();
 
-        if (/(invalid credentials|failed sign[- ]?in|login failed|unauthorized|authentication failed)/.test(searchable)) {
+        if (
+          /(invalid credentials|failed sign[- ]?in|login failed|unauthorized|authentication failed)/.test(
+            searchable,
+          )
+        ) {
           pushEntry(
             `auth-${item.id}`,
             "Repeated invalid credentials",
@@ -264,7 +288,9 @@ export default function SuspiciousLogsScreen() {
           pushEntry(
             `removal-${item.id}`,
             `${item.category} removal or deactivation`,
-            item.subject ? `${item.subject} was marked as removed or inactive.` : "A record was removed or disabled.",
+            item.subject
+              ? `${item.subject} was marked as removed or inactive.`
+              : "A record was removed or disabled.",
             item?.occurredAt,
             "high",
           );
@@ -274,7 +300,9 @@ export default function SuspiciousLogsScreen() {
           pushEntry(
             `priv-${item.id}`,
             `${item.category} role or permission change`,
-            item.subject ? `${item.subject} changed access-sensitive fields.` : "A role or permission change was recorded.",
+            item.subject
+              ? `${item.subject} changed access-sensitive fields.`
+              : "A role or permission change was recorded.",
             item?.occurredAt,
             "medium",
           );
@@ -282,7 +310,9 @@ export default function SuspiciousLogsScreen() {
       });
 
       const repeatedUpdates = activity.filter((item) =>
-        /(updated|modified|edited)/.test([item?.action, item?.details].filter(Boolean).join(" ").toLowerCase()),
+        /(updated|modified|edited)/.test(
+          [item?.action, item?.details].filter(Boolean).join(" ").toLowerCase(),
+        ),
       );
 
       if (repeatedUpdates.length >= 4) {
@@ -304,11 +334,17 @@ export default function SuspiciousLogsScreen() {
       ];
 
       setEntries(
-        entries.sort((a, b) => toDateMillis(b.occurredAt) - toDateMillis(a.occurredAt)),
+        entries.sort(
+          (a, b) => toDateMillis(b.occurredAt) - toDateMillis(a.occurredAt),
+        ),
       );
       setWatchScenarios(scenarios);
     } catch (err) {
-      setError(err?.message || t("admin.dashboard.load_failed") || "Failed to load suspicious logs");
+      setError(
+        err?.message ||
+          t("admin.dashboard.load_failed") ||
+          "Failed to load suspicious logs",
+      );
     } finally {
       setLoading(false);
     }
@@ -332,7 +368,7 @@ export default function SuspiciousLogsScreen() {
             />
           </TouchableOpacity>
           <Text style={[styles.title, isRTL && styles.textRight]}>
-            Suspicious Logs
+            {t("admin.dashboard.visualizations.suspicious_logs")}
           </Text>
         </View>
 
@@ -361,11 +397,18 @@ export default function SuspiciousLogsScreen() {
         {suspiciousLogEntries.length > 0 ? (
           suspiciousLogEntries.map((entry) => (
             <View key={entry.key} style={styles.listItem}>
-              <View style={[styles.dot, entry.severity === "high" && styles.dotHigh]} />
+              <View
+                style={[
+                  styles.dot,
+                  entry.severity === "high" && styles.dotHigh,
+                ]}
+              />
               <View style={styles.listBody}>
                 <Text style={styles.itemTitle}>{entry.title}</Text>
                 <Text style={styles.itemText}>{entry.details}</Text>
-                <Text style={styles.itemMeta}>{formatDateTime(entry.occurredAt, i18n.language)}</Text>
+                <Text style={styles.itemMeta}>
+                  {formatDateTime(entry.occurredAt, i18n.language)}
+                </Text>
               </View>
             </View>
           ))
@@ -399,21 +442,74 @@ const styles = StyleSheet.create({
   loadingWrap: { flexDirection: "row", alignItems: "center", gap: 8 },
   loadingText: { color: "#7D6B58" },
   errorText: { color: "#B54747", fontWeight: "600" },
-  summaryCard: { width: "100%", backgroundColor: "#FFF", borderRadius: 16, padding: 18, borderWidth: 1, borderColor: "#E9DDC9" },
+  summaryCard: {
+    width: "100%",
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#E9DDC9",
+  },
   summaryLabel: { fontSize: 12, color: "#8B7B6C", fontWeight: "600" },
-  summaryValue: { marginTop: 4, fontSize: 30, fontWeight: "800", color: "#D05E46" },
-  listCard: { width: "100%", backgroundColor: "#FFF", borderRadius: 16, padding: 18, borderWidth: 1, borderColor: "#E9DDC9", gap: 12 },
-  listItem: { flexDirection: "row", gap: 10, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "rgba(180,160,130,0.18)" },
+  summaryValue: {
+    marginTop: 4,
+    fontSize: 30,
+    fontWeight: "800",
+    color: "#D05E46",
+  },
+  listCard: {
+    width: "100%",
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#E9DDC9",
+    gap: 12,
+  },
+  listItem: {
+    flexDirection: "row",
+    gap: 10,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(180,160,130,0.18)",
+  },
   listBody: { flex: 1, gap: 2 },
-  dot: { width: 10, height: 10, borderRadius: 5, marginTop: 4, backgroundColor: "#D9A441", flexShrink: 0 },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginTop: 4,
+    backgroundColor: "#D9A441",
+    flexShrink: 0,
+  },
   dotHigh: { backgroundColor: "#D05E46" },
   itemTitle: { fontSize: 13, fontWeight: "700", color: "#2C2010" },
   itemText: { fontSize: 13, color: "#6B5B4F", lineHeight: 18 },
   itemMeta: { fontSize: 11, color: "#9B8B7C" },
   emptyText: { color: "#7D6B58" },
-  rulesCard: { width: "100%", backgroundColor: "#FFF", borderRadius: 16, padding: 18, borderWidth: 1, borderColor: "#E9DDC9", gap: 8 },
-  sectionTitle: { fontSize: 15, fontWeight: "800", color: "#2C2010", marginBottom: 4 },
+  rulesCard: {
+    width: "100%",
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#E9DDC9",
+    gap: 8,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#2C2010",
+    marginBottom: 4,
+  },
   ruleRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
-  ruleBullet: { width: 7, height: 7, borderRadius: 3.5, marginTop: 6, backgroundColor: "#8A631A", flexShrink: 0 },
+  ruleBullet: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    marginTop: 6,
+    backgroundColor: "#8A631A",
+    flexShrink: 0,
+  },
   ruleText: { flex: 1, fontSize: 12, color: "#5C4A39", lineHeight: 16 },
 });

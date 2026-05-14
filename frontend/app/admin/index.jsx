@@ -251,7 +251,21 @@ export default function AdminDashboard() {
     const values = Object.values(bucketMap);
     return values.map((item) => ({
       ...item,
-      heightPercent: Math.max(6, Math.round((item.count / Math.max(1, values.reduce((highest, current) => (current.count > highest ? current.count : highest), 1))) * 100)),
+      heightPercent: Math.max(
+        6,
+        Math.round(
+          (item.count /
+            Math.max(
+              1,
+              values.reduce(
+                (highest, current) =>
+                  current.count > highest ? current.count : highest,
+                1,
+              ),
+            )) *
+            100,
+        ),
+      ),
     }));
   }, [filteredActivity, i18n.language]);
 
@@ -278,23 +292,44 @@ export default function AdminDashboard() {
     const entries = [];
     const seen = new Set();
 
-    const pushEntry = (key, title, details, occurredAt, severity = "medium") => {
+    const pushEntry = (
+      key,
+      title,
+      details,
+      occurredAt,
+      severity = "medium",
+    ) => {
       if (!key || seen.has(key)) return;
       seen.add(key);
       entries.push({ key, title, details, occurredAt, severity });
     };
 
     filteredActivity.forEach((item) => {
-      const searchable = [item?.category, item?.action, item?.subject, item?.details]
+      const searchable = [
+        item?.category,
+        item?.action,
+        item?.subject,
+        item?.details,
+      ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
 
-      const isAuthFailure = /(invalid credentials|failed sign[- ]?in|login failed|unauthorized|authentication failed)/.test(searchable);
-      const isRemoval = /(removed|deleted|deactivated|inactive)/.test(searchable);
-      const isPrivilegeChange = /(role|permission|privilege|admin action)/.test(searchable);
-      const isOperationalFailure = /(error|failed|exception|denied|suspicious)/.test(searchable);
-      const isSystemActor = !item?.actor?.name || String(item?.actor?.role || "").toLowerCase() === "system";
+      const isAuthFailure =
+        /(invalid credentials|failed sign[- ]?in|login failed|unauthorized|authentication failed)/.test(
+          searchable,
+        );
+      const isRemoval = /(removed|deleted|deactivated|inactive)/.test(
+        searchable,
+      );
+      const isPrivilegeChange = /(role|permission|privilege|admin action)/.test(
+        searchable,
+      );
+      const isOperationalFailure =
+        /(error|failed|exception|denied|suspicious)/.test(searchable);
+      const isSystemActor =
+        !item?.actor?.name ||
+        String(item?.actor?.role || "").toLowerCase() === "system";
 
       if (isAuthFailure) {
         pushEntry(
@@ -310,7 +345,9 @@ export default function AdminDashboard() {
         pushEntry(
           `removal-${item.id}`,
           `${item.category} removal or deactivation`,
-          item.subject ? `${item.subject} was marked as removed or inactive.` : "A record was removed or disabled.",
+          item.subject
+            ? `${item.subject} was marked as removed or inactive.`
+            : "A record was removed or disabled.",
           item?.occurredAt,
           "high",
         );
@@ -320,7 +357,9 @@ export default function AdminDashboard() {
         pushEntry(
           `priv-${item.id}`,
           `${item.category} role or permission change`,
-          item.subject ? `${item.subject} changed access-sensitive fields.` : "A role or permission change was recorded.",
+          item.subject
+            ? `${item.subject} changed access-sensitive fields.`
+            : "A role or permission change was recorded.",
           item?.occurredAt,
           "medium",
         );
@@ -330,7 +369,9 @@ export default function AdminDashboard() {
         pushEntry(
           `ops-${item.id}`,
           `${item.category} operational warning`,
-          item.details || item.action || "An operational warning appeared in the activity feed.",
+          item.details ||
+            item.action ||
+            "An operational warning appeared in the activity feed.",
           item?.occurredAt,
           "medium",
         );
@@ -340,7 +381,9 @@ export default function AdminDashboard() {
         pushEntry(
           `sys-${item.id}`,
           "System-generated activity",
-          item.subject ? `${item.subject} was created or changed without an identified actor.` : "An activity event came from a system or unknown actor.",
+          item.subject
+            ? `${item.subject} was created or changed without an identified actor.`
+            : "An activity event came from a system or unknown actor.",
           item?.occurredAt,
           "low",
         );
@@ -348,7 +391,9 @@ export default function AdminDashboard() {
     });
 
     const repeatedUpdates = filteredActivity.filter((item) =>
-      /(updated|modified|edited)/.test([item?.action, item?.details].filter(Boolean).join(" ").toLowerCase()),
+      /(updated|modified|edited)/.test(
+        [item?.action, item?.details].filter(Boolean).join(" ").toLowerCase(),
+      ),
     );
 
     if (repeatedUpdates.length >= 4) {
@@ -361,7 +406,9 @@ export default function AdminDashboard() {
       );
     }
 
-    return entries.sort((a, b) => toDateMillis(b.occurredAt) - toDateMillis(a.occurredAt));
+    return entries.sort(
+      (a, b) => toDateMillis(b.occurredAt) - toDateMillis(a.occurredAt),
+    );
   }, [filteredActivity]);
 
   const analyticsSummary = useMemo(() => {
@@ -399,7 +446,12 @@ export default function AdminDashboard() {
       busiestLabel: busiest.label || "-",
       busiestCount: busiest.count || 0,
     };
-  }, [filteredActivity, suspiciousLogEntries, trendChartData, selectedPeriodDays]);
+  }, [
+    filteredActivity,
+    suspiciousLogEntries,
+    trendChartData,
+    selectedPeriodDays,
+  ]);
 
   const linePath = (points) => {
     if (!points.length) return "";
@@ -1355,8 +1407,7 @@ export default function AdminDashboard() {
           <Text style={styles.analyticsValueDanger}>
             {analyticsSummary.suspiciousLogs}
           </Text>
-          <Text style={styles.analyticsHint}>
-          </Text>
+          <Text style={styles.analyticsHint}></Text>
         </TouchableOpacity>
         <View style={styles.analyticsCard}>
           <Text style={styles.analyticsLabel}>
