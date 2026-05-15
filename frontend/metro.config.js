@@ -7,6 +7,7 @@ config.resolver.assetExts = [
   "glb",
   "gltf",
   "bin",
+  "usdz",
 ];
 
 module.exports = config;

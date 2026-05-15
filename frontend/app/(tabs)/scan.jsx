@@ -149,26 +149,26 @@ export default function Scan() {
 
       {/* Camera View */}
       <View style={styles.cameraView}>
-        <CameraView ref={cameraRef} style={styles.camera} facing={facing}>
-          {/* Scanning Frame Overlay */}
-          <View style={styles.overlay}>
-            <View style={styles.scanFrame}>
-              <View style={[styles.corner, styles.topLeft]} />
-              <View style={[styles.corner, styles.topRight]} />
-              <View style={[styles.corner, styles.bottomLeft]} />
-              <View style={[styles.corner, styles.bottomRight]} />
+        <CameraView ref={cameraRef} style={styles.camera} facing={facing} />
 
-              {isScanning && <View style={styles.scanningLine} />}
-            </View>
+        {/* Scanning Frame Overlay */}
+        <View style={styles.overlay} pointerEvents="none">
+          <View style={styles.scanFrame}>
+            <View style={[styles.corner, styles.topLeft]} />
+            <View style={[styles.corner, styles.topRight]} />
+            <View style={[styles.corner, styles.bottomLeft]} />
+            <View style={[styles.corner, styles.bottomRight]} />
 
-            {/* Instructions */}
-            <View style={styles.instructionsContainer}>
-              <Text style={styles.instructionsText}>
-                {isScanning ? "Scanning..." : "Point camera at artifact"}
-              </Text>
-            </View>
+            {isScanning && <View style={styles.scanningLine} />}
           </View>
-        </CameraView>
+
+          {/* Instructions */}
+          <View style={styles.instructionsContainer}>
+            <Text style={styles.instructionsText}>
+              {isScanning ? "Scanning..." : "Point camera at artifact"}
+            </Text>
+          </View>
+        </View>
       </View>
 
       {/* Bottom Controls */}
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   overlay: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",

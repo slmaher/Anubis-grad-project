@@ -59,6 +59,19 @@ So make sure the backend is running on port `4000`.
    - `http://<your-pc-ip>:4000`
 3. Restart Expo (`npm run start`)
 
+## Hosted Quick Look for iPhone AR
+
+To open Quick Look directly from iPhone, set this environment variable before starting Expo:
+
+```bash
+EXPO_PUBLIC_QUICK_LOOK_BASE_URL=https://your-hosted-domain.example
+```
+
+That hosted site must serve the files in `public/quick-look/` and `assets/models/` over HTTPS.
+The iPhone AR button will then open the hosted Quick Look page in Safari.
+
+If the variable is not set, the app will show a setup hint instead of opening the share sheet.
+
 ## Project scripts
 
 - `npm run start` → Start Expo dev server
