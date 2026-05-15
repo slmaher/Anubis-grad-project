@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Platform, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Platform,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { WebView } from "react-native-webview";
 import { Asset } from "expo-asset";
@@ -12,7 +19,13 @@ import { getArModelById } from "../src/data/arModels";
 
 const QUICK_LOOK_BASE_URL = process.env.EXPO_PUBLIC_QUICK_LOOK_BASE_URL || "";
 
-const createArViewerHtml = ({ modelName, modelTitle, modelDescription, modelDataUrl, iosSrc }) => `
+const createArViewerHtml = ({
+  modelName,
+  modelTitle,
+  modelDescription,
+  modelDataUrl,
+  iosSrc,
+}) => `
 <!doctype html>
 <html>
   <head>
@@ -343,7 +356,8 @@ export default function ArViewerScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const webviewRef = useRef(null);
-  const writableDirectory = FileSystem.cacheDirectory || FileSystem.documentDirectory || "";
+  const writableDirectory =
+    FileSystem.cacheDirectory || FileSystem.documentDirectory || "";
   const [modelDataUrl, setModelDataUrl] = useState(null);
   const [iosSrc, setIosSrc] = useState(null);
   const [loadingModel, setLoadingModel] = useState(true);
@@ -351,7 +365,10 @@ export default function ArViewerScreen() {
   const [statusText, setStatusText] = useState("Preparing your AR scene...");
   const [banner, setBanner] = useState(null); // { type: 'info'|'error'|'success', text }
 
-  const model = useMemo(() => getArModelById(params?.modelId ? String(params.modelId) : ""), [params?.modelId]);
+  const model = useMemo(
+    () => getArModelById(params?.modelId ? String(params.modelId) : ""),
+    [params?.modelId],
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -387,13 +404,16 @@ export default function ArViewerScreen() {
             setIosSrc(null);
           }
         } catch (e) {
-          console.warn('Unable to load ios USDZ asset:', e);
+          console.warn("Unable to load ios USDZ asset:", e);
         }
       } catch (error) {
         console.error("AR model load error:", error);
         if (isMounted) {
           setStatusText("Could not load the selected model.");
-          setBanner({ type: "error", text: error?.message || "Failed to load the selected model." });
+          setBanner({
+            type: "error",
+            text: error?.message || "Failed to load the selected model.",
+          });
         }
       } finally {
         if (isMounted) {
@@ -418,7 +438,10 @@ export default function ArViewerScreen() {
       setSavingPhoto(true);
 
       const permission = await MediaLibrary.requestPermissionsAsync(true);
-      const sanitizedName = model.name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+      const sanitizedName = model.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_|_$/g, "");
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
       const finalFileName = `egyptian_souvenir_${sanitizedName}_${timestamp}.png`;
       const base64Payload = dataUrl.split(",")[1];
@@ -433,7 +456,10 @@ export default function ArViewerScreen() {
         if (permission.granted) {
           await MediaLibrary.createAssetAsync(targetPath);
           setStatusText(`Saved ${finalFileName} to your gallery.`);
-          setBanner({ type: "success", text: `${finalFileName} was added to your gallery.` });
+          setBanner({
+            type: "success",
+            text: `${finalFileName} was added to your gallery.`,
+          });
           return;
         }
 
@@ -458,11 +484,17 @@ export default function ArViewerScreen() {
         return;
       }
 
-      setBanner({ type: "success", text: `${finalFileName} was captured successfully.` });
+      setBanner({
+        type: "success",
+        text: `${finalFileName} was captured successfully.`,
+      });
       setStatusText(`Captured ${finalFileName}.`);
     } catch (error) {
       console.error("Souvenir capture error:", error);
-      setBanner({ type: "error", text: error?.message || "Unable to save the souvenir photo." });
+      setBanner({
+        type: "error",
+        text: error?.message || "Unable to save the souvenir photo.",
+      });
     } finally {
       setSavingPhoto(false);
     }
@@ -470,7 +502,10 @@ export default function ArViewerScreen() {
 
   const openArSession = () => {
     if (!webviewRef.current) {
-      setBanner({ type: "info", text: "Please wait for the model to finish loading." });
+      setBanner({
+        type: "info",
+        text: "Please wait for the model to finish loading.",
+      });
       return;
     }
 
@@ -491,12 +526,15 @@ export default function ArViewerScreen() {
   const openIphoneArSession = async () => {
     if (QUICK_LOOK_BASE_URL) {
       try {
-        const hostedUrl = `${QUICK_LOOK_BASE_URL.replace(/\/$/, "")}/quick-look/${model.id}.html`;
+        const hostedUrl = `${QUICK_LOOK_BASE_URL.replace(/\/$/, "")}/quick-look/statue.html`;
         await WebBrowser.openBrowserAsync(hostedUrl);
         return;
       } catch (error) {
-        console.error("Hosted Quick Look launch error:", error);
-        setBanner({ type: "error", text: "Could not open the hosted Quick Look page." });
+        console.error("Quick Look launch error:", error);
+        setBanner({
+          type: "error",
+          text: "Could not open Quick Look.",
+        });
         return;
       }
     }
@@ -504,11 +542,14 @@ export default function ArViewerScreen() {
     try {
       setBanner({
         type: "info",
-        text: "Set EXPO_PUBLIC_QUICK_LOOK_BASE_URL to your hosted site URL to open Quick Look directly from Safari.",
+        text: "Set EXPO_PUBLIC_QUICK_LOOK_BASE_URL to open Quick Look on iPhone.",
       });
     } catch (error) {
       console.error("iPhone AR launch error:", error);
-      setBanner({ type: "error", text: error?.message || "Could not open Quick Look on iPhone." });
+      setBanner({
+        type: "error",
+        text: error?.message || "Could not open Quick Look on iPhone.",
+      });
     }
   };
 
@@ -531,7 +572,10 @@ export default function ArViewerScreen() {
       <StatusBar barStyle="light-content" />
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
           <Text style={styles.backIcon}>‹</Text>
         </TouchableOpacity>
 
@@ -546,7 +590,9 @@ export default function ArViewerScreen() {
         {loadingModel || !viewerHtml ? (
           <View style={styles.loadingOverlay}>
             <Text style={styles.loadingTitle}>Loading AR scene...</Text>
-            <Text style={styles.loadingText}>Optimizing the GLB for mobile AR.</Text>
+            <Text style={styles.loadingText}>
+              Optimizing the GLB for mobile AR.
+            </Text>
           </View>
         ) : (
           <>
@@ -575,14 +621,21 @@ export default function ArViewerScreen() {
                     if (message.status === "session-started") {
                       setStatusText("Find a flat surface to place the model.");
                     } else if (message.status === "object-placed") {
-                      setStatusText("The model is placed. Capture your souvenir now.");
+                      setStatusText(
+                        "The model is placed. Capture your souvenir now.",
+                      );
                     } else if (message.status === "failed") {
                       setStatusText("AR is unavailable on this device.");
                     }
                   }
 
                   if (message.type === "capture-error") {
-                    setBanner({ type: "error", text: message.message || "Unable to capture the souvenir photo." });
+                    setBanner({
+                      type: "error",
+                      text:
+                        message.message ||
+                        "Unable to capture the souvenir photo.",
+                    });
                   }
 
                   if (message.type === "ar-unavailable") {
@@ -600,34 +653,54 @@ export default function ArViewerScreen() {
               <View
                 style={[
                   styles.banner,
-                  banner.type === "error" ? styles.bannerError : banner.type === "success" ? styles.bannerSuccess : styles.bannerInfo,
+                  banner.type === "error"
+                    ? styles.bannerError
+                    : banner.type === "success"
+                      ? styles.bannerSuccess
+                      : styles.bannerInfo,
                 ]}
               >
                 <Text style={styles.bannerText}>{banner.text}</Text>
-                <TouchableOpacity onPress={() => setBanner(null)} style={styles.bannerDismiss}>
+                <TouchableOpacity
+                  onPress={() => setBanner(null)}
+                  style={styles.bannerDismiss}
+                >
                   <Text style={styles.bannerDismissText}>OK</Text>
                 </TouchableOpacity>
               </View>
             ) : null}
             <TouchableOpacity
               style={styles.openArButton}
-              onPress={Platform.OS === "ios" ? openIphoneArSession : openArSession}
+              onPress={
+                Platform.OS === "ios" ? openIphoneArSession : openArSession
+              }
               activeOpacity={0.9}
             >
-              <MaterialCommunityIcons name="camera-iris" size={18} color="#2B1D12" />
+              <MaterialCommunityIcons
+                name="camera-iris"
+                size={18}
+                color="#2B1D12"
+              />
               <Text style={styles.openArButtonText}>
                 {Platform.OS === "ios" ? "Try iPhone AR" : "Open Camera AR"}
               </Text>
             </TouchableOpacity>
             {Platform.OS === "ios" && iosSrc ? (
               <TouchableOpacity
-                style={[styles.openArButton, { bottom: 76, backgroundColor: '#FFFFFF' }]}
+                style={[
+                  styles.openArButton,
+                  { bottom: 76, backgroundColor: "#FFFFFF" },
+                ]}
                 onPress={async () => {
                   await openIphoneArSession();
                 }}
                 activeOpacity={0.9}
               >
-                <MaterialCommunityIcons name="apple" size={18} color="#2B1D12" />
+                <MaterialCommunityIcons
+                  name="apple"
+                  size={18}
+                  color="#2B1D12"
+                />
                 <Text style={styles.openArButtonText}>Open iPhone AR</Text>
               </TouchableOpacity>
             ) : null}

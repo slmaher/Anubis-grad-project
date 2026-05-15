@@ -56,7 +56,11 @@ const sanitizeTextForTTS = (text) => {
   if (s.length > maxLen) {
     s = s.slice(0, maxLen);
     // Try to cut at last sentence end if possible
-    const lastPunct = Math.max(s.lastIndexOf('.'), s.lastIndexOf('!'), s.lastIndexOf('?'));
+    const lastPunct = Math.max(
+      s.lastIndexOf("."),
+      s.lastIndexOf("!"),
+      s.lastIndexOf("?"),
+    );
     if (lastPunct > Math.floor(maxLen * 0.6)) {
       s = s.slice(0, lastPunct + 1);
     }
@@ -83,14 +87,12 @@ const generateArabicGuide = (description) => {
     : "التمثال ده جميل جدا";
 
   const egyptianGuide =
-    
-       `أهلاً بيك يا صديقي، أنا نَوَّار، مرشدك السياحي . ` + 
+    `أهلاً بيك يا صديقي، أنا نَوَّار، مرشدك السياحي . ` +
     `${baseStory} ` +
     `تخيل معايا، الإيد القديمة اللي عملت الحاجة الجميلة دي. ` +
     `كانت معاهم حكايات وأسرار من زمان. ` +
     `شوف التفاصيل الدقيقة، كل حاجة فيها حكاية. ` +
     `ده كنز من كنوز مصر الحلوة.`;
-
 
   return egyptianGuide;
 };
@@ -100,10 +102,12 @@ const generateEnglishGuide = (description) => {
     .replace(/\s+/g, " ")
     .trim();
 
-  const descriptionWithoutIntro = cleanedDescription.replace(
-    /^(hello!?\s*i'?m\s+nawwar,?\s*(your|ur)\s+egyptian\s+guide\s+today\.?\s*)/i,
-    ""
-  ).trim();
+  const descriptionWithoutIntro = cleanedDescription
+    .replace(
+      /^(hello!?\s*i'?m\s+nawwar,?\s*(your|ur)\s+egyptian\s+guide\s+today\.?\s*)/i,
+      "",
+    )
+    .trim();
 
   const baseStory = descriptionWithoutIntro
     ? descriptionWithoutIntro
@@ -150,7 +154,10 @@ const generateSpeechWithElevenLabs = async (text, language) => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      const logFn = response.status === 401 || response.status === 402 ? console.warn : console.error;
+      const logFn =
+        response.status === 401 || response.status === 402
+          ? console.warn
+          : console.error;
       logFn("❌ ElevenLabs proxy error response:", {
         status: response.status,
         statusText: response.statusText,
@@ -162,7 +169,7 @@ const generateSpeechWithElevenLabs = async (text, language) => {
         try {
           Alert.alert(
             "Speech Unavailable",
-            "ElevenLabs API key is invalid or missing required permissions. Using device TTS fallback."
+            "ElevenLabs API key is invalid or missing required permissions. Using device TTS fallback.",
           );
         } catch (alertErr) {
           console.warn("Could not show alert for ElevenLabs 401:", alertErr);
@@ -177,7 +184,7 @@ const generateSpeechWithElevenLabs = async (text, language) => {
         try {
           Alert.alert(
             "Speech Unavailable",
-            "Speech generation failed: ElevenLabs account needs billing or has exhausted credits. Using device TTS fallback."
+            "Speech generation failed: ElevenLabs account needs billing or has exhausted credits. Using device TTS fallback.",
           );
         } catch (alertErr) {
           console.warn("Could not show alert for ElevenLabs 402:", alertErr);
@@ -189,7 +196,7 @@ const generateSpeechWithElevenLabs = async (text, language) => {
 
       throw new Error(
         errorData?.message ||
-          `ElevenLabs API error: ${response.status} - ${response.statusText}`
+          `ElevenLabs API error: ${response.status} - ${response.statusText}`,
       );
     }
 
@@ -205,12 +212,14 @@ const generateSpeechWithElevenLabs = async (text, language) => {
   } catch (error) {
     // If backend/proxy surfaced an axios-style error with status info, handle 401/402
     try {
-      const status = error?.response?.status || (error?.message && /402/.test(error.message) ? 402 : null);
+      const status =
+        error?.response?.status ||
+        (error?.message && /402/.test(error.message) ? 402 : null);
       if (status === 401) {
         try {
           Alert.alert(
             "Speech Unavailable",
-            "ElevenLabs API key is invalid or missing required permissions. Using device TTS fallback."
+            "ElevenLabs API key is invalid or missing required permissions. Using device TTS fallback.",
           );
         } catch (alertErr) {
           console.warn("Could not show alert for ElevenLabs 401:", alertErr);
@@ -224,7 +233,7 @@ const generateSpeechWithElevenLabs = async (text, language) => {
         try {
           Alert.alert(
             "Speech Unavailable",
-            "Speech generation failed: ElevenLabs account needs billing or has exhausted credits. Using device TTS fallback."
+            "Speech generation failed: ElevenLabs account needs billing or has exhausted credits. Using device TTS fallback.",
           );
         } catch (alertErr) {
           console.warn("Could not show alert for ElevenLabs 402:", alertErr);
@@ -413,7 +422,7 @@ export default function ScanResult() {
           setCurrentAudioUri(audioUri);
           try {
             router.push(
-              `/virtual-guide?audioUrl=${encodeURIComponent(audioUri)}&text=${encodeURIComponent(sanitized)}&language=${encodeURIComponent(language)}`
+              `/virtual-guide?audioUrl=${encodeURIComponent(audioUri)}&text=${encodeURIComponent(sanitized)}&language=${encodeURIComponent(language)}`,
             );
           } catch (navErr) {
             console.warn("Could not open virtual guide:", navErr);
@@ -449,7 +458,7 @@ export default function ScanResult() {
         try {
           const audioUriFromServer = await generateSpeechWithElevenLabs(
             sanitized,
-            language
+            language,
           );
 
           if (audioUriFromServer) {
@@ -476,7 +485,7 @@ export default function ScanResult() {
         setCurrentAudioUri(audioUri);
         try {
           router.push(
-            `/virtual-guide?audioUrl=${encodeURIComponent(audioUri)}&text=${encodeURIComponent(sanitized)}&language=${encodeURIComponent(language)}`
+            `/virtual-guide?audioUrl=${encodeURIComponent(audioUri)}&text=${encodeURIComponent(sanitized)}&language=${encodeURIComponent(language)}`,
           );
         } catch (navErr) {
           console.warn("Could not open virtual guide:", navErr);
@@ -485,13 +494,16 @@ export default function ScanResult() {
         // Fallback to local TTS
         Alert.alert(
           "Voice Fallback",
-          "Using local voice as ElevenLabs generation failed or is unavailable."
+          "Using local voice as ElevenLabs generation failed or is unavailable.",
         );
         await playWithExpoSpeech(guideText);
       }
     } catch (error) {
       console.error("❌ Audio generation error:", error);
-      Alert.alert("Audio Error", error?.message || "Could not generate guide audio");
+      Alert.alert(
+        "Audio Error",
+        error?.message || "Could not generate guide audio",
+      );
       await playWithExpoSpeech(guideText);
     } finally {
       generationPromises.delete(cacheKey);
@@ -509,7 +521,7 @@ export default function ScanResult() {
 
       const { sound } = await Audio.Sound.createAsync(
         { uri: audioUri },
-        { shouldPlay: true }
+        { shouldPlay: true },
       );
 
       audioPlayerRef.current = sound;
@@ -606,7 +618,7 @@ export default function ScanResult() {
       if (!permission.granted) {
         Alert.alert(
           "Permission Required",
-          "Please allow media access in your device settings"
+          "Please allow media access in your device settings",
         );
         return;
       }
@@ -701,11 +713,14 @@ export default function ScanResult() {
     if (!artifactTitle) return null;
     const exactMatch = artifactModels[artifactTitle];
     if (exactMatch) return exactMatch;
-    
+
     // Fallback: try finding a key that is a substring
     const titleLower = artifactTitle.toLowerCase();
     for (const key of Object.keys(artifactModels)) {
-      if (titleLower.includes(key.toLowerCase()) || key.toLowerCase().includes(titleLower)) {
+      if (
+        titleLower.includes(key.toLowerCase()) ||
+        key.toLowerCase().includes(titleLower)
+      ) {
         return artifactModels[key];
       }
     }
@@ -726,10 +741,15 @@ export default function ScanResult() {
   }, [aiResult, artifactTitle]);
 
   const selectedArModel = useMemo(() => {
-    return AR_MODELS.find((model) => model.id === selectedArModelId) || AR_MODELS[0];
+    return (
+      AR_MODELS.find((model) => model.id === selectedArModelId) || AR_MODELS[0]
+    );
   }, [selectedArModelId]);
 
-  const suggestedArModel = useMemo(() => getSuggestedArModel(artifactTitle), [artifactTitle]);
+  const suggestedArModel = useMemo(
+    () => getSuggestedArModel(artifactTitle),
+    [artifactTitle],
+  );
 
   useEffect(() => {
     if (suggestedArModel?.id) {
@@ -785,11 +805,7 @@ export default function ScanResult() {
             </View>
           </View>
 
-          
-
           <View style={styles.aiCard}>
-            
-
             {loadingAI ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#8B7B6C" />
@@ -802,42 +818,47 @@ export default function ScanResult() {
               </View>
             ) : aiResult ? (
               <View>
-                
-
-
-
                 <Text style={styles.artifactMainTitle}>{artifactTitle}</Text>
 
-<View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleSave}>
-              <View style={[styles.actionIcon, isSaved && styles.savedIcon]}>
-                <Image
-                  source={require("../../assets/images/save.png")}
-                  style={[styles.iconImage, isSaved && styles.savedIconImage]}
-                />
-              </View>
-              <Text style={styles.actionLabel}>Save</Text>
-            </TouchableOpacity>
+                <View style={styles.actionButtons}>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={handleSave}
+                  >
+                    <View
+                      style={[styles.actionIcon, isSaved && styles.savedIcon]}
+                    >
+                      <Image
+                        source={require("../../assets/images/save.png")}
+                        style={[
+                          styles.iconImage,
+                          isSaved && styles.savedIconImage,
+                        ]}
+                      />
+                    </View>
+                    <Text style={styles.actionLabel}>Save</Text>
+                  </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-              <View style={styles.actionIcon}>
-                <Entypo name="share" size={26} color="#000" />
-              </View>
-              <Text style={styles.actionLabel}>Share</Text>
-            </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={handleShare}
+                  >
+                    <View style={styles.actionIcon}>
+                      <Entypo name="share" size={26} color="#000" />
+                    </View>
+                    <Text style={styles.actionLabel}>Share</Text>
+                  </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handleAddToJourney}
-            >
-              <View style={styles.actionIcon}>
-                <AntDesign name="plus" size={26} color="#000" />
-              </View>
-              <Text style={styles.actionLabel}>Add to Journey</Text>
-            </TouchableOpacity>
-          </View>
-
-
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={handleAddToJourney}
+                  >
+                    <View style={styles.actionIcon}>
+                      <AntDesign name="plus" size={26} color="#000" />
+                    </View>
+                    <Text style={styles.actionLabel}>Add to Journey</Text>
+                  </TouchableOpacity>
+                </View>
 
                 {descriptionEn ? (
                   <View style={styles.descriptionBlock}>
@@ -849,17 +870,27 @@ export default function ScanResult() {
                 <View style={styles.metricsList}>
                   <View style={styles.metricRow}>
                     <View style={styles.metricIconCircleSmall}>
-                      <MaterialCommunityIcons name="shape-outline" size={16} color="#D4AF37" />
+                      <MaterialCommunityIcons
+                        name="shape-outline"
+                        size={16}
+                        color="#D4AF37"
+                      />
                     </View>
                     <Text style={styles.metricLabelSmall}>Type:</Text>
                     <Text style={styles.metricValueSmall}>
-                      {aiResult?.metadata?.artifact_type || aiResult?.recognition?.artifact_type || "Unknown"}
+                      {aiResult?.metadata?.artifact_type ||
+                        aiResult?.recognition?.artifact_type ||
+                        "Unknown"}
                     </Text>
                   </View>
 
                   <View style={styles.metricRow}>
                     <View style={styles.metricIconCircleSmall}>
-                      <MaterialCommunityIcons name="bank-outline" size={16} color="#D4AF37" />
+                      <MaterialCommunityIcons
+                        name="bank-outline"
+                        size={16}
+                        color="#D4AF37"
+                      />
                     </View>
                     <Text style={styles.metricLabelSmall}>Museum:</Text>
                     <Text style={styles.metricValueSmall}>
@@ -869,7 +900,11 @@ export default function ScanResult() {
 
                   <View style={styles.metricRow}>
                     <View style={styles.metricIconCircleSmall}>
-                      <MaterialCommunityIcons name="texture" size={16} color="#D4AF37" />
+                      <MaterialCommunityIcons
+                        name="texture"
+                        size={16}
+                        color="#D4AF37"
+                      />
                     </View>
                     <Text style={styles.metricLabelSmall}>Material:</Text>
                     <Text style={styles.metricValueSmall}>
@@ -878,10 +913,11 @@ export default function ScanResult() {
                   </View>
                 </View>
 
-
                 <View style={styles.virtualTourSection}>
                   <View style={styles.sectionHeaderRow}>
-                    <Text style={styles.virtualTourLabel}>Experience in 3D</Text>
+                    <Text style={styles.virtualTourLabel}>
+                      Experience in 3D
+                    </Text>
                     <View style={styles.languageToggleContainerSmall}>
                       <TouchableOpacity
                         style={[
@@ -949,11 +985,19 @@ export default function ScanResult() {
                   {sketchfabUrl ? (
                     <TouchableOpacity
                       style={[styles.virtualTourCard, { marginTop: 12 }]}
-                      onPress={() => router.push(`/model-viewer?url=${encodeURIComponent(sketchfabUrl)}`)}
+                      onPress={() =>
+                        router.push(
+                          `/model-viewer?url=${encodeURIComponent(sketchfabUrl)}`,
+                        )
+                      }
                     >
                       <View style={styles.virtualTourContent}>
                         <View style={styles.virtualTourIconContainer}>
-                          <MaterialCommunityIcons name="cube-scan" size={28} color="#D4AF37" />
+                          <MaterialCommunityIcons
+                            name="cube-scan"
+                            size={28}
+                            color="#D4AF37"
+                          />
                         </View>
                         <View style={styles.virtualTourTextContainer}>
                           <Text style={styles.virtualTourTitle}>
@@ -973,20 +1017,31 @@ export default function ScanResult() {
                   <View style={styles.sectionHeaderRow}>
                     <Text style={styles.arSectionTitle}>AR Souvenir Mode</Text>
                     <View style={styles.arBadge}>
-                      <MaterialCommunityIcons name="camera-iris" size={14} color="#2B1D12" />
+                      <MaterialCommunityIcons
+                        name="camera-iris"
+                        size={14}
+                        color="#2B1D12"
+                      />
                       <Text style={styles.arBadgeText}>Web AR</Text>
                     </View>
                   </View>
 
                   <Text style={styles.arSectionSubtitle}>
-                    Place a 3D Egyptian artifact in your real space and take a souvenir selfie.
+                    Place a 3D Egyptian artifact in your real space and take a
+                    souvenir selfie.
                   </Text>
 
                   <View style={styles.arPreviewCard}>
                     <Text style={styles.arPreviewEyebrow}>Selected model</Text>
-                    <Text style={styles.arPreviewTitle}>{selectedArModel.title}</Text>
-                    <Text style={styles.arPreviewDescription}>{selectedArModel.subtitle}</Text>
-                    <Text style={styles.arPreviewHint}>Move your phone to find a surface</Text>
+                    <Text style={styles.arPreviewTitle}>
+                      {selectedArModel.title}
+                    </Text>
+                    <Text style={styles.arPreviewDescription}>
+                      {selectedArModel.subtitle}
+                    </Text>
+                    <Text style={styles.arPreviewHint}>
+                      Move your phone to find a surface
+                    </Text>
                   </View>
 
                   <ScrollView
@@ -1007,11 +1062,24 @@ export default function ScanResult() {
                           activeOpacity={0.85}
                           onPress={() => setSelectedArModelId(model.id)}
                         >
-                          <View style={[styles.arModelDot, { backgroundColor: model.accent }]} />
-                          <Text style={[styles.arModelName, isActive && { color: model.accent }]}>
+                          <View
+                            style={[
+                              styles.arModelDot,
+                              { backgroundColor: model.accent },
+                            ]}
+                          />
+                          <Text
+                            style={[
+                              styles.arModelName,
+                              isActive && { color: model.accent },
+                            ]}
+                          >
                             {model.name}
                           </Text>
-                          <Text style={styles.arModelSubtitle} numberOfLines={2}>
+                          <Text
+                            style={styles.arModelSubtitle}
+                            numberOfLines={2}
+                          >
                             {model.title}
                           </Text>
                         </TouchableOpacity>
@@ -1019,9 +1087,18 @@ export default function ScanResult() {
                     })}
                   </ScrollView>
 
-                  <TouchableOpacity style={styles.arStartButton} onPress={handleStartArExperience}>
-                    <MaterialCommunityIcons name="cube-scan" size={20} color="#2B1D12" />
-                    <Text style={styles.arStartButtonText}>Start AR Experience</Text>
+                  <TouchableOpacity
+                    style={styles.arStartButton}
+                    onPress={handleStartArExperience}
+                  >
+                    <MaterialCommunityIcons
+                      name="cube-scan"
+                      size={20}
+                      color="#2B1D12"
+                    />
+                    <Text style={styles.arStartButtonText}>
+                      Start AR Experience
+                    </Text>
                   </TouchableOpacity>
                 </View>
 
@@ -1282,7 +1359,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-
   sectionTitle: {
     fontSize: 22,
     fontWeight: "700",
@@ -1371,7 +1447,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#3F342D",
     lineHeight: 24,
-    
   },
   restorationSection: {
     marginTop: 18,

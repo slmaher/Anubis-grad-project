@@ -2,15 +2,27 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
     <title>Desert Statue Quick Look</title>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.2.0/model-viewer.min.js"></script>
+    <script
+      type="module"
+      src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.2.0/model-viewer.min.js"
+    ></script>
     <style>
-      html, body {
+      html,
+      body {
         margin: 0;
         width: 100%;
         height: 100%;
-        background: radial-gradient(circle at top, #2b1c10 0%, #140e08 45%, #050302 100%);
+        background: radial-gradient(
+          circle at top,
+          #2b1c10 0%,
+          #140e08 45%,
+          #050302 100%
+        );
         overflow: hidden;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
@@ -22,8 +34,8 @@
   </head>
   <body>
     <model-viewer
-      src="/assets/models/Statue.glb"
-      ios-src="/assets/models/statue.usdz"
+      src="https://raw.githubusercontent.com/slmaher/Anubis-grad-project/main/frontend/assets/models/Statue.glb"
+      ios-src="https://raw.githubusercontent.com/slmaher/Anubis-grad-project/main/frontend/assets/models/statue.usdz"
       ar
       ar-modes="quick-look webxr scene-viewer"
       camera-controls

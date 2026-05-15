@@ -46,7 +46,11 @@ export const getSuggestedArModel = (artifactTitle = "") => {
     return getArModelById("statue");
   }
 
-  if (title.includes("portrait") || title.includes("face") || title.includes("head")) {
+  if (
+    title.includes("portrait") ||
+    title.includes("face") ||
+    title.includes("head")
+  ) {
     return getArModelById("portrait");
   }
 

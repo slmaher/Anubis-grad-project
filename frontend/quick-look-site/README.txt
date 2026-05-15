@@ -3,7 +3,9 @@ Quick Look site bundle
 Deploy the contents of this folder to any static HTTPS host.
 
 Expected public URLs after deploy:
+- /
 - /quick-look/statue.html
+- /statue.usdz
 - /assets/models/Statue.glb
 - /assets/models/statue.usdz
 
