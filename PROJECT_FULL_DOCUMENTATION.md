@@ -121,6 +121,14 @@ This section groups all product capabilities by primary actor.
 - AI image scan
   - Upload/capture image
   - Get recognition + metadata + restoration availability
+ - 3D model viewing & AR
+   - View high-quality 3D models of artifacts (GLTF/GLB, USDZ, OBJ) inside the app
+   - Quick-Look USDZ export for Apple devices
+   - Interactive model viewer with panning, zoom, lighting controls and annotations
+ - Virtual guide (audio + contextual walkthroughs)
+   - Contextual audio narration for museum exhibits and artifacts
+   - Per-artifact guide content: short description, extended audio, and suggested tour routes
+   - TTS-backed narration (uses AI_Enhancement audio/TTS helpers) and cached audio files for offline playback
 - Journey and local UX features
   - Save scan images locally
   - Add scan results to local journey list
@@ -298,6 +306,41 @@ This section documents the frontend surface area and how navigation and API inte
   - frontend/app/api/authStorage.js
 - Socket usage
   - frontend/app/hooks/useChatSocket.js
+
+### 3.4 3D Models, AR, and Virtual Guide
+
+This subsection documents how 3D assets, the AR viewer, and the Virtual Guide are implemented and integrated across the frontend and backend.
+
+- 3D asset formats and storage
+  - Supported formats: `glTF`/`GLB` (primary), `USDZ` (iOS/Quick Look), `OBJ` (legacy). Models live in `frontend/assets/models/` or are streamed from external hosts (Sketchfab or a CDN).
+  - Draco-compressed glTF is supported for smaller downloads.
+
+- Model viewer component
+  - Implemented in `frontend/app/model-viewer.jsx` (uses `three.js`, `@react-three/fiber`, and `@react-three/drei`).
+  - Features: orbit controls, lighting presets, annotations overlay, texture switching, and download/export actions (USDZ generation where applicable).
+
+- AR viewer
+  - Implemented in `frontend/app/ar-viewer.jsx` (uses `expo-three` / platform AR modules). Launches a native AR scene and places the selected artifact model in the user's environment.
+  - Allows scale/rotation placement, anchors to surfaces, and records placement snapshots to the user's journey.
+
+- Quick Look / USDZ
+  - For Apple devices, the app exposes a Quick Look flow by serving or generating USDZ files and opening them via the native Quick Look intent.
+
+- Virtual Guide architecture
+  - Guide content model: short text blurb, extended transcript, audio file URL, optional timed cue-points (for guided walkthroughs).
+  - Content sources: authored markdown/text stored in the backend, or generated dynamically by the AI assistant and TTS pipeline in `AI_Enhancement/`.
+  - Playback flow: frontend fetches guide content, checks for cached audio, otherwise requests audio generation from the AI/TTS endpoints, then plays with simple UI controls (play/pause/seek).
+  - Offline behavior: audio is cached in `tmp/elevenlabs_tts_cache` or frontend storage for offline replay.
+
+- Integration points
+  - Artifact detail pages link to the model viewer and AR viewer flows (`/artifacts/artifactDetailsScreen` → model viewer / `ar-viewer.jsx`).
+  - Backend endpoints provide metadata and model URLs used by viewers, e.g., `GET /api/artifacts/:id`.
+  - AI service endpoints support generating restoration previews and TTS audio used by the Virtual Guide.
+
+Design notes:
+- Prefer streaming glTF from a CDN to reduce app bundle size; fall back to embedded models for offline mode.
+- Provide low/medium/high model LODs for performance on weaker devices.
+- Ensure USDZ export path is validated for correct textures and PBR materials.
 
 ## 4. Admin Dashboard Structure
 

@@ -709,7 +709,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#090603",
-    paddingTop: Platform.OS === "ios" ? 34 : 14,
+    paddingTop: Platform.OS === "ios" ? 20: 14,
     paddingHorizontal: 18,
     paddingBottom: 18,
   },
@@ -818,7 +818,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(212,175,55,0.18)",
     backgroundColor: "#120B07",
-    minHeight: 500,
+    minHeight: 450,
   },
   camera: {
     ...StyleSheet.absoluteFillObject,

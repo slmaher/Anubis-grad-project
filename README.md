@@ -17,62 +17,94 @@ Full-stack project with:
 - MongoDB (local or Atlas)
 - Expo Go app (optional for testing on physical device)
 - Android Studio / Xcode (optional for emulator/simulator)
+# Anubis Project
 
-## Revive Egypt – Backend
+Anubis is a full-stack research and demo platform for museum artifact recognition, reconstruction, and interactive presentation. It includes:
 
-Node.js + Express + MongoDB (Mongoose) backend for the **Revive Egypt** museum-focused platform.
+- a TypeScript/Node backend (`backend/`)
+- an Expo React Native frontend (`frontend/`)
+- a Python FastAPI AI microservice (`AI_Enhancement/`)
 
-### Technology Stack
+**This README** contains a quick table of contents and concise, step-by-step instructions to get the project and the AI service running locally.
 
-| Layer                | Technology / Tool                                                                    | Purpose                                                                                                                                    |
-| -------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Frontend             | React Native, Expo                                                                   | Cross-platform mobile application                                                                                                          |
-| Frontend             | Expo Router                                                                          | Navigation and screen management                                                                                                           |
-| Frontend (3D)        | three.js, @react-three/fiber, @react-three/drei, expo-three                          | 3D model viewing and interactive WebGL viewers (Sketchfab embeds, GLTF/GLB)                                                                |
-| Assets / Formats     | glTF/GLB, USDZ, OBJ, Draco compression                                               | 3D model formats and optimized delivery                                                                                                    |
-| Backend              | Node.js, Express.js, TypeScript                                                      | RESTful API and business logic                                                                                                             |
-| Backend              | MongoDB, Mongoose                                                                    | Database and ORM                                                                                                                           |
-| Backend              | Socket.IO                                                                            | Real-time messaging                                                                                                                        |
-| Backend              | JWT                                                                                  | Authentication and authorization                                                                                                           |
-| AI Service           | Python FastAPI                                                                       | AI microservice endpoint                                                                                                                   |
-| AI Service           | DINOv2                                                                               | Artifact recognition                                                                                                                       |
-| AI Service           | Stable Diffusion                                                                     | Artifact visual reconstruction                                                                                                             |
-| Tools                | Blender, glTF-Pipeline                                                               | 3D model creation and optimization tools                                                                                                   |
-| TTS / Voice          | ElevenLabs                                                                           | Text-to-speech voice agent; cached audio in `tmp/elevenlabs_tts_cache`                                                                     |
-| External APIs        | Google Maps API, Sketchfab API                                                       | Navigation, location, and hosted 3D models                                                                                                 |
-| DevOps               | GitHub Actions, Docker                                                               | CI/CD and containerization                                                                                                                 |
-| Chatbot / Assistant  | Groq LLM, Groq Chat Completions API, @google/generative-ai, MyMemory Translation API | Conversational AI backend used by `/api/assistant/chat`; translation helper via MyMemory                                                   |
-| Charts / Analytics   | Recharts                                                                             | Frontend charting library used in admin dashboard (bar charts, KPI cards)                                                                  |
-| CSV Logging & Export | Frontend CSV builder (admin), Python `csv` module (AI_Enhancement)                   | Admin CSV export (`frontend/app/admin/index.jsx`) and AI experiment tracking (`AI_Enhancement/app/services/local_reconstruction_utils.py`) |
+## Table of contents
+- [Overview & Features](#overview--features)
+- [Requirements](#requirements)
+- [Quick Start](#quick-start)
+	- [Run the AI service (local)](#run-the-ai-service-local)
+	- [Run the backend (Node)](#run-the-backend-node)
+	- [Run the frontend (Expo)](#run-the-frontend-expo)
+- [Configuration & Data paths](#configuration--data-paths)
+- [Main API endpoints (AI service)](#main-api-endpoints-ai-service)
+- [Developer notes & scripts](#developer-notes--scripts)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
 
-### Getting Started
+## Overview & Features
 
-1. Install dependencies:
+- Artifact recognition using DINOv2 embeddings (image → nearest artifact)
+- Artifact restoration / reconstruction using Stable Diffusion pipelines
+- Combined analysis endpoint returning recognition + metadata + restoration
+- AI Virtual guide(Voice Agent)
+- Audio / TTS helpers for short descriptions
+- Frontend features: AR/3D viewers, quick-look USDZ export, virtual guide, reviews, favorites
+- Backend: REST API, authentication, real-time messaging, admin utilities
+
+## Requirements
+
+- Node.js (LTS recommended) and `npm`
+- Python 3.10+ (recommended) with `pip`
+- MongoDB (local or Atlas) for the backend (if using full backend features)
+- Optional: GPU + CUDA for faster AI model inference
+
+## Quick Start
+
+Run the AI service, backend, and frontend in separate terminals.
+
+### Run the AI service (local)
+1. Open a terminal and change to the AI folder:
+
+```bash
+cd "AI_Enhancement"
+```
+
+2. Create and activate a virtual environment, then install dependencies.
+
+Windows (PowerShell):
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+macOS / Linux:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+3. Start the FastAPI service:
+
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+The AI service will be reachable at `http://localhost:8000` by default.
+
+### Run the backend (Node)
 
 ```bash
 cd backend
 npm install
-```
-
-2. Run the development server:
-
-```bash
-
 npm run dev
 ```
 
-The API will be available at `http://localhost:4000`
+Default backend address: `http://localhost:4000` (see `backend/package.json` scripts)
 
-<!--
-3. (Optional) Seed the database with real Egyptian museums:
-
-```bash
-npm run seed
-``` -->
-
-## 2) Run Frontend
-
-From `frontend` folder:
+### Run the frontend (Expo)
 
 ```bash
 cd frontend
@@ -80,42 +112,52 @@ npm install
 npx expo start
 ```
 
-Expo shortcuts:
+Use the Expo dev tools to run on Android, iOS simulator, or web.
 
-- `a` → Android
-- `i` → iOS (macOS)
-- `w` → Web
+## Configuration & Data paths
 
-Or run directly:
+- AI service configuration: `AI_Enhancement/app/config.py` — override via an `.env` file in `AI_Enhancement/` (Pydantic BaseSettings is used)
+- Important AI paths are inside `AI_Enhancement/app/data/`:
+	- `artifacts/` — artifact images and metadata
+	- `artifacts/embeddings.npy` — artifact embeddings (generated by scripts)
+	- `restoration_results/` — saved restoration outputs
 
-```bash
-npm run android
-npm run ios
-npm run web
-```
+- Frontend API base URL: see `frontend/app/api/client.js` (update to point to backend/AI service as needed)
 
-## 3) Connect Frontend to Backend
+## Main API endpoints (AI service)
 
-Frontend API base URL is set in:
+- `GET /` — root / basic message
+- `GET /health` — health check
+- `POST /recognize` — upload an image file to get recognition results
+- `POST /restore` — upload an image file to run restoration/reconstruction
+- `POST /scan` — combined recognize + restore + metadata lookup
+- `POST /analyze-artifact` — richer analyze flow returning recognition, knowledge, and restoration
+- `POST /hieroglyphs/demo` — demo hieroglyph translation endpoint
 
-- `frontend/app/api/client.js`
-
-## Quick Start (both)
-
-Open two terminals:
-
-Terminal 1:
+Example: simple `curl` (after starting AI service)
 
 ```bash
-cd backend
-npm install
-npm run dev
+curl -X POST "http://localhost:8000/analyze-artifact" -F "file=@/path/to/image.jpg"
 ```
 
-Terminal 2:
+## Developer notes & scripts
 
-```bash
-cd frontend
-npm install
-npm run start
-```
+- Artifact index & embeddings: scripts in `AI_Enhancement/` (check `app/scripts/`) build `embeddings.npy` and `artifact_ids.json`.
+- Recognition service loads Hugging Face DINOv2 models at runtime (see `AI_Enhancement/app/services/recognition_service.py`). Ensure internet access for initial model download or pre-download models to a cache.
+- Stable Diffusion configuration values are in `AI_Enhancement/app/config.py` (model ids, image size, default steps/strengths).
+
+## Troubleshooting
+
+- Models not loading / slow startup: large models will download on first run. Use a machine with sufficient RAM or pre-cache models.
+- CUDA / GPU: ensure the Python environment uses the correct CUDA-enabled `torch` build. Without GPU, inference will still work but will be much slower.
+- Missing artifact embeddings: run the indexing scripts to generate `embeddings.npy` and `artifact_ids.json` before calling recognition endpoints.
+
+## Contributing
+
+Feel free to open issues or pull requests. For local development:
+
+1. Create a branch from `main`
+2. Add tests for new functionality where appropriate
+3. Open a PR with a description of changes
+
+
