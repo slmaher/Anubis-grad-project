@@ -17,8 +17,7 @@ export default function Reviews() {
   const params = useLocalSearchParams();
   const rawMuseumId = params.museumId;
   const museumId =
-    typeof rawMuseumId === "string" &&
-    /^[a-f\d]{24}$/i.test(rawMuseumId)
+    typeof rawMuseumId === "string" && /^[a-f\d]{24}$/i.test(rawMuseumId)
       ? rawMuseumId
       : undefined;
 
@@ -32,7 +31,8 @@ export default function Reviews() {
     "";
   const incomingModelId =
     (typeof params.modelId === "string" && params.modelId) ||
-    (typeof params.selectedArModelId === "string" && params.selectedArModelId) ||
+    (typeof params.selectedArModelId === "string" &&
+      params.selectedArModelId) ||
     "";
   const suggestedModel = getSuggestedArModel(artifactTitle || museumName || "");
   const initialSelfieModelId = incomingModelId || suggestedModel.id;
@@ -62,15 +62,15 @@ export default function Reviews() {
     (async () => {
       try {
         setLoading(true);
-const query = {
-  ...(museumId ? { museumId } : {}),
-  ...(museumName ? { museumName } : {}),
-  ...(museumLookupName ? { museumLookupName } : {}),
-};
+        const query = {
+          ...(museumId ? { museumId } : {}),
+          ...(museumName ? { museumName } : {}),
+          ...(museumLookupName ? { museumLookupName } : {}),
+        };
 
-const result = await api.getReviews(
-  Object.keys(query).length > 0 ? query : {},
-);
+        const result = await api.getReviews(
+          Object.keys(query).length > 0 ? query : {},
+        );
         const list = result?.data || [];
         if (isMounted) {
           setReviews(list);
@@ -121,7 +121,9 @@ const result = await api.getReviews(
       >
         <View style={styles.souvenirCard}>
           <Text style={styles.sectionEyebrow}>AR Souvenir Photo</Text>
-          <Text style={styles.souvenirTitle}>Take a Selfie with This Artifact</Text>
+          <Text style={styles.souvenirTitle}>
+            Take a Selfie with This Artifact
+          </Text>
           <Text style={styles.souvenirText}>
             Move and resize the artifact, then capture your souvenir.
           </Text>
@@ -137,7 +139,9 @@ const result = await api.getReviews(
 
           <View style={styles.currentModelPill}>
             <Text style={styles.currentModelLabel}>Using</Text>
-            <Text style={styles.currentModelValue}>{selectedSelfieModel.title}</Text>
+            <Text style={styles.currentModelValue}>
+              {selectedSelfieModel.title}
+            </Text>
           </View>
 
           {showSelector && (

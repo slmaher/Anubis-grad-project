@@ -4,7 +4,6 @@ import {
   Animated,
   Dimensions,
   Image,
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -12,6 +11,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Modal } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Asset } from "expo-asset";
 import * as FileSystem from "expo-file-system";
@@ -180,12 +181,14 @@ export default function SelfieArModal({
   const pinchGestureRef = useRef(null);
   const rotationGestureRef = useRef(null);
   const requestIdRef = useRef(null);
+  const pendingCameraUriRef = useRef(null);
   const transformRef = useRef(DEFAULT_TRANSFORM);
   const panStartRef = useRef(DEFAULT_TRANSFORM);
   const pinchStartScaleRef = useRef(1);
   const rotationStartRef = useRef(0);
   const [permission, requestPermission] = useCameraPermissions();
-  const [mediaPermission, requestMediaPermission] = MediaLibrary.usePermissions();
+  const [mediaPermission, requestMediaPermission] =
+    MediaLibrary.usePermissions();
   const [cameraReady, setCameraReady] = useState(false);
   const [modelReady, setModelReady] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(false);
@@ -223,7 +226,13 @@ export default function SelfieArModal({
     if (!mediaPermission?.granted) {
       requestMediaPermission();
     }
-  }, [visible, permission?.granted, mediaPermission?.granted, requestPermission, requestMediaPermission]);
+  }, [
+    visible,
+    permission?.granted,
+    mediaPermission?.granted,
+    requestPermission,
+    requestMediaPermission,
+  ]);
 
   useEffect(() => {
     let isMounted = true;
@@ -308,10 +317,9 @@ export default function SelfieArModal({
       setSaving(true);
       setBanner(null);
 
-      const mediaAccess =
-        mediaPermission?.granted
-          ? mediaPermission
-          : await requestMediaPermission();
+      const mediaAccess = mediaPermission?.granted
+        ? mediaPermission
+        : await requestMediaPermission();
 
       if (!mediaAccess?.granted) {
         setBanner({
@@ -334,6 +342,7 @@ export default function SelfieArModal({
 
       const requestId = String(Date.now());
       requestIdRef.current = requestId;
+      pendingCameraUriRef.current = photo.uri;
       setCameraLoading(true);
 
       webViewRef.current.injectJavaScript(
@@ -385,11 +394,20 @@ export default function SelfieArModal({
         return;
       }
 
+      const cameraUri = pendingCameraUriRef.current;
+      if (!cameraUri) {
+        throw new Error("Camera file location was not available.");
+      }
+
       const fileName = `egyptian_souvenir_${sanitizeModelName(
         selectedModel.name,
       )}_${Date.now()}.png`;
-      const targetPath = `${FileSystem.cacheDirectory || FileSystem.documentDirectory}${fileName}`;
-      const base64Payload = String(message.dataUrl).replace(/^data:image\/png;base64,/, "");
+      const cameraFolder = cameraUri.replace(/[^/]+$/, "");
+      const targetPath = `${cameraFolder}${fileName}`;
+      const base64Payload = String(message.dataUrl).replace(
+        /^data:image\/png;base64,/,
+        "",
+      );
 
       await FileSystem.writeAsStringAsync(targetPath, base64Payload, {
         encoding: FileSystem.EncodingType.Base64,
@@ -407,10 +425,13 @@ export default function SelfieArModal({
       if (onSaved) {
         onSaved(asset?.uri || targetPath);
       }
+
+      pendingCameraUriRef.current = null;
     } catch (error) {
       console.error("Failed to save souvenir capture:", error);
       setCameraLoading(false);
       setSaving(false);
+      pendingCameraUriRef.current = null;
       setBanner({
         type: "error",
         text: error?.message || "Could not save the souvenir photo.",
@@ -422,8 +443,10 @@ export default function SelfieArModal({
     if (gestureType === "pan") {
       syncTransform({
         ...transformRef.current,
-        translateX: panStartRef.current.translateX + event.nativeEvent.translationX,
-        translateY: panStartRef.current.translateY + event.nativeEvent.translationY,
+        translateX:
+          panStartRef.current.translateX + event.nativeEvent.translationX,
+        translateY:
+          panStartRef.current.translateY + event.nativeEvent.translationY,
       });
       return;
     }
@@ -431,7 +454,10 @@ export default function SelfieArModal({
     if (gestureType === "pinch") {
       syncTransform({
         ...transformRef.current,
-        scale: Math.max(0.6, pinchStartScaleRef.current * event.nativeEvent.scale),
+        scale: Math.max(
+          0.6,
+          pinchStartScaleRef.current * event.nativeEvent.scale,
+        ),
       });
       return;
     }
@@ -475,7 +501,8 @@ export default function SelfieArModal({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+        <View style={styles.container}>
         <View style={styles.header}>
           <View>
             <Text style={styles.eyebrow}>AR Souvenir Photo</Text>
@@ -515,7 +542,9 @@ export default function SelfieArModal({
               style={styles.photoAccessButton}
               onPress={requestMediaPermission}
             >
-              <Text style={styles.photoAccessButtonText}>Allow Photos Access</Text>
+              <Text style={styles.photoAccessButtonText}>
+                Allow Photos Access
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -534,11 +563,16 @@ export default function SelfieArModal({
                 source={require("../../assets/images/grand-museum.png")}
                 style={styles.permissionImage}
               />
-              <Text style={styles.permissionTitle}>Front camera access needed</Text>
+              <Text style={styles.permissionTitle}>
+                Front camera access needed
+              </Text>
               <Text style={styles.permissionText}>
                 Grant camera access to create your souvenir selfie.
               </Text>
-              <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
+              <TouchableOpacity
+                style={styles.permissionButton}
+                onPress={requestPermission}
+              >
                 <Text style={styles.permissionButtonText}>Allow Camera</Text>
               </TouchableOpacity>
             </View>
@@ -554,13 +588,17 @@ export default function SelfieArModal({
               <RotationGestureHandler
                 ref={rotationGestureRef}
                 simultaneousHandlers={[panGestureRef, pinchGestureRef]}
-                onGestureEvent={(event) => runTransformGesture("rotation", event)}
+                onGestureEvent={(event) =>
+                  runTransformGesture("rotation", event)
+                }
                 onHandlerStateChange={rotationHandlerStateChange}
               >
                 <PinchGestureHandler
                   ref={pinchGestureRef}
                   simultaneousHandlers={[panGestureRef, rotationGestureRef]}
-                  onGestureEvent={(event) => runTransformGesture("pinch", event)}
+                  onGestureEvent={(event) =>
+                    runTransformGesture("pinch", event)
+                  }
                   onHandlerStateChange={pinchHandlerStateChange}
                 >
                   <View style={styles.webViewLayer} pointerEvents="box-none">
@@ -584,14 +622,18 @@ export default function SelfieArModal({
                     {!cameraReady && (
                       <View style={styles.loadingOverlay}>
                         <ActivityIndicator size="large" color="#D4AF37" />
-                        <Text style={styles.loadingText}>Preparing camera...</Text>
+                        <Text style={styles.loadingText}>
+                          Preparing camera...
+                        </Text>
                       </View>
                     )}
 
                     {cameraLoading && (
                       <View style={styles.loadingOverlay}>
                         <ActivityIndicator size="large" color="#D4AF37" />
-                        <Text style={styles.loadingText}>Creating souvenir...</Text>
+                        <Text style={styles.loadingText}>
+                          Creating souvenir...
+                        </Text>
                       </View>
                     )}
                   </View>
@@ -620,7 +662,9 @@ export default function SelfieArModal({
                   onPress={() => setModelId(model.id)}
                   activeOpacity={0.85}
                 >
-                  <View style={[styles.modelDot, { backgroundColor: model.accent }]} />
+                  <View
+                    style={[styles.modelDot, { backgroundColor: model.accent }]}
+                  />
                   <Text style={styles.modelName}>{model.name}</Text>
                   <Text style={styles.modelSubtitle} numberOfLines={2}>
                     {model.title}
@@ -655,12 +699,17 @@ export default function SelfieArModal({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+        </View>
+      </SafeAreaView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#090603",
+  },
   container: {
     flex: 1,
     backgroundColor: "#090603",
