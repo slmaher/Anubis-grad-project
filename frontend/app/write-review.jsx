@@ -346,9 +346,17 @@ export default function WriteReview() {
                   activeOpacity={0.85}
                 >
                   <View
-                    style={[styles.selectorDot, { backgroundColor: model.accent }]}
+                    style={[
+                      styles.selectorDot,
+                      { backgroundColor: model.accent },
+                    ]}
                   />
-                  <Text style={[styles.selectorName, isActive && { color: model.accent }]}>
+                  <Text
+                    style={[
+                      styles.selectorName,
+                      isActive && { color: model.accent },
+                    ]}
+                  >
                     {model.name}
                   </Text>
                   <Text style={styles.selectorSubtitle} numberOfLines={2}>

@@ -86,8 +86,6 @@ export default function Reviews() {
     };
   }, [museumId, museumName, museumLookupName]);
 
-  
-
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -175,8 +173,6 @@ export default function Reviews() {
 
         <View style={{ height: 100 }} />
       </ScrollView>
-
-      
 
       {/* Floating Add Button */}
       <TouchableOpacity
