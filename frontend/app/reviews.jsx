@@ -9,8 +9,6 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { api } from "./api/client";
-import SelfieArModal from "../src/components/SelfieArModal";
-import AR_MODELS, { getSuggestedArModel } from "../src/data/arModels";
 
 export default function Reviews() {
   const router = useRouter();
@@ -34,14 +32,10 @@ export default function Reviews() {
     (typeof params.selectedArModelId === "string" &&
       params.selectedArModelId) ||
     "";
-  const suggestedModel = getSuggestedArModel(artifactTitle || museumName || "");
-  const initialSelfieModelId = incomingModelId || suggestedModel.id;
 
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selfieModalVisible, setSelfieModalVisible] = useState(false);
-  const [selfieModelId, setSelfieModelId] = useState(initialSelfieModelId);
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -92,14 +86,7 @@ export default function Reviews() {
     };
   }, [museumId, museumName, museumLookupName]);
 
-  useEffect(() => {
-    setSelfieModelId(initialSelfieModelId);
-  }, [initialSelfieModelId]);
-
-  const selectedSelfieModel =
-    AR_MODELS.find((model) => model.id === selfieModelId) || AR_MODELS[0];
-
-  const showSelector = !incomingModelId && !artifactTitle;
+  
 
   return (
     <View style={styles.container}>
@@ -108,9 +95,23 @@ export default function Reviews() {
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {museumName ? `${museumName} Reviews` : "Reviews"}
-        </Text>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>
+            {museumName ? `${museumName} Reviews` : "Reviews"}
+          </Text>
+          <TouchableOpacity
+            style={styles.selfieQuickButton}
+            onPress={() =>
+              router.push({
+                pathname: "/write-review",
+                params: { museumId, museumName, museumLookupName },
+              })
+            }
+            activeOpacity={0.9}
+          >
+            <Text style={styles.selfieQuickButtonText}>Take Selfie</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.placeholder} />
       </View>
 
@@ -119,73 +120,7 @@ export default function Reviews() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.souvenirCard}>
-          <Text style={styles.sectionEyebrow}>AR Souvenir Photo</Text>
-          <Text style={styles.souvenirTitle}>
-            Take a Selfie with This Artifact
-          </Text>
-          <Text style={styles.souvenirText}>
-            Move and resize the artifact, then capture your souvenir.
-          </Text>
-
-          <TouchableOpacity
-            style={styles.souvenirButton}
-            onPress={() => setSelfieModalVisible(true)}
-          >
-            <Text style={styles.souvenirButtonText}>
-              Take a Selfie with This Artifact
-            </Text>
-          </TouchableOpacity>
-
-          <View style={styles.currentModelPill}>
-            <Text style={styles.currentModelLabel}>Using</Text>
-            <Text style={styles.currentModelValue}>
-              {selectedSelfieModel.title}
-            </Text>
-          </View>
-
-          {showSelector && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.selectorRow}
-            >
-              {AR_MODELS.map((model) => {
-                const isActive = model.id === selfieModelId;
-                return (
-                  <TouchableOpacity
-                    key={model.id}
-                    style={[
-                      styles.selectorCard,
-                      isActive && styles.selectorCardActive,
-                      isActive && { borderColor: model.accent },
-                    ]}
-                    onPress={() => setSelfieModelId(model.id)}
-                    activeOpacity={0.85}
-                  >
-                    <View
-                      style={[
-                        styles.selectorDot,
-                        { backgroundColor: model.accent },
-                      ]}
-                    />
-                    <Text
-                      style={[
-                        styles.selectorName,
-                        isActive && { color: model.accent },
-                      ]}
-                    >
-                      {model.name}
-                    </Text>
-                    <Text style={styles.selectorSubtitle} numberOfLines={2}>
-                      {model.title}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          )}
-        </View>
+        {/* Souvenir AR moved to Write Review page for streamlined flow */}
 
         {loading && (
           <View style={styles.loadingContainer}>
@@ -241,15 +176,7 @@ export default function Reviews() {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      <SelfieArModal
-        visible={selfieModalVisible}
-        onClose={() => setSelfieModalVisible(false)}
-        artifactTitle={artifactTitle || museumName || ""}
-        initialModelId={selfieModelId}
-        onSaved={(savedUri) => {
-          console.log("Selfie souvenir saved:", savedUri);
-        }}
-      />
+      
 
       {/* Floating Add Button */}
       <TouchableOpacity
@@ -281,6 +208,11 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
     backgroundColor: "#E8DDD0",
   },
+  headerCenter: {
+    flex: 1,
+    alignItems: "center",
+    gap: 10,
+  },
   backButton: {
     width: 40,
     height: 40,
@@ -295,9 +227,22 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#000",
+    textAlign: "center",
   },
   placeholder: {
     width: 40,
+  },
+  selfieQuickButton: {
+    borderRadius: 999,
+    backgroundColor: "#000",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  selfieQuickButtonText: {
+    color: "#FFF4DC",
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.3,
   },
   scrollView: {
     flex: 1,

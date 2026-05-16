@@ -70,9 +70,9 @@ const makeModelHtml = (modelUri) => {
         transform-origin: center center;
       }
       .frame {
-        width: min(86vw, 360px);
-        height: min(86vw, 360px);
-        border-radius: 34px;
+        width: min(92vw, 430px);
+        height: min(92vw, 430px);
+        border-radius: 38px;
         overflow: hidden;
         background: transparent;
       }
@@ -685,13 +685,6 @@ export default function SelfieArModal({
 
             <View style={styles.actionRow}>
               <TouchableOpacity
-                style={[styles.secondaryButton, styles.closeActionButton]}
-                onPress={onClose}
-              >
-                <Text style={styles.secondaryButtonText}>Close</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
                 style={styles.captureButton}
                 onPress={handleCapture}
                 disabled={!permission?.granted || !modelReady || saving}
@@ -825,6 +818,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(212,175,55,0.18)",
     backgroundColor: "#120B07",
+    minHeight: 500,
   },
   camera: {
     ...StyleSheet.absoluteFillObject,
@@ -930,25 +924,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
   },
-  secondaryButton: {
-    flex: 1,
-    borderRadius: 18,
-    paddingVertical: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(212,175,55,0.28)",
-    backgroundColor: "rgba(212,175,55,0.08)",
-  },
-  closeActionButton: {
-    flex: 0.9,
-  },
-  secondaryButtonText: {
-    color: "#F8E8C8",
-    fontWeight: "800",
-  },
   captureButton: {
-    flex: 1.2,
+    flex: 1,
     borderRadius: 18,
     paddingVertical: 16,
     alignItems: "center",

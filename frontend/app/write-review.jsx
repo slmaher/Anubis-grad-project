@@ -13,6 +13,8 @@ import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { api } from "./api/client";
 import { getAuthToken } from "./api/authStorage";
+import SelfieArModal from "../src/components/SelfieArModal";
+import AR_MODELS, { getSuggestedArModel } from "../src/data/arModels";
 
 export default function WriteReview() {
   const router = useRouter();
@@ -28,6 +30,9 @@ export default function WriteReview() {
   const [title, setTitle] = useState("");
   const [photos, setPhotos] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const suggestedModel = getSuggestedArModel(museumName || "");
+  const [selfieModalVisible, setSelfieModalVisible] = useState(false);
+  const [selfieModelId, setSelfieModelId] = useState(suggestedModel.id);
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -299,12 +304,79 @@ export default function WriteReview() {
           </View>
         </View>
 
+        {/* AR Souvenir (moved here) */}
+        <View style={styles.souvenirCard}>
+          <Text style={styles.sectionEyebrow}>AR Souvenir Photo</Text>
+          <Text style={styles.souvenirTitle}>Create a souvenir selfie</Text>
+          <Text style={styles.souvenirText}>
+            Place the artifact in front of your camera, adjust size and
+            position, then capture a keepsake photo saved to your gallery.
+          </Text>
+
+          <TouchableOpacity
+            style={styles.souvenirButton}
+            onPress={() => setSelfieModalVisible(true)}
+          >
+            <Text style={styles.souvenirButtonText}>Open Selfie AR</Text>
+          </TouchableOpacity>
+
+          <View style={styles.currentModelPill}>
+            <Text style={styles.currentModelLabel}>Model</Text>
+            <Text style={styles.currentModelValue}>
+              {AR_MODELS.find((m) => m.id === selfieModelId)?.title || "Model"}
+            </Text>
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.selectorRow}
+          >
+            {AR_MODELS.map((model) => {
+              const isActive = model.id === selfieModelId;
+              return (
+                <TouchableOpacity
+                  key={model.id}
+                  style={[
+                    styles.selectorCard,
+                    isActive && styles.selectorCardActive,
+                    isActive && { borderColor: model.accent },
+                  ]}
+                  onPress={() => setSelfieModelId(model.id)}
+                  activeOpacity={0.85}
+                >
+                  <View
+                    style={[styles.selectorDot, { backgroundColor: model.accent }]}
+                  />
+                  <Text style={[styles.selectorName, isActive && { color: model.accent }]}>
+                    {model.name}
+                  </Text>
+                  <Text style={styles.selectorSubtitle} numberOfLines={2}>
+                    {model.title}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+
         {/* Submit Button */}
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>
             {submitting ? "Submitting..." : "Submit your Review"}
           </Text>
         </TouchableOpacity>
+
+        <SelfieArModal
+          visible={selfieModalVisible}
+          onClose={() => setSelfieModalVisible(false)}
+          artifactTitle={museumName || ""}
+          initialModelId={selfieModelId}
+          onSaved={(savedUri) => {
+            console.log("Selfie souvenir saved:", savedUri);
+            // optionally add saved image to photos array
+          }}
+        />
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -543,6 +615,98 @@ const styles = StyleSheet.create({
   addPhotoIcon: {
     fontSize: 30,
     color: "#999",
+  },
+  souvenirCard: {
+    backgroundColor: "rgba(255,255,255,0.9)",
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: "rgba(212,175,55,0.14)",
+  },
+  sectionEyebrow: {
+    color: "#D4AF37",
+    letterSpacing: 1.6,
+    textTransform: "uppercase",
+    fontSize: 11,
+    fontWeight: "800",
+    marginBottom: 8,
+  },
+  souvenirTitle: {
+    color: "#201813",
+    fontSize: 18,
+    fontWeight: "800",
+    marginBottom: 6,
+  },
+  souvenirText: {
+    color: "#5A4A3F",
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+  souvenirButton: {
+    borderRadius: 14,
+    backgroundColor: "#000",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  souvenirButtonText: {
+    color: "#FFF4DC",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  currentModelPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingTop: 8,
+    paddingBottom: 6,
+  },
+  currentModelLabel: {
+    color: "#7C6757",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  currentModelValue: {
+    color: "#201813",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  selectorRow: {
+    gap: 10,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  selectorCard: {
+    width: 130,
+    borderRadius: 18,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.08)",
+    backgroundColor: "rgba(255,255,255,0.88)",
+  },
+  selectorCardActive: {
+    backgroundColor: "rgba(212,175,55,0.12)",
+  },
+  selectorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginBottom: 10,
+  },
+  selectorName: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#201813",
+    marginBottom: 4,
+  },
+  selectorSubtitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#5A4A3F",
   },
   submitButton: {
     backgroundColor: "#000",
