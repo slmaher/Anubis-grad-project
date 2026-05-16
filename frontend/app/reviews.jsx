@@ -9,23 +9,39 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { api } from "./api/client";
+import SelfieArModal from "../src/components/SelfieArModal";
+import AR_MODELS, { getSuggestedArModel } from "../src/data/arModels";
 
 export default function Reviews() {
   const router = useRouter();
   const params = useLocalSearchParams();
-const rawMuseumId = params.museumId;
-const museumId =
-  typeof rawMuseumId === "string" &&
-  /^[a-f\d]{24}$/i.test(rawMuseumId)
-    ? rawMuseumId
-    : undefined;
+  const rawMuseumId = params.museumId;
+  const museumId =
+    typeof rawMuseumId === "string" &&
+    /^[a-f\d]{24}$/i.test(rawMuseumId)
+      ? rawMuseumId
+      : undefined;
 
-const museumName = params.museumName;
-const museumLookupName = params.museumLookupName;
+  const museumName = params.museumName;
+  const museumLookupName = params.museumLookupName;
+  const artifactTitle =
+    (typeof params.artifactTitle === "string" && params.artifactTitle) ||
+    (typeof params.artifactName === "string" && params.artifactName) ||
+    (typeof params.selectedArtifactTitle === "string" &&
+      params.selectedArtifactTitle) ||
+    "";
+  const incomingModelId =
+    (typeof params.modelId === "string" && params.modelId) ||
+    (typeof params.selectedArModelId === "string" && params.selectedArModelId) ||
+    "";
+  const suggestedModel = getSuggestedArModel(artifactTitle || museumName || "");
+  const initialSelfieModelId = incomingModelId || suggestedModel.id;
 
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selfieModalVisible, setSelfieModalVisible] = useState(false);
+  const [selfieModelId, setSelfieModelId] = useState(initialSelfieModelId);
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -76,6 +92,15 @@ const result = await api.getReviews(
     };
   }, [museumId, museumName, museumLookupName]);
 
+  useEffect(() => {
+    setSelfieModelId(initialSelfieModelId);
+  }, [initialSelfieModelId]);
+
+  const selectedSelfieModel =
+    AR_MODELS.find((model) => model.id === selfieModelId) || AR_MODELS[0];
+
+  const showSelector = !incomingModelId && !artifactTitle;
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -94,6 +119,70 @@ const result = await api.getReviews(
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
+        <View style={styles.souvenirCard}>
+          <Text style={styles.sectionEyebrow}>AR Souvenir Photo</Text>
+          <Text style={styles.souvenirTitle}>Take a Selfie with This Artifact</Text>
+          <Text style={styles.souvenirText}>
+            Move and resize the artifact, then capture your souvenir.
+          </Text>
+
+          <TouchableOpacity
+            style={styles.souvenirButton}
+            onPress={() => setSelfieModalVisible(true)}
+          >
+            <Text style={styles.souvenirButtonText}>
+              Take a Selfie with This Artifact
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.currentModelPill}>
+            <Text style={styles.currentModelLabel}>Using</Text>
+            <Text style={styles.currentModelValue}>{selectedSelfieModel.title}</Text>
+          </View>
+
+          {showSelector && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.selectorRow}
+            >
+              {AR_MODELS.map((model) => {
+                const isActive = model.id === selfieModelId;
+                return (
+                  <TouchableOpacity
+                    key={model.id}
+                    style={[
+                      styles.selectorCard,
+                      isActive && styles.selectorCardActive,
+                      isActive && { borderColor: model.accent },
+                    ]}
+                    onPress={() => setSelfieModelId(model.id)}
+                    activeOpacity={0.85}
+                  >
+                    <View
+                      style={[
+                        styles.selectorDot,
+                        { backgroundColor: model.accent },
+                      ]}
+                    />
+                    <Text
+                      style={[
+                        styles.selectorName,
+                        isActive && { color: model.accent },
+                      ]}
+                    >
+                      {model.name}
+                    </Text>
+                    <Text style={styles.selectorSubtitle} numberOfLines={2}>
+                      {model.title}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
+        </View>
+
         {loading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#000" />
@@ -147,6 +236,16 @@ const result = await api.getReviews(
 
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      <SelfieArModal
+        visible={selfieModalVisible}
+        onClose={() => setSelfieModalVisible(false)}
+        artifactTitle={artifactTitle || museumName || ""}
+        initialModelId={selfieModelId}
+        onSaved={(savedUri) => {
+          console.log("Selfie souvenir saved:", savedUri);
+        }}
+      />
 
       {/* Floating Add Button */}
       <TouchableOpacity
@@ -202,6 +301,97 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 10,
+  },
+  souvenirCard: {
+    backgroundColor: "rgba(255,255,255,0.72)",
+    borderRadius: 22,
+    padding: 18,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: "rgba(212,175,55,0.22)",
+  },
+  sectionEyebrow: {
+    color: "#D4AF37",
+    letterSpacing: 1.6,
+    textTransform: "uppercase",
+    fontSize: 11,
+    fontWeight: "800",
+    marginBottom: 8,
+  },
+  souvenirTitle: {
+    color: "#201813",
+    fontSize: 20,
+    fontWeight: "800",
+    marginBottom: 6,
+  },
+  souvenirText: {
+    color: "#5A4A3F",
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 14,
+  },
+  souvenirButton: {
+    borderRadius: 16,
+    backgroundColor: "#000",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  souvenirButtonText: {
+    color: "#FFF4DC",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  currentModelPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  currentModelLabel: {
+    color: "#7C6757",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  currentModelValue: {
+    color: "#201813",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  selectorRow: {
+    gap: 10,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  selectorCard: {
+    width: 130,
+    borderRadius: 18,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.08)",
+    backgroundColor: "rgba(255,255,255,0.64)",
+  },
+  selectorCardActive: {
+    backgroundColor: "rgba(212,175,55,0.16)",
+  },
+  selectorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginBottom: 10,
+  },
+  selectorName: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#201813",
+    marginBottom: 4,
+  },
+  selectorSubtitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#5A4A3F",
   },
   reviewCard: {
     paddingVertical: 15,

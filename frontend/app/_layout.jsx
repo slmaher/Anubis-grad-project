@@ -1,3 +1,4 @@
+import "react-native-gesture-handler";
 import "intl-pluralrules";
 import { Stack } from "expo-router";
 import "../i18n/i18n";
@@ -5,6 +6,7 @@ import { useEffect } from "react";
 import { useTranslation, I18nextProvider } from "react-i18next";
 import { I18nManager, Platform } from "react-native";
 import i18n from "../i18n/i18n";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 function RootLayoutNav() {
   const { i18n: i18nInstance } = useTranslation();
@@ -120,8 +122,10 @@ function RootLayoutNav() {
 
 export default function Layout() {
   return (
-    <I18nextProvider i18n={i18n}>
-      <RootLayoutNav />
-    </I18nextProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <I18nextProvider i18n={i18n}>
+        <RootLayoutNav />
+      </I18nextProvider>
+    </GestureHandlerRootView>
   );
 }
