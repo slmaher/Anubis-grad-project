@@ -503,202 +503,205 @@ export default function SelfieArModal({
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <View style={styles.container}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.eyebrow}>AR Souvenir Photo</Text>
-            <Text style={styles.title}>Take a selfie with this artifact</Text>
-          </View>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeText}>✕</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={styles.helperText}>
-          Move and resize the artifact, then capture your souvenir.
-        </Text>
-
-        {banner && (
-          <View
-            style={[
-              styles.banner,
-              banner.type === "success"
-                ? styles.bannerSuccess
-                : banner.type === "error"
-                  ? styles.bannerError
-                  : styles.bannerInfo,
-            ]}
-          >
-            <Text style={styles.bannerText}>{banner.text}</Text>
-          </View>
-        )}
-
-        {needsPhotoAccess && (
-          <View style={styles.photoAccessCard}>
-            <Text style={styles.photoAccessTitle}>Allow Photos Access</Text>
-            <Text style={styles.photoAccessText}>
-              The souvenir photo must be saved to your gallery.
-            </Text>
-            <TouchableOpacity
-              style={styles.photoAccessButton}
-              onPress={requestMediaPermission}
-            >
-              <Text style={styles.photoAccessButtonText}>
-                Allow Photos Access
-              </Text>
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.eyebrow}>AR Souvenir Photo</Text>
+              <Text style={styles.title}>Take a selfie with this artifact</Text>
+            </View>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Text style={styles.closeText}>✕</Text>
             </TouchableOpacity>
           </View>
-        )}
 
-        <View style={styles.stage}>
-          {permission?.granted ? (
-            <CameraView
-              ref={cameraRef}
-              style={styles.camera}
-              facing="front"
-              onCameraReady={() => setCameraReady(true)}
-            />
-          ) : (
-            <View style={styles.permissionPanel}>
-              <Image
-                source={require("../../assets/images/grand-museum.png")}
-                style={styles.permissionImage}
-              />
-              <Text style={styles.permissionTitle}>
-                Front camera access needed
-              </Text>
-              <Text style={styles.permissionText}>
-                Grant camera access to create your souvenir selfie.
+          <Text style={styles.helperText}>
+            Move and resize the artifact, then capture your souvenir.
+          </Text>
+
+          {banner && (
+            <View
+              style={[
+                styles.banner,
+                banner.type === "success"
+                  ? styles.bannerSuccess
+                  : banner.type === "error"
+                    ? styles.bannerError
+                    : styles.bannerInfo,
+              ]}
+            >
+              <Text style={styles.bannerText}>{banner.text}</Text>
+            </View>
+          )}
+
+          {needsPhotoAccess && (
+            <View style={styles.photoAccessCard}>
+              <Text style={styles.photoAccessTitle}>Allow Photos Access</Text>
+              <Text style={styles.photoAccessText}>
+                The souvenir photo must be saved to your gallery.
               </Text>
               <TouchableOpacity
-                style={styles.permissionButton}
-                onPress={requestPermission}
+                style={styles.photoAccessButton}
+                onPress={requestMediaPermission}
               >
-                <Text style={styles.permissionButtonText}>Allow Camera</Text>
+                <Text style={styles.photoAccessButtonText}>
+                  Allow Photos Access
+                </Text>
               </TouchableOpacity>
             </View>
           )}
 
-          {permission?.granted && webHtml && (
-            <PanGestureHandler
-              ref={panGestureRef}
-              simultaneousHandlers={[pinchGestureRef, rotationGestureRef]}
-              onGestureEvent={(event) => runTransformGesture("pan", event)}
-              onHandlerStateChange={panHandlerStateChange}
-            >
-              <RotationGestureHandler
-                ref={rotationGestureRef}
-                simultaneousHandlers={[panGestureRef, pinchGestureRef]}
-                onGestureEvent={(event) =>
-                  runTransformGesture("rotation", event)
-                }
-                onHandlerStateChange={rotationHandlerStateChange}
-              >
-                <PinchGestureHandler
-                  ref={pinchGestureRef}
-                  simultaneousHandlers={[panGestureRef, rotationGestureRef]}
-                  onGestureEvent={(event) =>
-                    runTransformGesture("pinch", event)
-                  }
-                  onHandlerStateChange={pinchHandlerStateChange}
-                >
-                  <View style={styles.webViewLayer} pointerEvents="box-none">
-                    <WebView
-                      ref={webViewRef}
-                      key={modelUri}
-                      source={{ html: webHtml }}
-                      originWhitelist={["*"]}
-                      allowFileAccess
-                      allowFileAccessFromFileURLs
-                      allowUniversalAccessFromFileURLs
-                      onMessage={handleWebViewMessage}
-                      javaScriptEnabled
-                      domStorageEnabled
-                      androidLayerType="hardware"
-                      setSupportMultipleWindows={false}
-                      style={styles.webView}
-                      backgroundColor="transparent"
-                    />
-
-                    {!cameraReady && (
-                      <View style={styles.loadingOverlay}>
-                        <ActivityIndicator size="large" color="#D4AF37" />
-                        <Text style={styles.loadingText}>
-                          Preparing camera...
-                        </Text>
-                      </View>
-                    )}
-
-                    {cameraLoading && (
-                      <View style={styles.loadingOverlay}>
-                        <ActivityIndicator size="large" color="#D4AF37" />
-                        <Text style={styles.loadingText}>
-                          Creating souvenir...
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </PinchGestureHandler>
-              </RotationGestureHandler>
-            </PanGestureHandler>
-          )}
-        </View>
-
-        <View style={styles.footer}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.modelRow}
-          >
-            {AR_MODELS.map((model) => {
-              const isActive = model.id === modelId;
-              return (
+          <View style={styles.stage}>
+            {permission?.granted ? (
+              <CameraView
+                ref={cameraRef}
+                style={styles.camera}
+                facing="front"
+                onCameraReady={() => setCameraReady(true)}
+              />
+            ) : (
+              <View style={styles.permissionPanel}>
+                <Image
+                  source={require("../../assets/images/grand-museum.png")}
+                  style={styles.permissionImage}
+                />
+                <Text style={styles.permissionTitle}>
+                  Front camera access needed
+                </Text>
+                <Text style={styles.permissionText}>
+                  Grant camera access to create your souvenir selfie.
+                </Text>
                 <TouchableOpacity
-                  key={model.id}
-                  style={[
-                    styles.modelCard,
-                    isActive && styles.modelCardActive,
-                    isActive && { borderColor: model.accent },
-                  ]}
-                  onPress={() => setModelId(model.id)}
-                  activeOpacity={0.85}
+                  style={styles.permissionButton}
+                  onPress={requestPermission}
                 >
-                  <View
-                    style={[styles.modelDot, { backgroundColor: model.accent }]}
-                  />
-                  <Text style={styles.modelName}>{model.name}</Text>
-                  <Text style={styles.modelSubtitle} numberOfLines={2}>
-                    {model.title}
-                  </Text>
+                  <Text style={styles.permissionButtonText}>Allow Camera</Text>
                 </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+              </View>
+            )}
 
-          {showSelector && (
-            <Text style={styles.selectorHint}>
-              No model was selected elsewhere, so pick one here.
-            </Text>
-          )}
+            {permission?.granted && webHtml && (
+              <PanGestureHandler
+                ref={panGestureRef}
+                simultaneousHandlers={[pinchGestureRef, rotationGestureRef]}
+                onGestureEvent={(event) => runTransformGesture("pan", event)}
+                onHandlerStateChange={panHandlerStateChange}
+              >
+                <RotationGestureHandler
+                  ref={rotationGestureRef}
+                  simultaneousHandlers={[panGestureRef, pinchGestureRef]}
+                  onGestureEvent={(event) =>
+                    runTransformGesture("rotation", event)
+                  }
+                  onHandlerStateChange={rotationHandlerStateChange}
+                >
+                  <PinchGestureHandler
+                    ref={pinchGestureRef}
+                    simultaneousHandlers={[panGestureRef, rotationGestureRef]}
+                    onGestureEvent={(event) =>
+                      runTransformGesture("pinch", event)
+                    }
+                    onHandlerStateChange={pinchHandlerStateChange}
+                  >
+                    <View style={styles.webViewLayer} pointerEvents="box-none">
+                      <WebView
+                        ref={webViewRef}
+                        key={modelUri}
+                        source={{ html: webHtml }}
+                        originWhitelist={["*"]}
+                        allowFileAccess
+                        allowFileAccessFromFileURLs
+                        allowUniversalAccessFromFileURLs
+                        onMessage={handleWebViewMessage}
+                        javaScriptEnabled
+                        domStorageEnabled
+                        androidLayerType="hardware"
+                        setSupportMultipleWindows={false}
+                        style={styles.webView}
+                        backgroundColor="transparent"
+                      />
 
-          <View style={styles.actionRow}>
-            <TouchableOpacity
-              style={[styles.secondaryButton, styles.closeActionButton]}
-              onPress={onClose}
-            >
-              <Text style={styles.secondaryButtonText}>Close</Text>
-            </TouchableOpacity>
+                      {!cameraReady && (
+                        <View style={styles.loadingOverlay}>
+                          <ActivityIndicator size="large" color="#D4AF37" />
+                          <Text style={styles.loadingText}>
+                            Preparing camera...
+                          </Text>
+                        </View>
+                      )}
 
-            <TouchableOpacity
-              style={styles.captureButton}
-              onPress={handleCapture}
-              disabled={!permission?.granted || !modelReady || saving}
-            >
-              <Text style={styles.captureButtonText}>
-                {saving ? "Saving..." : "Capture Photo"}
-              </Text>
-            </TouchableOpacity>
+                      {cameraLoading && (
+                        <View style={styles.loadingOverlay}>
+                          <ActivityIndicator size="large" color="#D4AF37" />
+                          <Text style={styles.loadingText}>
+                            Creating souvenir...
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </PinchGestureHandler>
+                </RotationGestureHandler>
+              </PanGestureHandler>
+            )}
           </View>
-        </View>
+
+          <View style={styles.footer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.modelRow}
+            >
+              {AR_MODELS.map((model) => {
+                const isActive = model.id === modelId;
+                return (
+                  <TouchableOpacity
+                    key={model.id}
+                    style={[
+                      styles.modelCard,
+                      isActive && styles.modelCardActive,
+                      isActive && { borderColor: model.accent },
+                    ]}
+                    onPress={() => setModelId(model.id)}
+                    activeOpacity={0.85}
+                  >
+                    <View
+                      style={[
+                        styles.modelDot,
+                        { backgroundColor: model.accent },
+                      ]}
+                    />
+                    <Text style={styles.modelName}>{model.name}</Text>
+                    <Text style={styles.modelSubtitle} numberOfLines={2}>
+                      {model.title}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            {showSelector && (
+              <Text style={styles.selectorHint}>
+                No model was selected elsewhere, so pick one here.
+              </Text>
+            )}
+
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={[styles.secondaryButton, styles.closeActionButton]}
+                onPress={onClose}
+              >
+                <Text style={styles.secondaryButtonText}>Close</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.captureButton}
+                onPress={handleCapture}
+                disabled={!permission?.granted || !modelReady || saving}
+              >
+                <Text style={styles.captureButtonText}>
+                  {saving ? "Saving..." : "Capture Photo"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </SafeAreaView>
     </Modal>
