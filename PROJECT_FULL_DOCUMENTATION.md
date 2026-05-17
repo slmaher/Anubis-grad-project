@@ -121,14 +121,14 @@ This section groups all product capabilities by primary actor.
 - AI image scan
   - Upload/capture image
   - Get recognition + metadata + restoration availability
- - 3D model viewing & AR
-   - View high-quality 3D models of artifacts (GLTF/GLB, USDZ, OBJ) inside the app
-   - Quick-Look USDZ export for Apple devices
-   - Interactive model viewer with panning, zoom, lighting controls and annotations
- - Virtual guide (audio + contextual walkthroughs)
-   - Contextual audio narration for museum exhibits and artifacts
-   - Per-artifact guide content: short description, extended audio, and suggested tour routes
-   - TTS-backed narration (uses AI_Enhancement audio/TTS helpers) and cached audio files for offline playback
+- 3D model viewing & AR
+  - View high-quality 3D models of artifacts (GLTF/GLB, USDZ, OBJ) inside the app
+  - Quick-Look USDZ export for Apple devices
+  - Interactive model viewer with panning, zoom, lighting controls and annotations
+- Virtual guide (audio + contextual walkthroughs)
+  - Contextual audio narration for museum exhibits and artifacts
+  - Per-artifact guide content: short description, extended audio, and suggested tour routes
+  - TTS-backed narration (uses AI_Enhancement audio/TTS helpers) and cached audio files for offline playback
 - Journey and local UX features
   - Save scan images locally
   - Add scan results to local journey list
@@ -338,6 +338,7 @@ This subsection documents how 3D assets, the AR viewer, and the Virtual Guide ar
   - AI service endpoints support generating restoration previews and TTS audio used by the Virtual Guide.
 
 Design notes:
+
 - Prefer streaming glTF from a CDN to reduce app bundle size; fall back to embedded models for offline mode.
 - Provide low/medium/high model LODs for performance on weaker devices.
 - Ensure USDZ export path is validated for correct textures and PBR materials.
