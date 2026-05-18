@@ -10,7 +10,16 @@
     "featured": "المتاحف المميزة",
     "see_all": "عرض الكل",
     "grand_museum": "المتحف المصري الكبير",
-    "egyptian_museum": "المتحف المصري"
+    "egyptian_museum": "المتحف المصري",
+    "egyptian_artifacts_abroad": "الآثار المصرية في الخارج",
+    "faq": "الأسئلة الشائعة",
+    "tour_guide": "المرشد السياحي"
+  },
+  "home_artifacts": {
+    "british_desc": "استكشف القطع المصرية في مجموعة المتحف البريطاني.",
+    "rosicrucian_desc": "شاهد القطع المصرية المهمة المحفوظة في متحف روزيكروشيان.",
+    "british_title": "المتحف البريطاني",
+    "rosicrucian_title": "متحف روزيكروشيان"
   },
   "tickets": {
     "title": "التذاكر",

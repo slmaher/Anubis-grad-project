@@ -28,6 +28,14 @@ const FEATURED_MUSEUM_NAMES = [
   "Museum of Islamic Art",
 ];
 
+// Map DB museum names to translation keys for display
+const FEATURED_NAME_KEYS = {
+  "Grand Egyptian Museum (GEM)": "home.grand_museum",
+  "Egyptian Museum (Tahrir)": "home.egyptian_museum",
+  "National Museum of Egyptian Civilization (NMEC)": "home.national_museum_of_egyptian_civilization",
+  "Museum of Islamic Art": "home.museum_of_islamic_art",
+};
+
 function getFeaturedMuseumImage(name) {
   switch (name) {
     case "Grand Egyptian Museum (GEM)":
@@ -116,7 +124,7 @@ export default function Home() {
                   onPress={() => router.push("/tour-guide")}
                 >
                   <Text style={styles.tourGuideButtonText}>
-                    Need a Tour Guide?
+                    {t("home.tour_guide")}
                   </Text>
                 </TouchableOpacity>
 
@@ -129,7 +137,7 @@ export default function Home() {
                     size={20}
                     color="#755B42"
                   />
-                  <Text style={styles.smallHeaderButtonText}>FAQ</Text>
+                  <Text style={styles.smallHeaderButtonText}>{t("home.faq")}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -244,9 +252,9 @@ export default function Home() {
                     />
                     <View style={styles.museumCardOverlay}>
                       <View style={styles.museumTitleBubble}>
-                        <Text style={styles.museumCardTitle}>
-                          {museum.name}
-                        </Text>
+                          <Text style={styles.museumCardTitle}>
+                            {t(FEATURED_NAME_KEYS[museum.name] || '') || museum.name}
+                          </Text>
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -284,7 +292,7 @@ export default function Home() {
                         color="#1C1208"
                       />
                     </View>
-                    <Text style={styles.artifactCardTitle}>British Museum</Text>
+                    <Text style={styles.artifactCardTitle}>{t("home_artifacts.british_title")}</Text>
                     <Text style={styles.artifactCardText}>
                       {t("home_artifacts.british_desc")}
                     </Text>
@@ -315,7 +323,7 @@ export default function Home() {
                         styles.artifactCardTitleLight,
                       ]}
                     >
-                      Rosicrucian Museum
+                      {t("home_artifacts.rosicrucian_title")}
                     </Text>
                     <Text
                       style={[

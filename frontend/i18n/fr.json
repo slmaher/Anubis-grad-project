@@ -10,7 +10,16 @@
     "featured": "Musées en vedette",
     "see_all": "Voir tout",
     "grand_museum": "Grand Musée égyptien",
-    "egyptian_museum": "Musée égyptien"
+    "egyptian_museum": "Musée égyptien",
+    "egyptian_artifacts_abroad": "Artefacts égyptiens à l'étranger",
+    "faq": "Foire aux questions",
+    "tour_guide": "Guide touristique"
+  },
+  "home_artifacts": {
+    "british_desc": "Explorez des objets égyptiens conservés au British Museum.",
+    "rosicrucian_desc": "Consultez d'importantes pièces égyptiennes conservées au Rosicrucian Museum.",
+    "british_title": "British Museum",
+    "rosicrucian_title": "Musée Rosicrucien"
   },
   "tickets": {
     "title": "Billets",
@@ -336,5 +345,10 @@
       "nearby": "À proximité"
     },
     "book_ticket": "Réserver un billet"
+  }
+  ,"admin": {
+    "menu": {
+      "dashboard": "Tableau de bord"
+    }
   }
 }

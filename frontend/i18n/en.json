@@ -11,11 +11,15 @@
     "see_all": "See All",
     "grand_museum": "Grand Egyptian Museum",
     "egyptian_museum": "Egyptian Museum",
-    "egyptian_artifacts_abroad": "Egyptian Artifacts Abroad"
+    "egyptian_artifacts_abroad": "Egyptian Artifacts Abroad",
+    "faq": "FAQ",
+    "tour_guide": "Tour Guide"
   },
   "home_artifacts": {
     "british_desc": "Explore Egyptian objects held in the British Museum collection.",
-    "rosicrucian_desc": "View important Egyptian pieces preserved at the Rosicrucian Museum."
+    "rosicrucian_desc": "View important Egyptian pieces preserved at the Rosicrucian Museum.",
+    "british_title": "British Museum",
+    "rosicrucian_title": "Rosicrucian Museum"
   },
   "tickets": {
     "title": "Tickets",
