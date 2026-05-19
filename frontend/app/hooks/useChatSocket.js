@@ -5,7 +5,7 @@ import { API_BASE_URL } from "../api/baseUrl";
 
 const SOCKET_URL = API_BASE_URL;
 
-export const useChatSocket = (onNewMessage) => {
+export const useChatSocket = (onNewMessage, onNewGroupMessage) => {
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -29,6 +29,14 @@ export const useChatSocket = (onNewMessage) => {
         }
       });
 
+      socketRef.current.on("new_group_message", (message) => {
+        if (onNewGroupMessage) {
+          onNewGroupMessage(message);
+        } else if (onNewMessage) {
+          onNewMessage(message);
+        }
+      });
+
       socketRef.current.on("connect_error", (error) => {
         console.error("Socket connection error:", error.message);
       });
@@ -42,7 +50,7 @@ export const useChatSocket = (onNewMessage) => {
         socketRef.current.disconnect();
       }
     };
-  }, [onNewMessage]);
+  }, [onNewMessage, onNewGroupMessage]);
 
   return socketRef.current;
 };

@@ -42,9 +42,11 @@ export default function ChatScreen() {
   const [messageTranslations, setMessageTranslations] = useState({});
   const [translationLoading, setTranslationLoading] = useState({});
   const [translationErrors, setTranslationErrors] = useState({});
+  const [groupDetails, setGroupDetails] = useState(null);
   const scrollViewRef = useRef(null);
 
-  const contactName = params.contactName || t("chat_pages.contact_fallback");
+  const isGroup = params.isGroup === "true" || params.isGroup === true;
+  const contactName = isGroup ? (groupDetails?.name || params.contactName || "Group") : (params.contactName || t("chat_pages.contact_fallback"));
   const contactId = params.contactId;
   const contactAvatar =
     typeof params.contactAvatar === "string" && params.contactAvatar !== "null"
@@ -59,6 +61,25 @@ export default function ChatScreen() {
     if (lang.startsWith("zh")) return "zh-CN";
     return "en";
   }, [i18n.language]);
+
+  useEffect(() => {
+    if (isGroup && contactId) {
+      const fetchGroupDetails = async () => {
+        try {
+          const token = await getAuthToken();
+          if (token) {
+            const res = await api.getGroupDetails(contactId, token);
+            if (res?.success) {
+              setGroupDetails(res.data);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch group details:", err);
+        }
+      };
+      fetchGroupDetails();
+    }
+  }, [contactId, isGroup]);
 
   const handleTranslateMessage = async (msg) => {
     const existing = messageTranslations[msg.id];
@@ -109,7 +130,10 @@ export default function ChatScreen() {
 
       if (!token || !contactId) return;
 
-      const response = await api.getMessages(contactId, token);
+      const response = isGroup
+        ? await api.getGroupMessages(contactId, token)
+        : await api.getMessages(contactId, token);
+
       if (response.success) {
         const formatted = response.data.map((msg) => ({
           id: msg._id,
@@ -118,19 +142,23 @@ export default function ChatScreen() {
             hour: "2-digit",
             minute: "2-digit",
           }),
-          isSent: msg.sender._id === user?.id || msg.sender === user?.id,
+          isSent: msg.sender?._id === user?.id || msg.sender === user?.id,
+          senderName: msg.sender?.name || "Member",
+          senderAvatar: msg.sender?.avatar || null,
           hasCheckmark: msg.isRead,
         }));
         setChatMessages(formatted.reverse());
 
-        await api.markConversationAsRead(contactId, token);
+        if (!isGroup) {
+          await api.markConversationAsRead(contactId, token);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch messages:", error);
     } finally {
       setLoading(false);
     }
-  }, [contactId]);
+  }, [contactId, isGroup]);
 
   useEffect(() => {
     fetchMessages();
@@ -138,7 +166,7 @@ export default function ChatScreen() {
 
   const handleNewMessage = useCallback(
     (msg) => {
-      if (msg.sender._id === contactId || msg.sender === contactId) {
+      if (!isGroup && (msg.sender?._id === contactId || msg.sender === contactId)) {
         const formatted = {
           id: msg._id,
           text: msg.content,
@@ -147,6 +175,8 @@ export default function ChatScreen() {
             minute: "2-digit",
           }),
           isSent: false,
+          senderName: msg.sender?.name || "Member",
+          senderAvatar: msg.sender?.avatar || null,
           hasCheckmark: false,
         };
         setChatMessages((prev) => [...prev, formatted]);
@@ -156,10 +186,36 @@ export default function ChatScreen() {
         });
       }
     },
-    [contactId],
+    [contactId, isGroup],
   );
 
-  useChatSocket(handleNewMessage);
+  const handleNewGroupMessage = useCallback(
+    (msg) => {
+      if (isGroup && (msg.group?._id === contactId || msg.group === contactId)) {
+        const senderId = msg.sender?._id || msg.sender;
+        if (senderId === currentUser?.id) {
+          return;
+        }
+
+        const formatted = {
+          id: msg._id,
+          text: msg.content,
+          time: new Date(msg.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          isSent: false,
+          senderName: msg.sender?.name || "Member",
+          senderAvatar: msg.sender?.avatar || null,
+          hasCheckmark: false,
+        };
+        setChatMessages((prev) => [...prev, formatted]);
+      }
+    },
+    [contactId, isGroup, currentUser],
+  );
+
+  useChatSocket(handleNewMessage, handleNewGroupMessage);
 
   const handleSend = async () => {
     if (message.trim()) {
@@ -167,7 +223,10 @@ export default function ChatScreen() {
         const token = await getAuthToken();
         if (!token || !contactId) return;
 
-        const response = await api.sendMessage(contactId, message, token);
+        const response = isGroup
+          ? await api.sendGroupMessage(contactId, message, token)
+          : await api.sendMessage(contactId, message, token);
+
         if (response.success) {
           const msg = response.data;
           const formatted = {
@@ -178,6 +237,8 @@ export default function ChatScreen() {
               minute: "2-digit",
             }),
             isSent: true,
+            senderName: currentUser?.name || "Me",
+            senderAvatar: currentUser?.avatar || null,
             hasCheckmark: false,
           };
           setChatMessages((prev) => [...prev, formatted]);
@@ -222,7 +283,13 @@ export default function ChatScreen() {
               <Text style={styles.headerContactName} numberOfLines={1}>
                 {contactName}
               </Text>
-              <Text style={styles.headerSubtitle}>Conversation</Text>
+              <Text style={styles.headerSubtitle}>
+                {isGroup
+                  ? (groupDetails
+                    ? `${groupDetails.participants?.length || 0} members`
+                    : "Group Chat")
+                  : "Conversation"}
+              </Text>
             </View>
           </View>
         </View>
@@ -276,6 +343,9 @@ export default function ChatScreen() {
                         msg.isSent ? styles.sentBubble : styles.receivedBubble,
                       ]}
                     >
+                      {isGroup && !msg.isSent && (
+                        <Text style={styles.senderName}>{msg.senderName}</Text>
+                      )}
                       <Text
                         style={[
                           styles.messageText,
@@ -635,5 +705,12 @@ backButton: {
     width: 20,
     height: 20,
     tintColor: "#fff",
+  },
+  senderName: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: GOLD,
+    marginBottom: 4,
+    textAlign: "left",
   },
 });

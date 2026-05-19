@@ -145,6 +145,11 @@ const SwipeableMessageItem = ({ item, onPress, onDelete }) => {
 
               <Text style={styles.messageTime}>{item.time}</Text>
             </View>
+            {!!item.message && (
+              <Text style={styles.messageSub} numberOfLines={1}>
+                {item.message}
+              </Text>
+            )}
           </View>
         </TouchableOpacity>
       </Animated.View>
@@ -156,7 +161,10 @@ export default function MessagesList() {
   const router = useRouter();
   const { t } = useTranslation();
   const [conversations, setConversations] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingGroups, setLoadingGroups] = useState(false);
+  const [activeTab, setActiveTab] = useState("direct");
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -177,6 +185,7 @@ export default function MessagesList() {
             : "",
           avatar: conv.user?.avatar || null,
           unread: conv.unreadCount > 0,
+          isGroup: false,
         }));
 
         setConversations(formatted);
@@ -188,18 +197,59 @@ export default function MessagesList() {
     }
   }, []);
 
+  const fetchGroups = useCallback(async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) return;
+      setLoadingGroups(true);
+
+      const response = await api.getGroups(token);
+      if (response.success) {
+        const formatted = response.data.map((group) => ({
+          id: group._id,
+          name: group.name,
+          message: group.lastMessage?.content || "No messages yet",
+          time: group.lastMessage
+            ? new Date(group.lastMessage.createdAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "",
+          avatar: null,
+          unread: false,
+          isGroup: true,
+        }));
+
+        setGroups(formatted);
+      }
+    } catch (error) {
+      console.error("Failed to fetch groups:", error);
+    } finally {
+      setLoadingGroups(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchConversations();
-  }, [fetchConversations]);
+    fetchGroups();
+  }, [fetchConversations, fetchGroups]);
 
   const handleNewMessage = useCallback(() => {
     fetchConversations();
   }, [fetchConversations]);
 
-  useChatSocket(handleNewMessage);
+  const handleNewGroupMessage = useCallback(() => {
+    fetchGroups();
+  }, [fetchGroups]);
+
+  useChatSocket(handleNewMessage, handleNewGroupMessage);
 
   const handleDelete = (id) => {
-    setConversations((prev) => prev.filter((msg) => msg.id !== id));
+    if (activeTab === "direct") {
+      setConversations((prev) => prev.filter((msg) => msg.id !== id));
+    } else {
+      setGroups((prev) => prev.filter((msg) => msg.id !== id));
+    }
   };
 
   const handleChatPress = (contact) => {
@@ -209,6 +259,7 @@ export default function MessagesList() {
         contactId: contact.id,
         contactName: contact.name,
         contactAvatar: contact.avatar,
+        isGroup: contact.isGroup ? "true" : "false",
       },
     });
   };
@@ -234,15 +285,42 @@ export default function MessagesList() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {t("chat_pages.list_title")}
         </Text>
+
+        <TouchableOpacity
+          style={styles.groupsButton}
+          onPress={() => router.push("/groups")}
+        >
+          <Text style={styles.groupsButtonText}>Groups Setup</Text>
+        </TouchableOpacity>
+
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tabButton, activeTab === "direct" && styles.activeTabButton]}
+            onPress={() => setActiveTab("direct")}
+          >
+            <Text style={[styles.tabText, activeTab === "direct" && styles.activeTabText]}>
+              Chats
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tabButton, activeTab === "group" && styles.activeTabButton]}
+            onPress={() => setActiveTab("group")}
+          >
+            <Text style={[styles.tabText, activeTab === "group" && styles.activeTabText]}>
+              Groups
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {loading ? (
+      {loading || (activeTab === "group" && loadingGroups) ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#6B5B4F" />
         </View>
       ) : (
         <FlatList
-          data={conversations}
+          data={activeTab === "direct" ? conversations : groups}
           renderItem={renderMessageItem}
           keyExtractor={(item) => item.id.toString()}
           style={styles.messagesList}
@@ -252,8 +330,18 @@ export default function MessagesList() {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>
-                {t("chat_pages.no_conversations")}
+                {activeTab === "direct"
+                  ? t("chat_pages.no_conversations")
+                  : "No group conversations found"}
               </Text>
+              {activeTab === "group" && (
+                <TouchableOpacity
+                  style={styles.createGroupBtn}
+                  onPress={() => router.push("/groups")}
+                >
+                  <Text style={styles.createGroupBtnText}>Create or Join Group</Text>
+                </TouchableOpacity>
+              )}
             </View>
           }
         />
@@ -384,6 +472,13 @@ const styles = StyleSheet.create({
     color: "#9A8C7A",
   },
 
+  messageSub: {
+    fontSize: 14,
+    color: "#8B7B6C",
+    marginTop: 4,
+    textAlign: "left",
+  },
+
   swipeActions: {
     position: "absolute",
     right: 0,
@@ -422,12 +517,91 @@ const styles = StyleSheet.create({
   },
 
   emptyContainer: {
-    padding: 20,
+    padding: 30,
     alignItems: "center",
+    justifyContent: "center",
   },
 
   emptyText: {
     color: "#8B7B6C",
     fontSize: 16,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+
+  tabContainer: {
+    flexDirection: "row",
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: 20,
+    padding: 3,
+    marginHorizontal: 20,
+    marginTop: 14,
+    marginBottom: 2,
+  },
+
+  tabButton: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 17,
+  },
+
+  activeTabButton: {
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+
+  tabText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.7)",
+  },
+
+  activeTabText: {
+    color: "#6B5B4F",
+    fontWeight: "700",
+  },
+
+  groupsButton: {
+    position: "absolute",
+    top: 75,
+    right: 20,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.22)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  groupsButtonText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+
+  createGroupBtn: {
+    backgroundColor: "#6B5B4F",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  createGroupBtnText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
   },
 });

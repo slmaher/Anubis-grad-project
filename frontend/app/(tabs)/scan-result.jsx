@@ -80,7 +80,8 @@ const generateArabicGuide = (description) => {
 
   const baseStory = cleanedDescription
     ? cleanedDescription
-        .split(/(?<=[.!?])\s+/)
+        .replace(/([.!?])\s+/g, "$1|")
+        .split("|")
         .filter(Boolean)
         .slice(0, 2)
         .join(" ")
@@ -111,7 +112,8 @@ const generateEnglishGuide = (description) => {
 
   const baseStory = descriptionWithoutIntro
     ? descriptionWithoutIntro
-        .split(/(?<=[.!?])\s+/)
+        .replace(/([.!?])\s+/g, "$1|")
+        .split("|")
         .filter(Boolean)
         .slice(0, 2)
         .join(" ")

@@ -3,6 +3,9 @@ import { NextFunction, Response, Router } from "express";
 import { MessageModel } from "./message.model";
 import { UserModel } from "../users/user.model";
 import { CreateMessageDto } from "./message.dto";
+import { GroupModel } from "./group.model";
+import { GroupMessageModel } from "./groupMessage.model";
+import { CreateGroupDto, SendGroupMessageDto } from "./group.dto";
 import {
   authenticate,
   AuthenticatedRequest,
@@ -311,6 +314,245 @@ chatRouter.get(
       next(err);
     }
   },
+);
+
+// POST /api/chat/groups - Create a group
+chatRouter.post(
+  "/groups",
+  authenticate,
+  validateBody(CreateGroupDto),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const dto = req.body as CreateGroupDto;
+      const ownerId = req.user!.id;
+
+      // Ensure participants list includes the owner
+      const participantSet = new Set<string>();
+      participantSet.add(ownerId);
+      if (dto.participants) {
+        dto.participants.forEach((p) => participantSet.add(p));
+      }
+      const participants: string[] = [];
+      participantSet.forEach((p) => participants.push(p));
+
+      // Verify all participants exist
+      const usersExist = await UserModel.find({ _id: { $in: participants } });
+      if (usersExist.length !== participants.length) {
+        return res.status(400).json({
+          success: false,
+          message: "One or more participants do not exist",
+        });
+      }
+
+      const group = await GroupModel.create({
+        name: dto.name,
+        owner: ownerId,
+        participants: participants,
+      });
+
+      const populated = await group.populate([
+        { path: "owner", select: "name email avatar" },
+        { path: "participants", select: "name email avatar" },
+      ]);
+
+      // Socket broadcast to all participants about the new group
+      try {
+        const socketService = SocketService.getInstance();
+        participants.forEach((userId) => {
+          if (userId !== ownerId) {
+            socketService.emitToUser(userId, "new_group", populated);
+          }
+        });
+      } catch (err) {
+        console.error("Failed to emit new_group socket event:", err);
+      }
+
+      return res.status(201).json({
+        success: true,
+        data: populated,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// GET /api/chat/groups - Get all groups for the authenticated user
+chatRouter.get(
+  "/groups",
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.id;
+
+      const groups = await GroupModel.find({
+        participants: userId,
+      })
+        .populate("owner", "name email avatar")
+        .populate("participants", "name email avatar")
+        .sort({ updatedAt: -1 });
+
+      // Fetch the last message for each group
+      const data = await Promise.all(
+        groups.map(async (group) => {
+          const lastMessage = await GroupMessageModel.findOne({ group: group._id })
+            .populate("sender", "name email avatar")
+            .sort({ createdAt: -1 });
+
+          return {
+            ...group.toObject(),
+            lastMessage,
+          };
+        })
+      );
+
+      return res.json({
+        success: true,
+        data,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// GET /api/chat/groups/:id - Get specific group details
+chatRouter.get(
+  "/groups/:id",
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.id;
+      const group = await GroupModel.findById(req.params.id)
+        .populate("owner", "name email avatar")
+        .populate("participants", "name email avatar");
+
+      if (!group) {
+        return res.status(404).json({ success: false, message: "Group not found" });
+      }
+
+      // Check if user is participant
+      const isParticipant = group.participants.some(
+        (p) => p._id.toString() === userId
+      );
+      if (!isParticipant) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: You are not a participant in this group",
+        });
+      }
+
+      return res.json({
+        success: true,
+        data: group,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /api/chat/groups/:id/messages - Send a message in a group
+chatRouter.post(
+  "/groups/:id/messages",
+  authenticate,
+  validateBody(SendGroupMessageDto),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const dto = req.body as SendGroupMessageDto;
+      const senderId = req.user!.id;
+      const groupId = req.params.id;
+
+      // Verify group exists and user is participant
+      const group = await GroupModel.findById(groupId);
+      if (!group) {
+        return res.status(404).json({ success: false, message: "Group not found" });
+      }
+
+      const isParticipant = group.participants.some(
+        (p) => p.toString() === senderId
+      );
+      if (!isParticipant) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: You are not a participant in this group",
+        });
+      }
+
+      const message = await GroupMessageModel.create({
+        group: groupId,
+        sender: senderId,
+        content: dto.content,
+      });
+
+      const populated = await message.populate([
+        { path: "sender", select: "name email avatar" },
+        { path: "group", select: "name" },
+      ]);
+
+      // Update the group's updatedAt timestamp
+      await GroupModel.findByIdAndUpdate(groupId, { updatedAt: new Date() });
+
+      // Emit real-time update to all group participants
+      try {
+        const socketService = SocketService.getInstance();
+        group.participants.forEach((participantId) => {
+          socketService.emitToUser(participantId.toString(), "new_group_message", populated);
+        });
+      } catch (err) {
+        console.error("Failed to emit group socket event:", err);
+      }
+
+      return res.status(201).json({
+        success: true,
+        data: populated,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// GET /api/chat/groups/:id/messages - Get messages for a group
+chatRouter.get(
+  "/groups/:id/messages",
+  authenticate,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.id;
+      const groupId = req.params.id;
+      const { limit = "50", skip = "0" } = req.query;
+
+      // Verify group exists and user is participant
+      const group = await GroupModel.findById(groupId);
+      if (!group) {
+        return res.status(404).json({ success: false, message: "Group not found" });
+      }
+
+      const isParticipant = group.participants.some(
+        (p) => p.toString() === userId
+      );
+      if (!isParticipant) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: You are not a participant in this group",
+        });
+      }
+
+      const messages = await GroupMessageModel.find({ group: groupId })
+        .populate("sender", "name email avatar")
+        .sort({ createdAt: -1 })
+        .limit(Number(limit))
+        .skip(Number(skip));
+
+      return res.json({
+        success: true,
+        data: messages,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 );
 
 export { chatRouter };

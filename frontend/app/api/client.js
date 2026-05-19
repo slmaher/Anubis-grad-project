@@ -268,6 +268,29 @@ export const api = {
       token,
     });
   },
+  getGroups(token) {
+    return apiRequest("/api/chat/groups", { token });
+  },
+  createGroup(body, token) {
+    return apiRequest("/api/chat/groups", {
+      method: "POST",
+      body,
+      token,
+    });
+  },
+  getGroupMessages(groupId, token) {
+    return apiRequest(`/api/chat/groups/${groupId}/messages`, { token });
+  },
+  sendGroupMessage(groupId, content, token) {
+    return apiRequest(`/api/chat/groups/${groupId}/messages`, {
+      method: "POST",
+      body: { content },
+      token,
+    });
+  },
+  getGroupDetails(groupId, token) {
+    return apiRequest(`/api/chat/groups/${groupId}`, { token });
+  },
   getAiChatReply(history, language) {
     return apiRequest("/api/assistant/chat", {
       method: "POST",
