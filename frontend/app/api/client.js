@@ -199,6 +199,7 @@ export const api = {
           museum: resolvedMuseumId,
           rating: payload.rating,
           comment: payload.comment,
+          images: payload.images,
         },
         token,
       });

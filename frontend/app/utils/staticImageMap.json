@@ -1,0 +1,366 @@
+{
+  "ai_background.jpeg": {
+    "public_id": "ai_background",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160789/ai_background.jpg"
+  },
+  "Anubis-Statue.png": {
+    "public_id": "Anubis-Statue",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160792/Anubis-Statue.jpg"
+  },
+  "Anubis.png": {
+    "public_id": "Anubis",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160794/Anubis.png"
+  },
+  "apple_icon.png": {
+    "public_id": "apple_icon",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160795/apple_icon.png"
+  },
+  "apple_white.png": {
+    "public_id": "apple_white",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160797/apple_white.png"
+  },
+  "avatar.png": {
+    "public_id": "avatar",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160797/avatar.png"
+  },
+  "background.jpeg": {
+    "public_id": "background",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160799/background.jpg"
+  },
+  "beige-background.jpeg": {
+    "public_id": "beige-background",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160801/beige-background.jpg"
+  },
+  "bg.png": {
+    "public_id": "bg",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160803/bg.png"
+  },
+  "chat-icon.png": {
+    "public_id": "chat-icon",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160804/chat-icon.png"
+  },
+  "chat-image-1.jpg": {
+    "public_id": "chat-image-1",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160806/chat-image-1.jpg"
+  },
+  "chat-image-2.jpg": {
+    "public_id": "chat-image-2",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160809/chat-image-2.jpg"
+  },
+  "chat-image-3.jpg": {
+    "public_id": "chat-image-3",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160812/chat-image-3.jpg"
+  },
+  "community-background.png": {
+    "public_id": "community-background",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160813/community-background.jpg"
+  },
+  "Coptic-Museum.jpg": {
+    "public_id": "Coptic-Museum",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160814/Coptic-Museum.jpg"
+  },
+  "Egyptian-Civilization.jpg": {
+    "public_id": "Egyptian-Civilization",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160819/Egyptian-Civilization.jpg"
+  },
+  "Egyptian-Museum-Explore-Screen.png": {
+    "public_id": "Egyptian-Museum-Explore-Screen",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160826/Egyptian-Museum-Explore-Screen.webp"
+  },
+  "egyptian-museum-interior.jpg": {
+    "public_id": "egyptian-museum-interior",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160836/egyptian-museum-interior.jpg"
+  },
+  "egyptian-museum-interior.webp": {
+    "public_id": "egyptian-museum-interior",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160836/egyptian-museum-interior.jpg"
+  },
+  "egyptian-museum.png": {
+    "public_id": "egyptian-museum",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160844/egyptian-museum.webp"
+  },
+  "events-bg.jpeg": {
+    "public_id": "events-bg",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160848/events-bg.jpg"
+  },
+  "exploreCollection1.png": {
+    "public_id": "exploreCollection1",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160852/exploreCollection1.png"
+  },
+  "exploreCollection2.png": {
+    "public_id": "exploreCollection2",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160857/exploreCollection2.png"
+  },
+  "exploreCollection3.png": {
+    "public_id": "exploreCollection3",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160860/exploreCollection3.png"
+  },
+  "google_black.png": {
+    "public_id": "google_black",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160861/google_black.png"
+  },
+  "google_icon.png": {
+    "public_id": "google_icon",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160865/google_icon.png"
+  },
+  "Grand-Egyptian-Museum.png": {
+    "public_id": "Grand-Egyptian-Museum",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160879/Grand-Egyptian-Museum.jpg"
+  },
+  "grand-museum-night.webp": {
+    "public_id": "grand-museum-night",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160880/grand-museum-night.webp"
+  },
+  "Grand-Museum-Profile.png": {
+    "public_id": "Grand-Museum-Profile",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160884/Grand-Museum-Profile.jpg"
+  },
+  "grand-museum.png": {
+    "public_id": "grand-museum",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160886/grand-museum.jpg"
+  },
+  "home-background.jpeg": {
+    "public_id": "home-background",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160887/home-background.jpg"
+  },
+  "keychain.jpeg": {
+    "public_id": "keychain",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160888/keychain.jpg"
+  },
+  "loading.png": {
+    "public_id": "loading",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160889/loading.png"
+  },
+  "location.png": {
+    "public_id": "location",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160890/location.png"
+  },
+  "login.png": {
+    "public_id": "login",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160895/login.png"
+  },
+  "Logo.png": {
+    "public_id": "Logo",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160896/Logo.png"
+  },
+  "map-background.png.jpeg": {
+    "public_id": "map-background_png",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160898/map-background_png.jpg"
+  },
+  "map_2.jpeg": {
+    "public_id": "map_2",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160900/map_2.jpg"
+  },
+  "microsoft.png": {
+    "public_id": "microsoft",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160901/microsoft.png"
+  },
+  "Museum-icon.png": {
+    "public_id": "Museum-icon",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160901/Museum-icon.png"
+  },
+  "Museum-of-Islamic-Art.jpg": {
+    "public_id": "Museum-of-Islamic-Art",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160903/Museum-of-Islamic-Art.jpg"
+  },
+  "onboarding1.png": {
+    "public_id": "onboarding1",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160912/onboarding1.png"
+  },
+  "onboarding2.png": {
+    "public_id": "onboarding2",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160932/onboarding2.png"
+  },
+  "onboarding3.png": {
+    "public_id": "onboarding3",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160944/onboarding3.png"
+  },
+  "phone-icon.png": {
+    "public_id": "phone-icon",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160946/phone-icon.png"
+  },
+  "profile-alex.png": {
+    "public_id": "profile-alex",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160948/profile-alex.webp"
+  },
+  "profile-benjamin.png": {
+    "public_id": "profile-benjamin",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160949/profile-benjamin.webp"
+  },
+  "profile-claire.png": {
+    "public_id": "profile-claire",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160950/profile-claire.webp"
+  },
+  "profile-farita.png": {
+    "public_id": "profile-farita",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160951/profile-farita.webp"
+  },
+  "profile-james.png": {
+    "public_id": "profile-james",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160952/profile-james.webp"
+  },
+  "profile-marie.png": {
+    "public_id": "profile-marie",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160953/profile-marie.webp"
+  },
+  "profile-tomas.png": {
+    "public_id": "profile-tomas",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160955/profile-tomas.webp"
+  },
+  "profile-you.png": {
+    "public_id": "profile-you",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160957/profile-you.webp"
+  },
+  "qr-code.jpeg": {
+    "public_id": "qr-code",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160959/qr-code.jpg"
+  },
+  "question-icon.png": {
+    "public_id": "question-icon",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160961/question-icon.png"
+  },
+  "register.png": {
+    "public_id": "register",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160979/register.png"
+  },
+  "registerIcon1.png": {
+    "public_id": "registerIcon1",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160980/registerIcon1.png"
+  },
+  "registerIcon2.png": {
+    "public_id": "registerIcon2",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160981/registerIcon2.png"
+  },
+  "registerIcon3.png": {
+    "public_id": "registerIcon3",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160982/registerIcon3.png"
+  },
+  "round-arrows.png": {
+    "public_id": "round-arrows",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160983/round-arrows.png"
+  },
+  "save.png": {
+    "public_id": "save",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160984/save.png"
+  },
+  "search-icon-white.png": {
+    "public_id": "search-icon-white",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160985/search-icon-white.png"
+  },
+  "search-icon.png": {
+    "public_id": "search-icon",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160986/search-icon.png"
+  },
+  "send-icon.png": {
+    "public_id": "send-icon",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160987/send-icon.png"
+  },
+  "send-icon2.png": {
+    "public_id": "send-icon2",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160988/send-icon2.png"
+  },
+  "settings.png": {
+    "public_id": "settings",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160989/settings.png"
+  },
+  "shopping-bag.png": {
+    "public_id": "shopping-bag",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160990/shopping-bag.png"
+  },
+  "shopping-cart.png": {
+    "public_id": "shopping-cart",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160991/shopping-cart.png"
+  },
+  "signup.png": {
+    "public_id": "signup",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160996/signup.png"
+  },
+  "signupAndLoginIcon1.png": {
+    "public_id": "signupAndLoginIcon1",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160998/signupAndLoginIcon1.png"
+  },
+  "signupAndLoginIcon2.png": {
+    "public_id": "signupAndLoginIcon2",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779160999/signupAndLoginIcon2.png"
+  },
+  "signupAndLoginIcon3.png": {
+    "public_id": "signupAndLoginIcon3",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161000/signupAndLoginIcon3.png"
+  },
+  "souvenir-1.jpeg": {
+    "public_id": "souvenir-1",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161003/souvenir-1.jpg"
+  },
+  "souvenir-2.jpeg": {
+    "public_id": "souvenir-2",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161004/souvenir-2.jpg"
+  },
+  "souvenir-3.jpeg": {
+    "public_id": "souvenir-3",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161006/souvenir-3.jpg"
+  },
+  "souvenir-4.jpeg": {
+    "public_id": "souvenir-4",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161007/souvenir-4.jpg"
+  },
+  "souvenir-5.jpg": {
+    "public_id": "souvenir-5",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161009/souvenir-5.jpg"
+  },
+  "souvenir-6.jpg": {
+    "public_id": "souvenir-6",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161011/souvenir-6.jpg"
+  },
+  "Souvenirs.png": {
+    "public_id": "Souvenirs",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161012/Souvenirs.png"
+  },
+  "sparkling_stars.png": {
+    "public_id": "sparkling_stars",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161014/sparkling_stars.png"
+  },
+  "splash_screen.png": {
+    "public_id": "splash_screen",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161015/splash_screen.jpg"
+  },
+  "The-Grand-Egyptian-Museum.png": {
+    "public_id": "The-Grand-Egyptian-Museum",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161016/The-Grand-Egyptian-Museum.png"
+  },
+  "The-National-Museum-Of-Egypt.png": {
+    "public_id": "The-National-Museum-Of-Egypt",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161018/The-National-Museum-Of-Egypt.webp"
+  },
+  "tickets-background.webp": {
+    "public_id": "tickets-background",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161020/tickets-background.jpg"
+  },
+  "Tickets.png": {
+    "public_id": "Tickets",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161021/Tickets.png"
+  },
+  "tour-guide-icon.png": {
+    "public_id": "tour-guide-icon",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161022/tour-guide-icon.png"
+  },
+  "tutankhamun.jpg": {
+    "public_id": "tutankhamun",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161025/tutankhamun.jpg"
+  },
+  "volunteering-icon.png": {
+    "public_id": "volunteering-icon",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161026/volunteering-icon.png"
+  },
+  "WhatsApp Image 2026-02-20 at 8.45.57 PM.jpeg": {
+    "public_id": "WhatsApp_Image_2026-02-20_at_8_45_57_PM",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161027/WhatsApp_Image_2026-02-20_at_8_45_57_PM.jpg"
+  },
+  "white-trash.png": {
+    "public_id": "white-trash",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161027/white-trash.png"
+  },
+  "windows-logo.png": {
+    "public_id": "windows-logo",
+    "secure_url": "https://res.cloudinary.com/dh2fur94f/image/upload/v1779161028/windows-logo.png"
+  }
+}

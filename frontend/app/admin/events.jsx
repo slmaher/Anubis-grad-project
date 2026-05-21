@@ -18,6 +18,7 @@ import { useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { getAuthToken } from "../api/authStorage";
 import { API_URL } from "../api/baseUrl";
+import { uploadImageToCloudinary } from "../utils/cloudinary";
 
 const compressImageForWeb = async (dataUrl) => {
   if (Platform.OS !== "web") {
@@ -85,6 +86,7 @@ export default function EventManagement() {
   const [events, setEvents] = useState([]);
   const [museums, setMuseums] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [imageRemoved, setImageRemoved] = useState(false);
@@ -138,41 +140,31 @@ export default function EventManagement() {
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
-        quality: 0.2, // Extremely low quality for minimal size
-        base64: true,
+        quality: 0.5,
       });
 
       if (result.canceled || !result.assets?.length) {
         return;
       }
 
+      setUploading(true);
       const selected = result.assets[0];
-      if (!selected.base64) {
-        Alert.alert("Error", "Failed to read image data. Please try again.");
-        return;
-      }
 
-      const mimeType = selected.mimeType || "image/jpeg";
-      const base64Data = `data:${mimeType};base64,${selected.base64}`;
-      const compressedImageUrl = await compressImageForWeb(base64Data);
-
-      // Warn user if base64 is very large (rough estimate: base64 is ~33% larger than binary)
-      const estimatedSizeKB = (compressedImageUrl.length * 0.75) / 1024;
-      if (estimatedSizeKB > 500) {
-        Alert.alert(
-          "Image Too Large",
-          `This image is ~${Math.round(estimatedSizeKB)}KB. It may fail to upload. Consider choosing a smaller image.`,
-        );
-      }
+      // Upload to Cloudinary under the "banners" folder
+      const uploadResult = await uploadImageToCloudinary(selected.uri, "banners");
 
       setFormData((prev) => ({
         ...prev,
-        imageUrl: compressedImageUrl,
+        imageUrl: uploadResult.secure_url,
         imageFile: null,
       }));
       setImageRemoved(false);
+      Alert.alert("Success", "Photo uploaded successfully!");
     } catch (error) {
-      Alert.alert("Error", "Unable to pick image right now.");
+      console.error("[Cloudinary] pickImage error:", error);
+      Alert.alert("Error", error.message || "Unable to upload image right now.");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -544,16 +536,23 @@ export default function EventManagement() {
                 onChangeText={(t) => setFormData({ ...formData, imageUrl: t })}
               />
               <View style={styles.imageActionsRow}>
-                <TouchableOpacity
-                  style={styles.pickImageBtn}
+                 <TouchableOpacity
+                  style={[styles.pickImageBtn, uploading && { opacity: 0.7 }]}
                   onPress={pickImage}
+                  disabled={uploading}
                 >
-                  <MaterialCommunityIcons
-                    name="image-plus"
-                    size={18}
-                    color="#D9A441"
-                  />
-                  <Text style={styles.pickImageText}>Choose Photo</Text>
+                  {uploading ? (
+                    <ActivityIndicator size="small" color="#D9A441" style={{ marginRight: 4 }} />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name="image-plus"
+                      size={18}
+                      color="#D9A441"
+                    />
+                  )}
+                  <Text style={styles.pickImageText}>
+                    {uploading ? "Uploading to Cloud..." : "Choose Photo"}
+                  </Text>
                 </TouchableOpacity>
                 {!!formData.imageUrl && (
                   <TouchableOpacity
@@ -566,6 +565,7 @@ export default function EventManagement() {
                       });
                       setImageRemoved(true);
                     }}
+                    disabled={uploading}
                   >
                     <Text style={styles.clearImageText}>Remove</Text>
                   </TouchableOpacity>

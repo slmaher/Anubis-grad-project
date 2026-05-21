@@ -18,6 +18,7 @@ import { useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { getAuthToken } from "../api/authStorage";
 import { API_URL } from "../api/baseUrl";
+import { uploadImageToCloudinary } from "../utils/cloudinary";
 
 export default function MuseumManagement() {
   const params = useLocalSearchParams();
@@ -26,6 +27,7 @@ export default function MuseumManagement() {
     : params?.action;
   const [museums, setMuseums] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingMuseum, setEditingMuseum] = useState(null);
   const [imageRemoved, setImageRemoved] = useState(false);
@@ -71,27 +73,29 @@ export default function MuseumManagement() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         quality: 0.7,
-        base64: true,
       });
 
       if (result.canceled || !result.assets?.length) {
         return;
       }
 
+      setUploading(true);
       const selected = result.assets[0];
-      if (!selected.base64) {
-        Alert.alert("Error", "Failed to read image data. Please try again.");
-        return;
-      }
 
-      const mimeType = selected.mimeType || "image/jpeg";
+      // Upload to Cloudinary under the "categories" folder
+      const uploadResult = await uploadImageToCloudinary(selected.uri, "categories");
+
       setFormData((prev) => ({
         ...prev,
-        imageUrl: `data:${mimeType};base64,${selected.base64}`,
+        imageUrl: uploadResult.secure_url,
       }));
       setImageRemoved(false);
+      Alert.alert("Success", "Museum image uploaded successfully!");
     } catch (error) {
-      Alert.alert("Error", "Unable to pick image right now.");
+      console.error("[Cloudinary] pickImage error:", error);
+      Alert.alert("Error", error.message || "Unable to upload image right now.");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -320,15 +324,22 @@ export default function MuseumManagement() {
               />
               <View style={styles.imageActionsRow}>
                 <TouchableOpacity
-                  style={styles.pickImageBtn}
+                  style={[styles.pickImageBtn, uploading && { opacity: 0.7 }]}
                   onPress={pickImage}
+                  disabled={uploading}
                 >
-                  <MaterialCommunityIcons
-                    name="image-plus"
-                    size={18}
-                    color="#D9A441"
-                  />
-                  <Text style={styles.pickImageText}>Choose Image</Text>
+                  {uploading ? (
+                    <ActivityIndicator size="small" color="#D9A441" style={{ marginRight: 4 }} />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name="image-plus"
+                      size={18}
+                      color="#D9A441"
+                    />
+                  )}
+                  <Text style={styles.pickImageText}>
+                    {uploading ? "Uploading to Cloud..." : "Choose Image"}
+                  </Text>
                 </TouchableOpacity>
                 {!!formData.imageUrl && (
                   <TouchableOpacity
@@ -337,6 +348,7 @@ export default function MuseumManagement() {
                       setFormData({ ...formData, imageUrl: "" });
                       setImageRemoved(true);
                     }}
+                    disabled={uploading}
                   >
                     <Text style={styles.clearImageText}>Remove</Text>
                   </TouchableOpacity>

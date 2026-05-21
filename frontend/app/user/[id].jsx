@@ -16,6 +16,8 @@ import { getAuthToken } from "../api/authStorage";
 import * as ImagePicker from "expo-image-picker";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
+import { uploadImageToCloudinary } from "../utils/cloudinary";
+
 const FRIEND_RELATIONSHIP = {
   none: "none",
   friends: "friends",
@@ -139,18 +141,22 @@ export default function UserProfile() {
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.5,
-        base64: true,
       });
 
       if (!result.canceled) {
         setIsUpdatingPhoto(true);
         const token = await getAuthToken();
-        const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+        
+        // Upload image directly to Cloudinary profiles folder
+        const localUri = result.assets[0].uri;
+        const uploadResult = await uploadImageToCloudinary(localUri, "profiles");
 
+        // Save secure_url returned by Cloudinary to the database
         const response = await api.updateProfile(
-          { avatar: base64Image },
+          { avatar: uploadResult.secure_url },
           token,
         );
+        
         if (response.success) {
           setProfile((prev) => ({ ...prev, avatar: response.data.avatar }));
           Alert.alert("Success", "Profile photo updated!");
@@ -160,7 +166,7 @@ export default function UserProfile() {
       }
     } catch (error) {
       console.error("Error updating photo:", error);
-      Alert.alert("Error", "An error occurred while updating photo.");
+      Alert.alert("Error", error.message || "An error occurred while updating photo.");
     } finally {
       setIsUpdatingPhoto(false);
     }

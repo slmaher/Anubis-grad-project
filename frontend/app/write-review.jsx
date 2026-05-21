@@ -13,6 +13,7 @@ import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { api } from "./api/client";
 import { getAuthToken } from "./api/authStorage";
+import { uploadImageToCloudinary } from "./utils/cloudinary";
 import SelfieArModal from "../src/components/SelfieArModal";
 import AR_MODELS, { getSuggestedArModel } from "../src/data/arModels";
 
@@ -95,12 +96,23 @@ export default function WriteReview() {
         return;
       }
 
+      let uploadedImageUrls = [];
+      if (photos && photos.length > 0) {
+        for (const localUri of photos) {
+          const uploadResult = await uploadImageToCloudinary(localUri, "reviews");
+          if (uploadResult?.secure_url) {
+            uploadedImageUrls.push(uploadResult.secure_url);
+          }
+        }
+      }
+
       const payload = {
         museum: museumId,
         museumName,
         museumLookupName,
         rating: overallRating,
         comment: reviewText || title || undefined,
+        images: uploadedImageUrls,
       };
 
       await api.createReview(payload, token);

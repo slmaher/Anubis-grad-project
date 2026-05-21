@@ -4,9 +4,55 @@ import { Stack } from "expo-router";
 import "../i18n/i18n";
 import { useEffect } from "react";
 import { useTranslation, I18nextProvider } from "react-i18next";
-import { I18nManager, Platform } from "react-native";
+import { I18nManager, Platform, Image } from "react-native";
 import i18n from "../i18n/i18n";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { resolveImageSource } from "./utils/cloudinary";
+
+// Global Monkey-patch for React Native Image to automatically resolve Cloudinary resources
+if (Image && !Image.__cloudinaryPatched) {
+  try {
+    const originalRender = Image.render;
+    if (typeof originalRender === "function") {
+      Image.render = function (props, ref) {
+        const newProps = { ...props };
+        if (props && props.source) {
+          // If style has a width, we can use it to request an appropriately sized image from Cloudinary
+          let targetWidth = 800;
+          if (props.style) {
+            const flatStyle = Array.isArray(props.style)
+              ? Object.assign({}, ...props.style)
+              : props.style;
+            if (typeof flatStyle.width === "number") {
+              targetWidth = flatStyle.width;
+            }
+          }
+          newProps.source = resolveImageSource(props.source, targetWidth);
+        }
+        return originalRender.call(this, newProps, ref);
+      };
+      console.log("🛠️ [Cloudinary] Global Image.render patched successfully.");
+    }
+  } catch (e) {
+    console.warn("⚠️ [Cloudinary] Failed to patch Image.render:", e);
+  }
+
+  try {
+    const originalResolveAssetSource = Image.resolveAssetSource;
+    if (typeof originalResolveAssetSource === "function") {
+      Image.resolveAssetSource = function (source) {
+        const resolved = resolveImageSource(source);
+        return originalResolveAssetSource.call(this, resolved);
+      };
+      console.log("🛠️ [Cloudinary] Global Image.resolveAssetSource patched successfully.");
+    }
+  } catch (e) {
+    console.warn("⚠️ [Cloudinary] Failed to patch Image.resolveAssetSource:", e);
+  }
+
+  Image.__cloudinaryPatched = true;
+}
+
 
 function RootLayoutNav() {
   const { i18n: i18nInstance } = useTranslation();

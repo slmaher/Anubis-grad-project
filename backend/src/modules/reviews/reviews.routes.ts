@@ -154,6 +154,7 @@ reviewsRouter.post(
         museum: museumObjectId,
         rating: dto.rating,
         comment: dto.comment,
+        images: dto.images,
       });
 
       const populated = await review.populate([
@@ -198,6 +199,7 @@ reviewsRouter.patch(
           $set: {
             ...(dto.rating != null && { rating: dto.rating }),
             ...(dto.comment !== undefined && { comment: dto.comment }),
+            ...(dto.images !== undefined && { images: dto.images }),
           },
         },
         { new: true },

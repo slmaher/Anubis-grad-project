@@ -22,6 +22,7 @@ import { useTranslation } from "react-i18next";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { api } from "../api/client";
 import { getAuthToken, getAuthUser } from "../api/authStorage";
+import { uploadImageToCloudinary } from "../utils/cloudinary";
 
 const DARK = "#644b2f";
 const MUTED = "#8B7B6C";
@@ -219,23 +220,18 @@ export default function Community() {
         return;
       }
 
-      let imagePayload = null;
+      let uploadedImageUrl = null;
 
-      if (selectedImage?.startsWith("data:")) {
-        if (selectedImage.length > MAX_POST_IMAGE_LENGTH) {
-          alert(
-            "The selected image is too large to upload. Please choose a smaller image.",
-          );
-          return;
-        }
-
-        imagePayload = selectedImage;
+      if (selectedImage) {
+        // Upload the selected local image directly to Cloudinary posts folder
+        const uploadResult = await uploadImageToCloudinary(selectedImage, "posts");
+        uploadedImageUrl = uploadResult.secure_url;
       }
 
       await api.createPost(
         {
           content: newPostContent,
-          ...(imagePayload ? { image: imagePayload } : {}),
+          ...(uploadedImageUrl ? { image: uploadedImageUrl } : {}),
         },
         token,
       );
@@ -349,12 +345,11 @@ export default function Community() {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
-      quality: 0.25,
-      base64: true,
+      quality: 0.5,
     });
 
-    if (!result.canceled && result.assets?.[0]?.base64) {
-      setSelectedImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+    if (!result.canceled && result.assets?.[0]?.uri) {
+      setSelectedImage(result.assets[0].uri);
     }
   };
 

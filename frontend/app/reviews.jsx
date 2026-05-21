@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
@@ -164,6 +165,20 @@ export default function Reviews() {
 
                 {/* Comment */}
                 <Text style={styles.comment}>{review.comment}</Text>
+
+                {/* Images */}
+                {Array.isArray(review.images) && review.images.length > 0 && (
+                  <View style={styles.reviewImagesRow}>
+                    {review.images.map((imgUrl, imgIdx) => (
+                      <Image
+                        key={imgIdx}
+                        source={{ uri: imgUrl }}
+                        style={styles.reviewImageThumb}
+                        resizeMode="cover"
+                      />
+                    ))}
+                  </View>
+                )}
               </View>
 
               {/* Divider - Don't show after last item */}
@@ -376,6 +391,19 @@ const styles = StyleSheet.create({
     color: "#666",
     lineHeight: 20,
     marginLeft: 50,
+  },
+  reviewImagesRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 10,
+    marginLeft: 50,
+  },
+  reviewImageThumb: {
+    width: 75,
+    height: 75,
+    borderRadius: 8,
+    backgroundColor: "#E0E0E0",
   },
   divider: {
     height: 1,

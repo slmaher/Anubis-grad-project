@@ -5,6 +5,7 @@ export interface IReview extends Document {
   museum: mongoose.Types.ObjectId;
   rating: number;
   comment?: string;
+  images?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,6 +34,10 @@ const ReviewSchema = new Schema<IReview>(
       type: String,
       trim: true,
       maxlength: 1000
+    },
+    images: {
+      type: [String],
+      default: []
     }
   },
   {

@@ -1,4 +1,4 @@
-import { IsInt, IsMongoId, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { IsInt, IsMongoId, IsOptional, IsString, Max, MaxLength, Min, IsArray } from 'class-validator';
 
 export class CreateReviewDto {
   @IsMongoId()
@@ -13,6 +13,11 @@ export class CreateReviewDto {
   @IsString()
   @MaxLength(1000)
   comment?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  images?: string[];
 }
 
 export class UpdateReviewDto {
@@ -26,4 +31,9 @@ export class UpdateReviewDto {
   @IsString()
   @MaxLength(1000)
   comment?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  images?: string[];
 }

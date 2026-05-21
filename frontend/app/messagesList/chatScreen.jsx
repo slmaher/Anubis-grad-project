@@ -10,13 +10,17 @@ import {
   Platform,
   ActivityIndicator,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import * as ImagePicker from "expo-image-picker";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../api/client";
 import { getAuthToken, getAuthUser } from "../api/authStorage";
 import { useChatSocket } from "../hooks/useChatSocket";
+import { uploadImageToCloudinary } from "../utils/cloudinary";
 
 const DARK = "#2C2010";
 const MUTED = "#8B7B6C";
@@ -38,6 +42,7 @@ export default function ChatScreen() {
   const [message, setMessage] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [messageTranslations, setMessageTranslations] = useState({});
   const [translationLoading, setTranslationLoading] = useState({});
@@ -250,6 +255,65 @@ export default function ChatScreen() {
     }
   };
 
+  const pickChatImage = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permission.status !== "granted") {
+        Alert.alert(
+          "Permission needed",
+          "Please allow gallery access to send images in chat."
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 0.7,
+      });
+
+      if (result.canceled || !result.assets?.length) {
+        return;
+      }
+
+      setUploading(true);
+      const selected = result.assets[0];
+
+      // Upload directly to Cloudinary chat folder!
+      const uploadResult = await uploadImageToCloudinary(selected.uri, "chat");
+      const secureUrl = uploadResult.secure_url;
+
+      // Send the secureUrl as the message content!
+      const token = await getAuthToken();
+      if (!token || !contactId) return;
+
+      const response = isGroup
+        ? await api.sendGroupMessage(contactId, secureUrl, token)
+        : await api.sendMessage(contactId, secureUrl, token);
+
+      if (response.success) {
+        const msg = response.data;
+        const formatted = {
+          id: msg._id,
+          text: msg.content,
+          time: new Date(msg.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          isSent: true,
+          senderName: currentUser?.name || "Me",
+          senderAvatar: currentUser?.avatar || null,
+          hasCheckmark: false,
+        };
+        setChatMessages((prev) => [...prev, formatted]);
+      }
+    } catch (error) {
+      console.error("[Cloudinary Chat] upload failed:", error);
+      Alert.alert("Upload Failed", "Unable to upload or send image.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -346,14 +410,25 @@ export default function ChatScreen() {
                       {isGroup && !msg.isSent && (
                         <Text style={styles.senderName}>{msg.senderName}</Text>
                       )}
-                      <Text
-                        style={[
-                          styles.messageText,
-                          msg.isSent ? styles.sentText : styles.receivedText,
-                        ]}
-                      >
-                        {displayText}
-                      </Text>
+                      {typeof displayText === "string" &&
+                      displayText.startsWith("http") &&
+                      (displayText.includes("res.cloudinary.com") ||
+                        displayText.match(/\.(jpeg|jpg|gif|png|webp|heic)/i)) ? (
+                        <Image
+                          source={{ uri: displayText }}
+                          style={styles.chatAttachmentImage}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <Text
+                          style={[
+                            styles.messageText,
+                            msg.isSent ? styles.sentText : styles.receivedText,
+                          ]}
+                        >
+                          {displayText}
+                        </Text>
+                      )}
 
                       <View style={styles.messageFooter}>
                         <Text
@@ -404,6 +479,18 @@ export default function ChatScreen() {
 
         <View style={styles.inputContainer}>
           <View style={styles.inputWrapper}>
+            <TouchableOpacity
+              style={styles.attachButton}
+              onPress={pickChatImage}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <ActivityIndicator size="small" color={GOLD} />
+              ) : (
+                <MaterialCommunityIcons name="paperclip" size={24} color={MUTED} />
+              )}
+            </TouchableOpacity>
+
             <TextInput
               style={styles.input}
               placeholder={t("chat_pages.type_message")}
@@ -647,6 +734,22 @@ backButton: {
     width: 82,
     height: 82,
     borderRadius: 14,
+  },
+
+  chatAttachmentImage: {
+    width: 200,
+    height: 150,
+    borderRadius: 14,
+    marginTop: 4,
+    marginBottom: 4,
+    backgroundColor: "#F3F0EB",
+  },
+
+  attachButton: {
+    padding: 8,
+    marginRight: 4,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   inputContainer: {
