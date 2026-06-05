@@ -424,7 +424,7 @@ export default function ScanResult() {
           setCurrentAudioUri(audioUri);
           try {
             router.push(
-              `/virtual-guide?audioUrl=${encodeURIComponent(audioUri)}&text=${encodeURIComponent(sanitized)}&language=${encodeURIComponent(language)}`,
+              `/virtual-guide?audioUrl=${encodeURIComponent(audioUri)}&text=${encodeURIComponent(sanitized)}&language=${encodeURIComponent(language)}&artifactTitle=${encodeURIComponent(artifactTitle || "")}&artifactSummary=${encodeURIComponent(descriptionEn || descriptionAr || sanitized || "")}&modelTitle=${encodeURIComponent(selectedArModel?.title || "")}&modelSubtitle=${encodeURIComponent(selectedArModel?.subtitle || "")}`,
             );
           } catch (navErr) {
             console.warn("Could not open virtual guide:", navErr);
@@ -487,7 +487,7 @@ export default function ScanResult() {
         setCurrentAudioUri(audioUri);
         try {
           router.push(
-            `/virtual-guide?audioUrl=${encodeURIComponent(audioUri)}&text=${encodeURIComponent(sanitized)}&language=${encodeURIComponent(language)}`,
+            `/virtual-guide?audioUrl=${encodeURIComponent(audioUri)}&text=${encodeURIComponent(sanitized)}&language=${encodeURIComponent(language)}&artifactTitle=${encodeURIComponent(artifactTitle || "")}&artifactSummary=${encodeURIComponent(descriptionEn || descriptionAr || sanitized || "")}&modelTitle=${encodeURIComponent(selectedArModel?.title || "")}&modelSubtitle=${encodeURIComponent(selectedArModel?.subtitle || "")}`,
           );
         } catch (navErr) {
           console.warn("Could not open virtual guide:", navErr);
@@ -760,12 +760,9 @@ export default function ScanResult() {
   }, [suggestedArModel?.id]);
 
   const handleStartArExperience = () => {
-    router.push({
-      pathname: "/ar-viewer",
-      params: {
-        modelId: selectedArModel.id,
-      },
-    });
+    router.push(
+      `/virtual-guide?audioUrl=${encodeURIComponent(audioUri)}&text=${encodeURIComponent(sanitized)}&language=${encodeURIComponent(language)}&artifactTitle=${encodeURIComponent(artifactTitle || "")}&artifactSummary=${encodeURIComponent(descriptionEn || descriptionAr || sanitized || "")}&modelTitle=${encodeURIComponent(selectedArModel?.title || "")}&modelSubtitle=${encodeURIComponent(selectedArModel?.subtitle || "")}`
+    );
   };
 
   const restoredImageUrl = aiResult?.restoration?.final_image_url || null;

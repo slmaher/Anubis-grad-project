@@ -1,15 +1,121 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Platform,
+  ScrollView,
+  TextInput,
+  KeyboardAvoidingView,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Asset } from "expo-asset";
 import * as FileSystem from "expo-file-system";
+import * as Speech from "expo-speech";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BlurView } from "expo-blur";
+
+import { api } from "./api/client";
+import { API_BASE_URL } from "./api/baseUrl";
+
+const STORAGE_PREFIX = "virtual-guide";
+const MAX_VISIBLE_MESSAGES = 80;
+
+function safeDecode(value, fallback = "") {
+  if (!value) return fallback;
+  try {
+    return decodeURIComponent(String(value));
+  } catch {
+    return String(value);
+  }
+}
+
+function hashString(value) {
+  const text = String(value || "");
+  let hash = 5381;
+  for (let i = 0; i < text.length; i += 1) {
+    hash = (hash * 33) ^ text.charCodeAt(i);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+function sanitizeText(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .replace(/<[^>]+>/g, " ")
+    .trim();
+}
+
+function splitTokens(text) {
+  return String(text || "").match(/\S+|\s+/g) || [];
+}
+
+function buildDefaultWelcome({ artifactTitle, artifactSummary, modelTitle, language }) {
+  const title = artifactTitle || modelTitle || "this artifact";
+  if (language === "ar") {
+    return sanitizeText(`أهلاً بيك، أنا هنا للإجابة عن ${title}.`);
+  }
+
+  return sanitizeText(`I’m here to answer questions about ${title}.`);
+}
+
+function buildSuggestedQuestions({ artifactTitle, modelTitle, language }) {
+  const title = artifactTitle || modelTitle || (language === "ar" ? "الأثر" : "this artifact");
+
+  if (language === "ar") {
+    return [
+      `ما هو ${title}؟`,
+      `ما أهم تفاصيله؟`,
+      `اشرحه ببساطة.`,
+    ];
+  }
+
+  if (language === "fr") {
+    return [
+      `Qu'est-ce que ${title} ?`,
+      `Quel est son point clé ?`,
+      `Explique-le simplement.`,
+    ];
+  }
+
+  if (language === "de") {
+    return [
+      `Was ist ${title}?`,
+      `Was ist das Wichtigste daran?`,
+      `Erklär es einfach.`,
+    ];
+  }
+
+  if (language === "zh") {
+    return [
+      `什么是 ${title}？`,
+      `它最重要的是什么？`,
+      `用简单的话解释。`,
+    ];
+  }
+
+  return [
+    `What is ${title}?`,
+    `What matters most here?`,
+    `Explain it simply.`,
+  ];
+}
+
+function languageToSpeechCode(language) {
+  if (language === "ar") return "ar-EG";
+  if (language === "fr") return "fr-FR";
+  if (language === "de") return "de-DE";
+  if (language === "zh") return "zh-CN";
+  return "en-US";
+}
+
+function getGuideStorageKey(parts) {
+  return `${STORAGE_PREFIX}:${parts.filter(Boolean).join(":")}`;
+}
 
 const buildAvatarHTML = (
   initialAudioUrl = "",
@@ -32,7 +138,7 @@ const buildAvatarHTML = (
   #loading small{display:block;margin-top:6px;color:#9fb3d1;font-size:11px}
 </style>
 </head>
-<body>
+<body dir="${initialLanguage === "ar" ? "rtl" : "ltr"}" lang="${initialLanguage}">
 <div id="bg">
   <svg width="100%" height="100%" viewBox="0 0 400 900"
        preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
@@ -177,6 +283,15 @@ function debug(msg, obj) {
       window.ReactNativeWebView.postMessage(JSON.stringify(payload));
     } else {
       console.log('AVATAR_DEBUG', payload);
+    }
+  } catch (e) {}
+}
+
+function notify(type, payload) {
+  try {
+    const message = JSON.stringify({ t: type, ...(payload || {}) });
+    if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+      window.ReactNativeWebView.postMessage(message);
     }
   } catch (e) {}
 }
@@ -761,7 +876,8 @@ function disconnectAudioGraph() {
 
 async function startAudio(url) {
   disconnectAudioGraph();
-  setStatus('','');
+  setStatus('playing', sub.textContent || '');
+  notify('AUDIO_STARTED', { audioUrl: url });
   app.audio.element = new Audio(url);
   app.audio.element.crossOrigin = 'anonymous';
   app.audio.element.playsInline = true;
@@ -772,14 +888,38 @@ async function startAudio(url) {
     app.audio.sourceNode.connect(app.audio.analyser);
   } catch(_) { app.audio.analyser = null; app.audio.freqData = null; app.audio.timeData = null; }
   app.isSpeaking = true;
-  app.audio.element.onended = stopAudio;
-  app.audio.element.play().catch(() => { app.isSpeaking = false; setStatus('',''); });
+  notify('STATE_CHANGE', { state: 'speaking' });
+  app.audio.element.onended = () => {
+    notify('AUDIO_ENDED', { audioUrl: url });
+    stopAudio();
+  };
+  app.audio.element.play().catch((error) => {
+    notify('AUDIO_ERROR', { message: String(error?.message || error || 'Audio playback failed') });
+    app.isSpeaking = false; setStatus('','');
+  });
 }
 
 function stopAudio() {
   app.isSpeaking = false; app.speakingStrength = 0;
   disconnectAudioGraph();
-  setStatus('','');
+  setStatus('idle','');
+  notify('STATE_CHANGE', { state: 'idle' });
+}
+
+function pauseAudio() {
+  if (app.audio.element && !app.audio.element.paused) {
+    app.audio.element.pause();
+    notify('STATE_CHANGE', { state: 'paused' });
+    setStatus('paused', sub.textContent || '');
+  }
+}
+
+function resumeAudio() {
+  if (app.audio.element && app.audio.element.paused) {
+    app.audio.element.play().catch(() => {});
+    notify('STATE_CHANGE', { state: 'speaking' });
+    setStatus('playing', sub.textContent || '');
+  }
 }
 
 function animate() {
@@ -811,6 +951,9 @@ function handleIncomingMessage(ev) {
     const d = typeof ev.data === 'string' ? JSON.parse(ev.data) : ev.data;
     if (d?.type === 'PLAY_AUDIO' && d.audioUrl) startAudio(d.audioUrl);
     if (d?.type === 'STOP_AUDIO') stopAudio();
+    if (d?.type === 'PAUSE_AUDIO') pauseAudio();
+    if (d?.type === 'RESUME_AUDIO') resumeAudio();
+    if (d?.type === 'SET_STATUS') setStatus(d.status || '', d.subtitle || '');
   } catch(_){}
 }
 
@@ -838,6 +981,187 @@ export default function VirtualGuide() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const [modelUrl, setModelUrl] = useState("");
+  const webViewRef = useRef(null);
+  const mountedRef = useRef(true);
+  const messageScrollRef = useRef(null);
+  const replyTimerRef = useRef(null);
+  const speechCacheRef = useRef(new Map());
+  const currentAudioUrlRef = useRef("");
+  const conversationMemoryRef = useRef("");
+  const [messages, setMessages] = useState([]);
+  const [draft, setDraft] = useState("");
+  const [isThinking, setIsThinking] = useState(false);
+  const [guideState, setGuideState] = useState("idle");
+  const [isMuted, setIsMuted] = useState(false);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const [isStreamingReply, setIsStreamingReply] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [lastSpokenText, setLastSpokenText] = useState("");
+
+  const audioUrl = params?.audioUrl ? safeDecode(params.audioUrl) : null;
+  const guideText = params?.text ? safeDecode(params.text) : "";
+  const language = params?.language ? safeDecode(params.language) : "en";
+  const artifactTitle = params?.artifactTitle ? safeDecode(params.artifactTitle) : "";
+  const artifactSummary = params?.artifactSummary ? safeDecode(params.artifactSummary) : "";
+  const museumName = params?.museumName ? safeDecode(params.museumName) : "";
+  const modelTitle = params?.modelTitle ? safeDecode(params.modelTitle) : "";
+  const modelSubtitle = params?.modelSubtitle ? safeDecode(params.modelSubtitle) : "";
+  const isRTL = language === "ar";
+
+  const guideStorageKey = useMemo(
+    () =>
+      getGuideStorageKey([
+        "session",
+        language,
+        hashString(`${artifactTitle || modelTitle || guideText || "guide"}`),
+      ]),
+    [artifactTitle, guideText, language, modelTitle],
+  );
+
+  const ttsStorageKey = useMemo(() => getGuideStorageKey(["tts", language]), [language]);
+
+  const suggestedQuestions = useMemo(
+    () => buildSuggestedQuestions({ artifactTitle, modelTitle, language }),
+    [artifactTitle, language, modelTitle],
+  );
+
+  const headerTitle = useMemo(
+    () => artifactTitle || modelTitle || (language === "ar" ? "المرشد الذكي" : "Virtual Guide"),
+    [artifactTitle, language, modelTitle],
+  );
+
+  const headerSubtitle = useMemo(
+    () => artifactSummary || modelSubtitle || (language === "ar" ? "اسأل سؤالًا واحدًا في كل مرة" : "Ask one question at a time"),
+    [artifactSummary, guideText, language, modelSubtitle],
+  );
+
+  const inputPlaceholder = isRTL ? "اكتب سؤالك هنا..." : "Ask a follow-up question...";
+
+  useEffect(() => {
+    currentAudioUrlRef.current = audioUrl || "";
+    if (guideText) {
+      setLastSpokenText(guideText);
+    }
+  }, [audioUrl, guideText]);
+
+  const syncGuideMode = useCallback((state, subtitle = "") => {
+    setGuideState(state);
+    if (webViewRef.current) {
+      webViewRef.current.postMessage(
+        JSON.stringify({
+          type: "SET_STATUS",
+          status: state,
+          subtitle,
+        }),
+      );
+    }
+  }, []);
+
+  const persistSession = useCallback(
+    async (nextMessages) => {
+      try {
+        await AsyncStorage.setItem(
+          guideStorageKey,
+          JSON.stringify({
+            artifactTitle,
+            artifactSummary,
+            museumName,
+            modelTitle,
+            modelSubtitle,
+            language,
+            memory: conversationMemoryRef.current,
+            messages: nextMessages.slice(-MAX_VISIBLE_MESSAGES),
+            updatedAt: Date.now(),
+          }),
+        );
+      } catch (error) {
+        console.warn("Failed to persist virtual guide session:", error);
+      }
+    },
+    [artifactSummary, artifactTitle, guideStorageKey, language, modelSubtitle, modelTitle, museumName],
+  );
+
+  const loadPersistedSession = useCallback(async () => {
+    setIsLoadingSession(true);
+    try {
+      const raw = await AsyncStorage.getItem(guideStorageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.memory) {
+          conversationMemoryRef.current = parsed.memory;
+        }
+        if (Array.isArray(parsed?.messages) && parsed.messages.length > 0) {
+          setMessages(parsed.messages.slice(-MAX_VISIBLE_MESSAGES));
+          setSessionReady(true);
+          return;
+        }
+      }
+
+      const welcomeText = sanitizeText(
+        guideText ||
+          buildDefaultWelcome({
+            artifactTitle,
+            artifactSummary,
+            modelTitle,
+            language,
+          }),
+      );
+
+      const memoryNote = sanitizeText(
+        [
+          artifactTitle ? `Artifact: ${artifactTitle}` : null,
+          museumName ? `Museum: ${museumName}` : null,
+          modelTitle ? `Model: ${modelTitle}` : null,
+          modelSubtitle ? `Model note: ${modelSubtitle}` : null,
+          artifactSummary ? `Context: ${artifactSummary}` : null,
+        ]
+          .filter(Boolean)
+          .join(" | "),
+      );
+
+      conversationMemoryRef.current = memoryNote;
+
+      const nextMessages = [
+        {
+          id: `welcome-${Date.now()}`,
+          role: "assistant",
+          text: welcomeText,
+          animatedText: welcomeText,
+          createdAt: Date.now(),
+          kind: "welcome",
+        },
+      ];
+
+      setMessages(nextMessages);
+      setSessionReady(true);
+      await persistSession(nextMessages);
+    } catch (error) {
+      console.warn("Failed to load guide session:", error);
+      const fallback = sanitizeText(
+        guideText ||
+          buildDefaultWelcome({
+            artifactTitle,
+            artifactSummary,
+            modelTitle,
+            language,
+          }),
+      );
+      const nextMessages = [
+        {
+          id: `fallback-${Date.now()}`,
+          role: "assistant",
+          text: fallback,
+          animatedText: fallback,
+          createdAt: Date.now(),
+          kind: "welcome",
+        },
+      ];
+      setMessages(nextMessages);
+      setSessionReady(true);
+    } finally {
+      setIsLoadingSession(false);
+    }
+  }, [artifactSummary, artifactTitle, guideStorageKey, guideText, language, modelSubtitle, modelTitle, museumName, persistSession]);
 
   useEffect(() => {
     const loadModel = async () => {
@@ -850,59 +1174,744 @@ export default function VirtualGuide() {
         const base64Data = await FileSystem.readAsStringAsync(uri, {
           encoding: FileSystem.EncodingType.Base64,
         });
-        setModelUrl(`data:model/gltf-binary;base64,${base64Data}`);
+        if (mountedRef.current) {
+          setModelUrl(`data:model/gltf-binary;base64,${base64Data}`);
+        }
       } catch (error) {
         console.error("Model load error:", error);
       }
     };
+
     loadModel();
+    return () => {
+      mountedRef.current = false;
+      if (replyTimerRef.current) {
+        clearInterval(replyTimerRef.current);
+      }
+      Speech.stop();
+    };
   }, []);
 
-  const audioUrl = params?.audioUrl
-    ? decodeURIComponent(params.audioUrl)
-    : null;
-  const guideText = params?.text ? decodeURIComponent(params.text) : "";
-  const language = params?.language
-    ? decodeURIComponent(params.language)
-    : "en";
+  useEffect(() => {
+    loadPersistedSession();
+  }, [loadPersistedSession]);
+
+  useEffect(() => {
+    if (sessionReady) {
+      persistSession(messages);
+    }
+  }, [messages, persistSession, sessionReady]);
+
+  useEffect(() => {
+    if (messageScrollRef.current) {
+      messageScrollRef.current.scrollToEnd?.({ animated: true });
+    }
+  }, [messages, isThinking, isStreamingReply]);
+
+  const buildChatHistoryForApi = useCallback(
+    (nextUserText) => {
+      const visibleHistory = messages
+        .filter((message) => message?.text)
+        .map((message) => ({
+          sender: message.role === "user" ? "user" : "ai",
+          text: message.text,
+        }));
+
+      const memoryHeader = conversationMemoryRef.current
+        ? [{ sender: "ai", text: conversationMemoryRef.current }]
+        : [];
+
+      return [
+        ...memoryHeader,
+        ...visibleHistory,
+        { sender: "user", text: nextUserText },
+      ].slice(-25);
+    },
+    [messages],
+  );
+
+  const cacheTtsAudio = useCallback(
+    async (text) => {
+      const normalizedText = sanitizeText(text);
+      const cacheKey = `${ttsStorageKey}:${hashString(normalizedText)}`;
+
+      if (speechCacheRef.current.has(cacheKey)) {
+        return speechCacheRef.current.get(cacheKey);
+      }
+
+      try {
+        const cached = await AsyncStorage.getItem(cacheKey);
+        if (cached) {
+          speechCacheRef.current.set(cacheKey, cached);
+          return cached;
+        }
+      } catch (error) {
+        console.warn("TTS cache lookup failed:", error);
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/ai/tour-guide/speech`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: normalizedText, language }),
+        });
+
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(payload?.message || `Speech request failed with status ${response.status}`);
+        }
+
+        const audioBase64 = payload?.data?.audioBase64;
+        const contentType = payload?.data?.contentType || "audio/mpeg";
+        if (!audioBase64) {
+          throw new Error("Speech service returned no audio");
+        }
+
+        const audioUrlValue = `data:${contentType};base64,${audioBase64}`;
+        speechCacheRef.current.set(cacheKey, audioUrlValue);
+        await AsyncStorage.setItem(cacheKey, audioUrlValue);
+        return audioUrlValue;
+      } catch (error) {
+        console.warn("TTS generation failed:", error);
+        return null;
+      }
+    },
+    [language, ttsStorageKey],
+  );
+
+  const sendAudioCommand = useCallback((type, audioUrlValue = "") => {
+    if (!webViewRef.current) {
+      return;
+    }
+
+    webViewRef.current.postMessage(
+      JSON.stringify({
+        type,
+        audioUrl: audioUrlValue,
+      }),
+    );
+  }, []);
+
+  const stopVoice = useCallback(async () => {
+    sendAudioCommand("STOP_AUDIO");
+    setLastSpokenText("");
+    setGuideState("idle");
+    try {
+      await Speech.stop();
+    } catch (error) {
+      console.warn("Failed to stop fallback speech:", error);
+    }
+  }, [sendAudioCommand]);
+
+  const playFallbackSpeech = useCallback(
+    async (text) => {
+      try {
+        await Speech.stop();
+        Speech.speak(text, {
+          language: languageToSpeechCode(language),
+          rate: 0.92,
+          pitch: 1.0,
+          volume: 1.0,
+          onStart: () => setGuideState("speaking"),
+          onDone: () => setGuideState("idle"),
+          onStopped: () => setGuideState("idle"),
+          onError: () => setGuideState("idle"),
+        });
+      } catch (error) {
+        console.warn("Device speech failed:", error);
+      }
+    },
+    [language],
+  );
+
+  const revealAssistantText = useCallback((messageId, fullText) => {
+    if (replyTimerRef.current) {
+      clearInterval(replyTimerRef.current);
+    }
+
+    const tokens = splitTokens(fullText);
+    if (!tokens.length) {
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === messageId
+            ? { ...message, animatedText: fullText, text: fullText, isStreaming: false }
+            : message,
+        ),
+      );
+      return Promise.resolve(fullText);
+    }
+
+    return new Promise((resolve) => {
+      let index = 0;
+      let rendered = "";
+      setIsStreamingReply(true);
+
+      replyTimerRef.current = setInterval(() => {
+        rendered += tokens[index] || "";
+        index += 1;
+
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === messageId
+              ? { ...message, animatedText: rendered, text: fullText, isStreaming: true }
+              : message,
+          ),
+        );
+
+        if (index >= tokens.length) {
+          clearInterval(replyTimerRef.current);
+          replyTimerRef.current = null;
+
+          setMessages((current) =>
+            current.map((message) =>
+              message.id === messageId
+                ? { ...message, animatedText: fullText, text: fullText, isStreaming: false }
+                : message,
+            ),
+          );
+
+          setIsStreamingReply(false);
+          resolve(fullText);
+        }
+      }, 18);
+    });
+  }, []);
+
+  const speakAssistantReply = useCallback(
+    async (text) => {
+      setLastSpokenText(text);
+      const audio = await cacheTtsAudio(text);
+      currentAudioUrlRef.current = audio || "";
+
+      if (!audio) {
+        await playFallbackSpeech(text);
+        return;
+      }
+
+      if (!isMuted) {
+        syncGuideMode("speaking", sanitizeText(text).slice(0, 120));
+        sendAudioCommand("PLAY_AUDIO", audio);
+      }
+    },
+    [cacheTtsAudio, isMuted, playFallbackSpeech, sendAudioCommand, syncGuideMode],
+  );
+
+  const sendMessage = useCallback(
+    async (rawText) => {
+      const text = sanitizeText(rawText || draft);
+      if (!text || isThinking) {
+        return;
+      }
+
+      const nextUserMessage = {
+        id: `user-${Date.now()}`,
+        role: "user",
+        text,
+        animatedText: text,
+        createdAt: Date.now(),
+      };
+
+      const pendingAssistantId = `assistant-${Date.now()}`;
+      const pendingAssistantMessage = {
+        id: pendingAssistantId,
+        role: "assistant",
+        text: "",
+        animatedText: isRTL ? "..." : "Thinking...",
+        createdAt: Date.now(),
+        isStreaming: true,
+      };
+
+      setDraft("");
+      setIsThinking(true);
+      setGuideState("thinking");
+      setMessages((current) => [...current, nextUserMessage, pendingAssistantMessage].slice(-MAX_VISIBLE_MESSAGES));
+
+      try {
+        const replyResponse = await api.getAiChatReply(buildChatHistoryForApi(text), language);
+        const reply = sanitizeText(replyResponse?.data?.reply || replyResponse?.reply || "");
+
+        if (!reply) {
+          throw new Error("Empty assistant reply");
+        }
+
+        await revealAssistantText(pendingAssistantId, reply);
+        setIsThinking(false);
+        setGuideState("idle");
+        await speakAssistantReply(reply);
+      } catch (error) {
+        console.warn("Assistant reply failed:", error);
+        const fallbackReply = isRTL
+          ? "لم أستطع الوصول إلى الرد الآن، لكن يمكنك المحاولة مرة أخرى أو اختيار سؤال مقترح."
+          : "I could not fetch a reply right now. Please try again or tap a suggested question.";
+
+        await revealAssistantText(pendingAssistantId, fallbackReply);
+        setIsThinking(false);
+        setGuideState("idle");
+      }
+    },
+    [buildChatHistoryForApi, draft, isRTL, isThinking, language, revealAssistantText, speakAssistantReply],
+  );
+
+  const handleSuggestionPress = useCallback(
+    async (question) => {
+      await sendMessage(question);
+    },
+    [sendMessage],
+  );
+
+  const handleReplay = useCallback(async () => {
+    if (currentAudioUrlRef.current) {
+      sendAudioCommand("PLAY_AUDIO", currentAudioUrlRef.current);
+      setGuideState("speaking");
+      return;
+    }
+
+    if (lastSpokenText) {
+      await playFallbackSpeech(lastSpokenText);
+      return;
+    }
+
+    Alert.alert(
+      isRTL ? "لا يوجد صوت" : "No audio available",
+      isRTL ? "اسأل سؤالًا أولًا أو انتظر الرد القادم." : "Ask a question first or wait for the next response.",
+    );
+  }, [isRTL, lastSpokenText, playFallbackSpeech, sendAudioCommand]);
+
+  const handleMuteToggle = useCallback(async () => {
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+    if (nextMuted) {
+      await stopVoice();
+      syncGuideMode("idle", headerSubtitle);
+    }
+  }, [headerSubtitle, isMuted, stopVoice, syncGuideMode]);
+
+  const handleVoicePlaceholder = useCallback(() => {
+    Alert.alert(
+      isRTL ? "ميزة قادمة" : "Coming Soon",
+      isRTL
+        ? "التحويل من الكلام إلى النص قيد الإعداد. يمكنك كتابة سؤالك الآن."
+        : "Speech-to-text is being prepared. You can type your question for now.",
+    );
+  }, [isRTL]);
+
+  const handleWebViewMessage = useCallback((event) => {
+    try {
+      const msg = JSON.parse(event.nativeEvent.data);
+      if (msg.t === "AVATAR_DEBUG") {
+        console.log("[Avatar]", msg.m, msg.o ?? "");
+      }
+      if (msg.t === "STATE_CHANGE" && msg.state) {
+        setGuideState(msg.state);
+      }
+      if (msg.t === "AUDIO_ENDED") {
+        setGuideState("idle");
+      }
+    } catch (_) {
+      console.log("WebView:", event.nativeEvent.data);
+    }
+  }, []);
+
+  const handleBack = useCallback(() => {
+    stopVoice();
+    router.back();
+  }, [router, stopVoice]);
+
+  const renderMessage = useCallback(
+    (message) => {
+      const isUser = message.role === "user";
+      const messageText = message.isStreaming
+        ? message.animatedText || message.text
+        : message.animatedText || message.text;
+
+      return (
+        <View key={message.id} style={[styles.messageRow, isUser ? styles.userRow : styles.assistantRow]}>
+          <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.assistantBubble]}>
+            <Text
+              style={[
+                styles.messageText,
+                isUser ? styles.userMessageText : styles.assistantMessageText,
+                isRTL && styles.rtlText,
+              ]}
+              numberOfLines={isUser ? 2 : 4}
+              ellipsizeMode="tail"
+            >
+              {messageText || (isRTL ? "..." : "...")}
+            </Text>
+          </View>
+        </View>
+      );
+    },
+    [isRTL],
+  );
 
   return (
-    <View style={styles.container}>
-      <WebView
-        key={modelUrl}
-        originWhitelist={["*"]}
-        source={{
-          html: buildAvatarHTML(audioUrl, guideText, language, modelUrl),
-        }}
-        javaScriptEnabled={true}
-        javaScriptEnabledAndroid={true}
-        style={{ flex: 1, backgroundColor: "transparent" }}
-        allowsInlineMediaPlayback={true}
-        mediaPlaybackRequiresUserAction={false}
-        onMessage={(event) => {
-          try {
-            const msg = JSON.parse(event.nativeEvent.data);
-            if (msg.t === "AVATAR_DEBUG")
-              console.log("[Avatar]", msg.m, msg.o ?? "");
-          } catch (_) {
-            console.log("WebView:", event.nativeEvent.data);
-          }
-        }}
-        onError={(error) => console.error("WebView error:", error)}
-      />
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.back()}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.backIcon}>← Back</Text>
-      </TouchableOpacity>
-    </View>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <View style={styles.stage}>
+        <WebView
+          ref={webViewRef}
+          key={modelUrl}
+          originWhitelist={["*"]}
+          source={{ html: buildAvatarHTML(audioUrl, guideText, language, modelUrl) }}
+          javaScriptEnabled={true}
+          javaScriptEnabledAndroid={true}
+          style={styles.webview}
+          allowsInlineMediaPlayback={true}
+          mediaPlaybackRequiresUserAction={false}
+          onMessage={handleWebViewMessage}
+          onError={(error) => console.error("WebView error:", error)}
+        />
+
+        <View pointerEvents="box-none" style={styles.overlay}>
+          <View style={styles.headerWrap}>
+            <BlurView intensity={45} tint="dark" style={styles.headerCard}>
+              <View style={styles.headerTopRow}>
+                <View style={styles.headerCopy}>
+                  <Text style={[styles.kicker, isRTL && styles.rtlText]}>Immersive AI Museum Companion</Text>
+                  <Text style={[styles.title, isRTL && styles.rtlText]} numberOfLines={1}>
+                    {headerTitle}
+                  </Text>
+                  <Text style={[styles.subtitle, isRTL && styles.rtlText]} numberOfLines={2}>
+                    {headerSubtitle}
+                  </Text>
+                </View>
+                <View style={styles.stateStack}>
+                  <View style={[styles.statePill, guideState === "speaking" && styles.statePillActive]}>
+                    <Text style={styles.statePillText}>{guideState}</Text>
+                  </View>
+                  <TouchableOpacity style={styles.actionPill} onPress={handleMuteToggle} activeOpacity={0.85}>
+                    <Text style={styles.actionPillText}>{isMuted ? (isRTL ? "تشغيل" : "Unmute") : (isRTL ? "كتم" : "Mute")}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <View style={styles.actionRow}>
+                <TouchableOpacity style={styles.secondaryButton} onPress={handleReplay} activeOpacity={0.85}>
+                  <Text style={styles.secondaryButtonText}>{isRTL ? "إعادة" : "Replay"}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.secondaryButton} onPress={handleVoicePlaceholder} activeOpacity={0.85}>
+                  <Text style={styles.secondaryButtonText}>{isRTL ? "تحدث" : "Voice"}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.secondaryButton} onPress={stopVoice} activeOpacity={0.85}>
+                  <Text style={styles.secondaryButtonText}>{isRTL ? "إيقاف" : "Stop"}</Text>
+                </TouchableOpacity>
+              </View>
+            </BlurView>
+          </View>
+
+          <View style={styles.chatPanelWrap}>
+            <BlurView intensity={70} tint="dark" style={styles.chatPanel}>
+              <View style={styles.suggestionsHeader}>
+                <Text style={[styles.sectionLabel, isRTL && styles.rtlText]}>{isRTL ? "أسئلة مقترحة" : "Suggested questions"}</Text>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.suggestionRow}>
+                {suggestedQuestions.slice(0, 3).map((question) => (
+                  <TouchableOpacity
+                    key={question}
+                    style={styles.suggestionChip}
+                    onPress={() => handleSuggestionPress(question)}
+                    activeOpacity={0.86}
+                    disabled={isThinking}
+                  >
+                    <Text style={[styles.suggestionText, isRTL && styles.rtlText]} numberOfLines={2}>
+                      {question}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <ScrollView
+                ref={messageScrollRef}
+                style={styles.messageList}
+                contentContainerStyle={styles.messageListContent}
+                showsVerticalScrollIndicator={false}
+              >
+                {messages.slice(-3).map(renderMessage)}
+                {isThinking ? (
+                  <View style={[styles.messageRow, styles.assistantRow]}>
+                    <View style={[styles.messageBubble, styles.assistantBubble, styles.typingBubble]}>
+                      <ActivityIndicator size="small" color="#F0C86B" />
+                      <Text style={[styles.typingText, isRTL && styles.rtlText]}>{isRTL ? "المرشد يفكر..." : "The guide is thinking..."}</Text>
+                    </View>
+                  </View>
+                ) : null}
+              </ScrollView>
+
+              <View style={styles.inputWrap}>
+                <TouchableOpacity style={styles.micButton} onPress={handleVoicePlaceholder} activeOpacity={0.85}>
+                  <Text style={styles.micButtonText}>STT</Text>
+                </TouchableOpacity>
+                <TextInput
+                  value={draft}
+                  onChangeText={setDraft}
+                  placeholder={inputPlaceholder}
+                  placeholderTextColor="#8D846B"
+                  style={[styles.input, isRTL && styles.rtlInput]}
+                  multiline
+                  textAlignVertical="center"
+                  editable={!isThinking}
+                  onSubmitEditing={() => sendMessage(draft)}
+                  returnKeyType="send"
+                />
+                <TouchableOpacity
+                  style={[styles.sendButton, (!draft.trim() || isThinking) && styles.sendButtonDisabled]}
+                  onPress={() => sendMessage(draft)}
+                  activeOpacity={0.85}
+                  disabled={!draft.trim() || isThinking}
+                >
+                  <Text style={styles.sendButtonText}>{isRTL ? "إرسال" : "Send"}</Text>
+                </TouchableOpacity>
+              </View>
+            </BlurView>
+          </View>
+        </View>
+
+        <TouchableOpacity style={styles.backButton} onPress={handleBack} activeOpacity={0.8}>
+          <Text style={styles.backIcon}>{isRTL ? "رجوع" : "Back"}</Text>
+        </TouchableOpacity>
+
+        {isLoadingSession ? (
+          <View style={styles.loadingOverlay}>
+            <BlurView intensity={60} tint="dark" style={styles.loadingCard}>
+              <ActivityIndicator size="large" color="#F0C86B" />
+              <Text style={[styles.loadingTitle, isRTL && styles.rtlText]}>
+                {isRTL ? "جاري تجهيز المرشد" : "Preparing your guide"}
+              </Text>
+              <Text style={[styles.loadingSubtitle, isRTL && styles.rtlText]}>
+                {isRTL ? "تحميل الصوت والسياق والمحادثة المحفوظة..." : "Loading audio, context, and your saved conversation..."}
+              </Text>
+            </BlurView>
+          </View>
+        ) : null}
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0a0800", position: "relative" },
+  container: { flex: 1, backgroundColor: "#070503" },
+  stage: { flex: 1, position: "relative", backgroundColor: "#070503" },
+  webview: { flex: 1, backgroundColor: "transparent" },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingTop: 44,
+    paddingBottom: 10,
+  },
+  headerWrap: { width: "100%" },
+  headerCard: {
+    borderRadius: 22,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(240, 200, 107, 0.16)",
+    backgroundColor: "rgba(9, 7, 4, 0.7)",
+  },
+  headerTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  headerCopy: { flex: 1 },
+  kicker: {
+    color: "#C79B3B",
+    fontSize: 9,
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    marginBottom: 6,
+  },
+  title: {
+    color: "#F5E8CB",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  subtitle: {
+    color: "#C9BA9C",
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  stateStack: { alignItems: "flex-end", gap: 8 },
+  statePill: {
+    minWidth: 82,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    alignItems: "center",
+  },
+  statePillActive: {
+    backgroundColor: "rgba(240, 200, 107, 0.18)",
+  },
+  statePillText: {
+    color: "#F5E8CB",
+    textTransform: "uppercase",
+    fontSize: 10,
+    letterSpacing: 1.6,
+  },
+  actionPill: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  actionPillText: { color: "#F5E8CB", fontSize: 12, fontWeight: "600" },
+  actionRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 10,
+    flexWrap: "wrap",
+  },
+  secondaryButton: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  secondaryButtonText: { color: "#EDE0BE", fontSize: 12, fontWeight: "600" },
+  chatPanelWrap: { width: "100%", flex: 1, justifyContent: "flex-end" },
+  chatPanel: {
+    borderRadius: 28,
+    paddingTop: 12,
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+    borderWidth: 1,
+    borderColor: "rgba(240, 200, 107, 0.14)",
+    backgroundColor: "rgba(7, 6, 4, 0.75)",
+    overflow: "hidden",
+    minHeight: 240,
+    maxHeight: "64%",
+  },
+  suggestionsHeader: { marginBottom: 10 },
+  sectionLabel: {
+    color: "#F5E8CB",
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  suggestionRow: {
+    paddingBottom: 8,
+    gap: 8,
+  },
+  suggestionChip: {
+    width: 132,
+    minHeight: 48,
+    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(240, 200, 107, 0.12)",
+  },
+  suggestionText: {
+    color: "#F5E8CB",
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "600",
+  },
+  messageList: {
+    flexGrow: 1,
+    minHeight: 112,
+  },
+  messageListContent: {
+    paddingBottom: 8,
+    gap: 8,
+  },
+  messageRow: {
+    flexDirection: "row",
+  },
+  userRow: { justifyContent: "flex-end" },
+  assistantRow: { justifyContent: "flex-start" },
+  messageBubble: {
+    maxWidth: "78%",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 16,
+  },
+  userBubble: {
+    backgroundColor: "rgba(200, 150, 10, 0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(240, 200, 107, 0.24)",
+  },
+  assistantBubble: {
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  typingBubble: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  messageText: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  userMessageText: { color: "#FFF8E9" },
+  assistantMessageText: { color: "#F5E8CB" },
+  typingText: { color: "#F5E8CB", fontSize: 12 },
+  inputWrap: {
+    marginTop: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  micButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  micButtonText: {
+    color: "#F5E8CB",
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+  },
+  input: {
+    flex: 1,
+    minHeight: 40,
+    maxHeight: 80,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    color: "#FFF8E9",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  rtlInput: {
+    textAlign: "right",
+    writingDirection: "rtl",
+  },
+  sendButton: {
+    minWidth: 70,
+    height: 40,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#C8960A",
+  },
+  sendButtonDisabled: {
+    opacity: 0.45,
+  },
+  sendButtonText: {
+    color: "#170F00",
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+  },
   backButton: {
     position: "absolute",
     top: 48,
@@ -915,5 +1924,40 @@ const styles = StyleSheet.create({
     color: "#f5e8cb",
     fontSize: 16,
     fontWeight: "500",
+  },
+  rtlText: {
+    writingDirection: "rtl",
+    textAlign: "right",
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    backgroundColor: "rgba(4, 3, 2, 0.25)",
+  },
+  loadingCard: {
+    width: "100%",
+    maxWidth: 360,
+    borderRadius: 22,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "rgba(240, 200, 107, 0.16)",
+    backgroundColor: "rgba(8, 7, 4, 0.82)",
+  },
+  loadingTitle: {
+    color: "#F5E8CB",
+    fontSize: 16,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  loadingSubtitle: {
+    color: "#BBAA87",
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: "center",
   },
 });

@@ -56,8 +56,8 @@ function requestGroq(prompt: string): Promise<string> {
       const body = JSON.stringify({
         model: model,
         messages: [{ role: 'user', content: prompt }],
-        temperature: 0.6,
-        max_tokens: 700
+        temperature: 0.35,
+        max_tokens: 240
       });
 
       const req = https.request(
@@ -161,9 +161,9 @@ assistantRouter.post('/chat', async (req: Request, res: Response, next: NextFunc
       .join('\n');
 
     const prompt = `You are Anubis, a friendly and knowledgeable AI assistant for the Revive Egypt app — a platform dedicated to Egyptian tourism, museums, culture, and history.
-You are helpful, warm, and conversational. You are an expert on Egypt (museums, historical sites, culture, food, travel, restaurants, events, and more), but you can also answer general questions on any topic the user asks.
+  You are helpful, warm, and conversational. You are an expert on Egypt (museums, historical sites, culture, food, travel, restaurants, events, and more), but you can also answer general questions on any topic the user asks.
 Do not restrict yourself to museums only. If a user asks about restaurants, travel tips, Egyptian cuisine, nearby places, or anything else, answer helpfully.
-Be concise, engaging, and use a touch of Egyptian charm. ${langInstruction}
+Keep every answer very short: 1-2 short sentences, about 40-60 words max, no long lists, no extra filler. ${langInstruction}
 
 Conversation so far:
 ${transcript}
