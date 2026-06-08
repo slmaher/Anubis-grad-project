@@ -10,6 +10,7 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
+  useWindowDimensions,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
@@ -32,6 +33,8 @@ const AVAILABLE_ICONS = [
 ];
 
 export default function DonationManagement() {
+  const { width } = useWindowDimensions();
+  const isCompact = width < 768;
   const params = useLocalSearchParams();
   const actionParam = Array.isArray(params?.action)
     ? params.action[0]
@@ -196,7 +199,7 @@ const deleteCampaign = (id) => {
   };
 
   const renderCampaign = ({ item }) => (
-    <View style={styles.card}>
+    <View style={[styles.card, isCompact && styles.cardCompact]}>
       <View style={styles.iconBadge}>
         <MaterialCommunityIcons
           name={item.icon || "heart-outline"}
@@ -205,7 +208,7 @@ const deleteCampaign = (id) => {
         />
       </View>
 
-      <View style={styles.cardInfo}>
+      <View style={[styles.cardInfo, isCompact && styles.cardInfoCompact]}>
         <Text style={styles.name}>{item.title || "Untitled Campaign"}</Text>
         <Text style={styles.sub}>
           {item.currentAmount ?? 0} / {item.goalAmount ?? 0} EGP raised
@@ -215,7 +218,7 @@ const deleteCampaign = (id) => {
         </Text>
       </View>
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, isCompact && styles.actionsCompact]}>
         <TouchableOpacity onPress={() => openEdit(item)}>
           <MaterialCommunityIcons
             name="pencil-outline"
@@ -243,10 +246,15 @@ const deleteCampaign = (id) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Donation Campaigns</Text>
+      <View style={[styles.header, isCompact && styles.headerCompact]}>
+        <Text style={[styles.title, isCompact && styles.titleCompact]}>
+          Donation Campaigns
+        </Text>
 
-        <TouchableOpacity style={styles.addBtn} onPress={openCreate}>
+        <TouchableOpacity
+          style={[styles.addBtn, isCompact && styles.addBtnCompact]}
+          onPress={openCreate}
+        >
           <MaterialCommunityIcons name="plus" size={24} color="#fff" />
           <Text style={styles.addBtnText}>New Campaign</Text>
         </TouchableOpacity>
@@ -261,15 +269,29 @@ const deleteCampaign = (id) => {
 
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {editingCampaign ? "Edit Campaign" : "New Campaign"}
-            </Text>
+          <View style={[styles.modalContent, isCompact && styles.modalContentCompact]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {editingCampaign ? "Edit Campaign" : "New Campaign"}
+              </Text>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => {
+                  setModalVisible(false);
+                  setEditingCampaign(null);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Close modal"
+              >
+                <Text style={styles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
 
             <ScrollView>
               <TextInput
                 style={styles.input}
                 placeholder="Title"
+                placeholderTextColor="#A79B91"
                 value={formData.title}
                 onChangeText={(t) => setFormData({ ...formData, title: t })}
               />
@@ -277,6 +299,7 @@ const deleteCampaign = (id) => {
               <TextInput
                 style={styles.input}
                 placeholder="Goal Amount (EGP)"
+                placeholderTextColor="#A79B91"
                 keyboardType="numeric"
                 value={formData.goalAmount}
                 onChangeText={(t) =>
@@ -287,6 +310,7 @@ const deleteCampaign = (id) => {
               <TextInput
                 style={styles.input}
                 placeholder="Suggested Amount (EGP)"
+                placeholderTextColor="#A79B91"
                 keyboardType="numeric"
                 value={formData.suggestedAmount}
                 onChangeText={(t) =>
@@ -297,6 +321,7 @@ const deleteCampaign = (id) => {
               <TextInput
                 style={[styles.input, { height: 100 }]}
                 placeholder="Description"
+                placeholderTextColor="#A79B91"
                 multiline
                 value={formData.description}
                 onChangeText={(t) =>
@@ -306,12 +331,13 @@ const deleteCampaign = (id) => {
 
               <Text style={styles.sectionLabel}>Select Icon</Text>
 
-              <View style={styles.iconGrid}>
+              <View style={[styles.iconGrid, isCompact && styles.iconGridCompact]}>
                 {AVAILABLE_ICONS.map((icon) => (
                   <TouchableOpacity
                     key={icon}
                     style={[
                       styles.iconButton,
+                      isCompact && styles.iconButtonCompact,
                       formData.icon === icon && styles.iconButtonSelected,
                     ]}
                     onPress={() => setFormData({ ...formData, icon })}
@@ -326,7 +352,7 @@ const deleteCampaign = (id) => {
               </View>
             </ScrollView>
 
-            <View style={styles.modalButtons}>
+            <View style={[styles.modalButtons, isCompact && styles.modalButtonsCompact]}>
               <TouchableOpacity
                 style={styles.cancelBtn}
                 onPress={() => {
@@ -356,8 +382,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 24,
+    gap: 12,
+    flexWrap: "wrap",
+  },
+  headerCompact: {
+    alignItems: "stretch",
   },
   title: { fontSize: 24, fontWeight: "700", color: "#2C2010" },
+  titleCompact: {
+    width: "100%",
+  },
   addBtn: {
     backgroundColor: "#D9A441",
     paddingHorizontal: 16,
@@ -366,6 +400,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+  },
+  addBtnCompact: {
+    width: "100%",
+    justifyContent: "center",
   },
   addBtnText: { color: "#fff", fontWeight: "600" },
   list: { gap: 12 },
@@ -376,7 +414,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: 12,
     elevation: 2,
+  },
+  cardCompact: {
+    flexDirection: "column",
+    alignItems: "stretch",
   },
   iconBadge: {
     width: 50,
@@ -388,9 +431,17 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   cardInfo: { flex: 1 },
+  cardInfoCompact: {
+    width: "100%",
+  },
   name: { fontSize: 16, fontWeight: "600", color: "#2C2010" },
   sub: { fontSize: 13, color: "#8B7B6C", marginTop: 2 },
-  actions: { flexDirection: "row", gap: 16 },
+  actions: { flexDirection: "row", gap: 16, alignItems: "center" },
+  actionsCompact: {
+    width: "100%",
+    justifyContent: "flex-end",
+    marginTop: 8,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -405,6 +456,11 @@ const styles = StyleSheet.create({
     padding: 24,
     maxHeight: "80%",
   },
+  modalContentCompact: {
+    width: "94%",
+    padding: 18,
+    maxHeight: "88%",
+  },
   modalTitle: { fontSize: 20, fontWeight: "700", marginBottom: 20 },
   input: {
     borderWidth: 1,
@@ -412,8 +468,28 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
+    color: "#2C2010",
   },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F5EFE7",
+  },
+  closeBtnText: { color: "#2C2010", fontSize: 16, fontWeight: "700" },
   modalButtons: { flexDirection: "row", justifyContent: "flex-end", gap: 12 },
+  modalButtonsCompact: {
+    flexDirection: "column",
+    alignItems: "stretch",
+  },
   cancelBtn: { paddingHorizontal: 20, paddingVertical: 10 },
   saveBtn: {
     backgroundColor: "#D9A441",
@@ -433,6 +509,9 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 16,
   },
+  iconGridCompact: {
+    gap: 10,
+  },
   iconButton: {
     width: "22%",
     aspectRatio: 1,
@@ -442,8 +521,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  iconButtonCompact: {
+    width: "30%",
+  },
   iconButtonSelected: {
     borderColor: "#D9A441",
     backgroundColor: "#F9F7F4",
+  },
+  modalButtonsCompact: {
+    justifyContent: "stretch",
+    flexWrap: "wrap",
   },
 });

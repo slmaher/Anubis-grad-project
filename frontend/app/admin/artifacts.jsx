@@ -179,28 +179,46 @@ export default function ArtifactManagement() {
         contentContainerStyle={styles.list}
       />
 
-      <Modal visible={modalVisible} animationType="slide" transparent>
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setModalVisible(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {editingArtifact ? "Edit Artifact" : "Add New Artifact"}
-            </Text>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {editingArtifact ? "Edit Artifact" : "Add New Artifact"}
+              </Text>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setModalVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Close modal"
+              >
+                <Text style={styles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
             <ScrollView>
               <TextInput
                 style={styles.input}
                 placeholder="Name"
+                placeholderTextColor="#A79B91"
                 value={formData.name}
                 onChangeText={(t) => setFormData({ ...formData, name: t })}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Era"
+                placeholderTextColor="#A79B91"
                 value={formData.era}
                 onChangeText={(t) => setFormData({ ...formData, era: t })}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Museum ID"
+                placeholderTextColor="#A79B91"
                 value={formData.museum}
                 onChangeText={(t) => setFormData({ ...formData, museum: t })}
               />
@@ -210,6 +228,7 @@ export default function ArtifactManagement() {
               <TextInput
                 style={[styles.input, { height: 100 }]}
                 placeholder="Description"
+                placeholderTextColor="#A79B91"
                 multiline
                 value={formData.description}
                 onChangeText={(t) =>
@@ -282,13 +301,29 @@ const styles = StyleSheet.create({
     padding: 24,
     maxHeight: "80%",
   },
-  modalTitle: { fontSize: 20, fontWeight: "700", marginBottom: 20 },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: { fontSize: 20, fontWeight: "700", flex: 1, paddingRight: 12 },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F5EFE7",
+  },
+  closeBtnText: { color: "#2C2010", fontSize: 16, fontWeight: "700" },
   input: {
     borderWidth: 1,
     borderColor: "#ECE5DE",
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
+    color: "#2C2010",
   },
   modalButtons: { flexDirection: "row", justifyContent: "flex-end", gap: 12 },
   cancelBtn: { paddingHorizontal: 20, paddingVertical: 10 },

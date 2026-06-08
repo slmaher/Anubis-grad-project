@@ -7,12 +7,15 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  useWindowDimensions,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getAuthToken } from "../api/authStorage";
 import { API_URL } from "../api/baseUrl";
 
 export default function ReviewManagement() {
+  const { width } = useWindowDimensions();
+  const isCompact = width < 768;
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -82,15 +85,18 @@ export default function ReviewManagement() {
   };
 
   const renderReview = ({ item }) => (
-    <View style={styles.reviewCard}>
-      <View style={styles.reviewHeader}>
-        <View>
+    <View style={[styles.reviewCard, isCompact && styles.reviewCardCompact]}>
+      <View style={[styles.reviewHeader, isCompact && styles.reviewHeaderCompact]}>
+        <View style={[styles.reviewMeta, isCompact && styles.reviewMetaCompact]}>
           <Text style={styles.userName}>{item.user?.name || "Anonymous"}</Text>
           <Text style={styles.museumName}>
             on {item.museum?.name || "Unknown"}
           </Text>
         </View>
-        <TouchableOpacity onPress={() => deleteReview(item._id)}>
+        <TouchableOpacity
+          style={styles.deleteBtn}
+          onPress={() => deleteReview(item._id)}
+        >
           <MaterialCommunityIcons
             name="delete-sweep-outline"
             size={24}
@@ -113,7 +119,9 @@ export default function ReviewManagement() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Review Management</Text>
+      <Text style={[styles.title, isCompact && styles.titleCompact]}>
+        Review Management
+      </Text>
       <FlatList
         data={reviews}
         renderItem={renderReview}
@@ -132,25 +140,46 @@ const styles = StyleSheet.create({
     color: "#2C2010",
     marginBottom: 24,
   },
+  titleCompact: {
+    marginBottom: 16,
+  },
   list: { gap: 16 },
   reviewCard: {
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
+    gap: 8,
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+  },
+  reviewCardCompact: {
+    padding: 14,
   },
   reviewHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
+    gap: 12,
+  },
+  reviewHeaderCompact: {
+    alignItems: "flex-start",
+  },
+  reviewMeta: {
+    flex: 1,
+  },
+  reviewMetaCompact: {
+    width: "100%",
   },
   userName: { fontSize: 16, fontWeight: "600", color: "#2C2010" },
   museumName: { fontSize: 13, color: "#8B7B6C" },
   stars: { flexDirection: "row", gap: 2, marginBottom: 8 },
   comment: { fontSize: 14, color: "#2C2010", lineHeight: 20, marginBottom: 8 },
   date: { fontSize: 12, color: "#8B7B6C", textAlign: "right" },
+  deleteBtn: {
+    padding: 4,
+    alignSelf: "flex-start",
+  },
 });

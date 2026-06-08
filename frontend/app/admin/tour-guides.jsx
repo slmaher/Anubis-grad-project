@@ -286,9 +286,19 @@ export default function TourGuideManagement() {
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {editingId ? "Edit Guide Profile" : "New Guide Profile"}
-            </Text>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {editingId ? "Edit Guide Profile" : "New Guide Profile"}
+              </Text>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setModalVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Close modal"
+              >
+                <Text style={styles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
             <ScrollView>
               {!editingId && (
                 <View style={styles.userPickerWrap}>
@@ -341,6 +351,7 @@ export default function TourGuideManagement() {
               <TextInput
                 style={[styles.input, { height: 90 }]}
                 placeholder="Bio"
+                placeholderTextColor="#A79B91"
                 value={formData.bio}
                 multiline
                 onChangeText={(t) =>
@@ -350,6 +361,7 @@ export default function TourGuideManagement() {
               <TextInput
                 style={styles.input}
                 placeholder="Specialties (comma separated)"
+                placeholderTextColor="#A79B91"
                 value={formData.specialties}
                 onChangeText={(t) =>
                   setFormData((prev) => ({ ...prev, specialties: t }))
@@ -358,6 +370,7 @@ export default function TourGuideManagement() {
               <TextInput
                 style={styles.input}
                 placeholder="Languages (comma separated)"
+                placeholderTextColor="#A79B91"
                 value={formData.languages}
                 onChangeText={(t) =>
                   setFormData((prev) => ({ ...prev, languages: t }))
@@ -366,6 +379,7 @@ export default function TourGuideManagement() {
               <TextInput
                 style={styles.input}
                 placeholder="Experience Years"
+                placeholderTextColor="#A79B91"
                 value={formData.experienceYears}
                 keyboardType="numeric"
                 onChangeText={(t) =>
@@ -375,6 +389,7 @@ export default function TourGuideManagement() {
               <TextInput
                 style={styles.input}
                 placeholder="Hourly Rate (EGP)"
+                placeholderTextColor="#A79B91"
                 value={formData.hourlyRate}
                 keyboardType="numeric"
                 onChangeText={(t) =>
@@ -505,7 +520,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
+    color: "#2C2010",
   },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F5EFE7",
+  },
+  closeBtnText: { color: "#2C2010", fontSize: 16, fontWeight: "700" },
   errorText: {
     color: "#C62828",
     marginBottom: 8,

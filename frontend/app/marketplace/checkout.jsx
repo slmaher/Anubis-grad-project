@@ -358,7 +358,7 @@ function CheckoutScreen({ onSuccess }) {
                         style={[styles.itemName, isRTL && styles.textRtl]}
                         numberOfLines={2}
                       >
-                        {t(item.nameKey, item.nameKey)}
+                        {t(item.nameKey, item.name || item.nameKey)}
                       </Text>
                       <Text style={[styles.itemPrice, isRTL && styles.textRtl]}>
                         {item.price} LE x {item.quantity}

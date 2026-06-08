@@ -761,7 +761,7 @@ export default function ScanResult() {
 
   const handleStartArExperience = () => {
     router.push(
-      `/virtual-guide?audioUrl=${encodeURIComponent(audioUri)}&text=${encodeURIComponent(sanitized)}&language=${encodeURIComponent(language)}&artifactTitle=${encodeURIComponent(artifactTitle || "")}&artifactSummary=${encodeURIComponent(descriptionEn || descriptionAr || sanitized || "")}&modelTitle=${encodeURIComponent(selectedArModel?.title || "")}&modelSubtitle=${encodeURIComponent(selectedArModel?.subtitle || "")}`
+      `/virtual-guide?audioUrl=${encodeURIComponent(audioUri)}&text=${encodeURIComponent(sanitized)}&language=${encodeURIComponent(language)}&artifactTitle=${encodeURIComponent(artifactTitle || "")}&artifactSummary=${encodeURIComponent(descriptionEn || descriptionAr || sanitized || "")}&modelTitle=${encodeURIComponent(selectedArModel?.title || "")}&modelSubtitle=${encodeURIComponent(selectedArModel?.subtitle || "")}`,
     );
   };
 

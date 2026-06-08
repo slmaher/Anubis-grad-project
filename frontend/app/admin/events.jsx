@@ -446,13 +446,24 @@ export default function EventManagement() {
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {editingEvent ? "Edit Event" : "Add New Event"}
-            </Text>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {editingEvent ? "Edit Event" : "Add New Event"}
+              </Text>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setModalVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Close modal"
+              >
+                <Text style={styles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
             <ScrollView>
               <TextInput
                 style={styles.input}
                 placeholder="Title"
+                placeholderTextColor="#A79B91"
                 value={formData.title}
                 onChangeText={(t) => {
                   setFormData({ ...formData, title: t });
@@ -465,6 +476,7 @@ export default function EventManagement() {
               <TextInput
                 style={styles.input}
                 placeholder="Museum ID"
+                placeholderTextColor="#A79B91"
                 value={formData.museum}
                 onChangeText={(t) => {
                   setFormData({ ...formData, museum: t });
@@ -502,6 +514,7 @@ export default function EventManagement() {
               <TextInput
                 style={styles.input}
                 placeholder="Start Date (YYYY-MM-DD)"
+                placeholderTextColor="#A79B91"
                 value={formData.startDate}
                 onChangeText={(t) => {
                   setFormData({ ...formData, startDate: t });
@@ -514,6 +527,7 @@ export default function EventManagement() {
               <TextInput
                 style={styles.input}
                 placeholder="End Date (YYYY-MM-DD)"
+                placeholderTextColor="#A79B91"
                 value={formData.endDate}
                 onChangeText={(t) => {
                   setFormData({ ...formData, endDate: t });
@@ -526,12 +540,14 @@ export default function EventManagement() {
               <TextInput
                 style={styles.input}
                 placeholder="Location"
+                placeholderTextColor="#A79B91"
                 value={formData.location}
                 onChangeText={(t) => setFormData({ ...formData, location: t })}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Image URL (optional)"
+                placeholderTextColor="#A79B91"
                 value={formData.imageUrl}
                 onChangeText={(t) => setFormData({ ...formData, imageUrl: t })}
               />
@@ -581,6 +597,7 @@ export default function EventManagement() {
               <TextInput
                 style={[styles.input, { height: 80 }]}
                 placeholder="Description"
+                placeholderTextColor="#A79B91"
                 multiline
                 value={formData.description}
                 onChangeText={(t) => {
@@ -666,7 +683,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
+    color: "#2C2010",
   },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F5EFE7",
+  },
+  closeBtnText: { color: "#2C2010", fontSize: 16, fontWeight: "700" },
   helperText: {
     fontSize: 12,
     color: "#8B7B6C",

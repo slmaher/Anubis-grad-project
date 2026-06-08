@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import {
   View,
   Text,
@@ -54,7 +60,12 @@ function splitTokens(text) {
   return String(text || "").match(/\S+|\s+/g) || [];
 }
 
-function buildDefaultWelcome({ artifactTitle, artifactSummary, modelTitle, language }) {
+function buildDefaultWelcome({
+  artifactTitle,
+  artifactSummary,
+  modelTitle,
+  language,
+}) {
   const title = artifactTitle || modelTitle || "this artifact";
   if (language === "ar") {
     return sanitizeText(`أهلاً بيك، أنا هنا للإجابة عن ${title}.`);
@@ -64,14 +75,13 @@ function buildDefaultWelcome({ artifactTitle, artifactSummary, modelTitle, langu
 }
 
 function buildSuggestedQuestions({ artifactTitle, modelTitle, language }) {
-  const title = artifactTitle || modelTitle || (language === "ar" ? "الأثر" : "this artifact");
+  const title =
+    artifactTitle ||
+    modelTitle ||
+    (language === "ar" ? "الأثر" : "this artifact");
 
   if (language === "ar") {
-    return [
-      `ما هو ${title}؟`,
-      `ما أهم تفاصيله؟`,
-      `اشرحه ببساطة.`,
-    ];
+    return [`ما هو ${title}؟`, `ما أهم تفاصيله؟`, `اشرحه ببساطة.`];
   }
 
   if (language === "fr") {
@@ -91,18 +101,10 @@ function buildSuggestedQuestions({ artifactTitle, modelTitle, language }) {
   }
 
   if (language === "zh") {
-    return [
-      `什么是 ${title}？`,
-      `它最重要的是什么？`,
-      `用简单的话解释。`,
-    ];
+    return [`什么是 ${title}？`, `它最重要的是什么？`, `用简单的话解释。`];
   }
 
-  return [
-    `What is ${title}?`,
-    `What matters most here?`,
-    `Explain it simply.`,
-  ];
+  return [`What is ${title}?`, `What matters most here?`, `Explain it simply.`];
 }
 
 function languageToSpeechCode(language) {
@@ -1001,11 +1003,17 @@ export default function VirtualGuide() {
   const audioUrl = params?.audioUrl ? safeDecode(params.audioUrl) : null;
   const guideText = params?.text ? safeDecode(params.text) : "";
   const language = params?.language ? safeDecode(params.language) : "en";
-  const artifactTitle = params?.artifactTitle ? safeDecode(params.artifactTitle) : "";
-  const artifactSummary = params?.artifactSummary ? safeDecode(params.artifactSummary) : "";
+  const artifactTitle = params?.artifactTitle
+    ? safeDecode(params.artifactTitle)
+    : "";
+  const artifactSummary = params?.artifactSummary
+    ? safeDecode(params.artifactSummary)
+    : "";
   const museumName = params?.museumName ? safeDecode(params.museumName) : "";
   const modelTitle = params?.modelTitle ? safeDecode(params.modelTitle) : "";
-  const modelSubtitle = params?.modelSubtitle ? safeDecode(params.modelSubtitle) : "";
+  const modelSubtitle = params?.modelSubtitle
+    ? safeDecode(params.modelSubtitle)
+    : "";
   const isRTL = language === "ar";
 
   const guideStorageKey = useMemo(
@@ -1018,7 +1026,10 @@ export default function VirtualGuide() {
     [artifactTitle, guideText, language, modelTitle],
   );
 
-  const ttsStorageKey = useMemo(() => getGuideStorageKey(["tts", language]), [language]);
+  const ttsStorageKey = useMemo(
+    () => getGuideStorageKey(["tts", language]),
+    [language],
+  );
 
   const suggestedQuestions = useMemo(
     () => buildSuggestedQuestions({ artifactTitle, modelTitle, language }),
@@ -1026,16 +1037,26 @@ export default function VirtualGuide() {
   );
 
   const headerTitle = useMemo(
-    () => artifactTitle || modelTitle || (language === "ar" ? "المرشد الذكي" : "Virtual Guide"),
+    () =>
+      artifactTitle ||
+      modelTitle ||
+      (language === "ar" ? "المرشد الذكي" : "Virtual Guide"),
     [artifactTitle, language, modelTitle],
   );
 
   const headerSubtitle = useMemo(
-    () => artifactSummary || modelSubtitle || (language === "ar" ? "اسأل سؤالًا واحدًا في كل مرة" : "Ask one question at a time"),
+    () =>
+      artifactSummary ||
+      modelSubtitle ||
+      (language === "ar"
+        ? "اسأل سؤالًا واحدًا في كل مرة"
+        : "Ask one question at a time"),
     [artifactSummary, guideText, language, modelSubtitle],
   );
 
-  const inputPlaceholder = isRTL ? "اكتب سؤالك هنا..." : "Ask a follow-up question...";
+  const inputPlaceholder = isRTL
+    ? "اكتب سؤالك هنا..."
+    : "Ask a follow-up question...";
 
   useEffect(() => {
     currentAudioUrlRef.current = audioUrl || "";
@@ -1078,7 +1099,15 @@ export default function VirtualGuide() {
         console.warn("Failed to persist virtual guide session:", error);
       }
     },
-    [artifactSummary, artifactTitle, guideStorageKey, language, modelSubtitle, modelTitle, museumName],
+    [
+      artifactSummary,
+      artifactTitle,
+      guideStorageKey,
+      language,
+      modelSubtitle,
+      modelTitle,
+      museumName,
+    ],
   );
 
   const loadPersistedSession = useCallback(async () => {
@@ -1161,7 +1190,17 @@ export default function VirtualGuide() {
     } finally {
       setIsLoadingSession(false);
     }
-  }, [artifactSummary, artifactTitle, guideStorageKey, guideText, language, modelSubtitle, modelTitle, museumName, persistSession]);
+  }, [
+    artifactSummary,
+    artifactTitle,
+    guideStorageKey,
+    guideText,
+    language,
+    modelSubtitle,
+    modelTitle,
+    museumName,
+    persistSession,
+  ]);
 
   useEffect(() => {
     const loadModel = async () => {
@@ -1250,15 +1289,21 @@ export default function VirtualGuide() {
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}/api/ai/tour-guide/speech`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: normalizedText, language }),
-        });
+        const response = await fetch(
+          `${API_BASE_URL}/api/ai/tour-guide/speech`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: normalizedText, language }),
+          },
+        );
 
         const payload = await response.json().catch(() => null);
         if (!response.ok) {
-          throw new Error(payload?.message || `Speech request failed with status ${response.status}`);
+          throw new Error(
+            payload?.message ||
+              `Speech request failed with status ${response.status}`,
+          );
         }
 
         const audioBase64 = payload?.data?.audioBase64;
@@ -1334,7 +1379,12 @@ export default function VirtualGuide() {
       setMessages((current) =>
         current.map((message) =>
           message.id === messageId
-            ? { ...message, animatedText: fullText, text: fullText, isStreaming: false }
+            ? {
+                ...message,
+                animatedText: fullText,
+                text: fullText,
+                isStreaming: false,
+              }
             : message,
         ),
       );
@@ -1353,7 +1403,12 @@ export default function VirtualGuide() {
         setMessages((current) =>
           current.map((message) =>
             message.id === messageId
-              ? { ...message, animatedText: rendered, text: fullText, isStreaming: true }
+              ? {
+                  ...message,
+                  animatedText: rendered,
+                  text: fullText,
+                  isStreaming: true,
+                }
               : message,
           ),
         );
@@ -1365,7 +1420,12 @@ export default function VirtualGuide() {
           setMessages((current) =>
             current.map((message) =>
               message.id === messageId
-                ? { ...message, animatedText: fullText, text: fullText, isStreaming: false }
+                ? {
+                    ...message,
+                    animatedText: fullText,
+                    text: fullText,
+                    isStreaming: false,
+                  }
                 : message,
             ),
           );
@@ -1393,7 +1453,13 @@ export default function VirtualGuide() {
         sendAudioCommand("PLAY_AUDIO", audio);
       }
     },
-    [cacheTtsAudio, isMuted, playFallbackSpeech, sendAudioCommand, syncGuideMode],
+    [
+      cacheTtsAudio,
+      isMuted,
+      playFallbackSpeech,
+      sendAudioCommand,
+      syncGuideMode,
+    ],
   );
 
   const sendMessage = useCallback(
@@ -1424,11 +1490,20 @@ export default function VirtualGuide() {
       setDraft("");
       setIsThinking(true);
       setGuideState("thinking");
-      setMessages((current) => [...current, nextUserMessage, pendingAssistantMessage].slice(-MAX_VISIBLE_MESSAGES));
+      setMessages((current) =>
+        [...current, nextUserMessage, pendingAssistantMessage].slice(
+          -MAX_VISIBLE_MESSAGES,
+        ),
+      );
 
       try {
-        const replyResponse = await api.getAiChatReply(buildChatHistoryForApi(text), language);
-        const reply = sanitizeText(replyResponse?.data?.reply || replyResponse?.reply || "");
+        const replyResponse = await api.getAiChatReply(
+          buildChatHistoryForApi(text),
+          language,
+        );
+        const reply = sanitizeText(
+          replyResponse?.data?.reply || replyResponse?.reply || "",
+        );
 
         if (!reply) {
           throw new Error("Empty assistant reply");
@@ -1449,7 +1524,15 @@ export default function VirtualGuide() {
         setGuideState("idle");
       }
     },
-    [buildChatHistoryForApi, draft, isRTL, isThinking, language, revealAssistantText, speakAssistantReply],
+    [
+      buildChatHistoryForApi,
+      draft,
+      isRTL,
+      isThinking,
+      language,
+      revealAssistantText,
+      speakAssistantReply,
+    ],
   );
 
   const handleSuggestionPress = useCallback(
@@ -1473,7 +1556,9 @@ export default function VirtualGuide() {
 
     Alert.alert(
       isRTL ? "لا يوجد صوت" : "No audio available",
-      isRTL ? "اسأل سؤالًا أولًا أو انتظر الرد القادم." : "Ask a question first or wait for the next response.",
+      isRTL
+        ? "اسأل سؤالًا أولًا أو انتظر الرد القادم."
+        : "Ask a question first or wait for the next response.",
     );
   }, [isRTL, lastSpokenText, playFallbackSpeech, sendAudioCommand]);
 
@@ -1525,8 +1610,19 @@ export default function VirtualGuide() {
         : message.animatedText || message.text;
 
       return (
-        <View key={message.id} style={[styles.messageRow, isUser ? styles.userRow : styles.assistantRow]}>
-          <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.assistantBubble]}>
+        <View
+          key={message.id}
+          style={[
+            styles.messageRow,
+            isUser ? styles.userRow : styles.assistantRow,
+          ]}
+        >
+          <View
+            style={[
+              styles.messageBubble,
+              isUser ? styles.userBubble : styles.assistantBubble,
+            ]}
+          >
             <Text
               style={[
                 styles.messageText,
@@ -1546,13 +1642,18 @@ export default function VirtualGuide() {
   );
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <View style={styles.stage}>
         <WebView
           ref={webViewRef}
           key={modelUrl}
           originWhitelist={["*"]}
-          source={{ html: buildAvatarHTML(audioUrl, guideText, language, modelUrl) }}
+          source={{
+            html: buildAvatarHTML(audioUrl, guideText, language, modelUrl),
+          }}
           javaScriptEnabled={true}
           javaScriptEnabledAndroid={true}
           style={styles.webview}
@@ -1567,32 +1668,75 @@ export default function VirtualGuide() {
             <BlurView intensity={45} tint="dark" style={styles.headerCard}>
               <View style={styles.headerTopRow}>
                 <View style={styles.headerCopy}>
-                  <Text style={[styles.kicker, isRTL && styles.rtlText]}>Immersive AI Museum Companion</Text>
-                  <Text style={[styles.title, isRTL && styles.rtlText]} numberOfLines={1}>
+                  <Text style={[styles.kicker, isRTL && styles.rtlText]}>
+                    Immersive AI Museum Companion
+                  </Text>
+                  <Text
+                    style={[styles.title, isRTL && styles.rtlText]}
+                    numberOfLines={1}
+                  >
                     {headerTitle}
                   </Text>
-                  <Text style={[styles.subtitle, isRTL && styles.rtlText]} numberOfLines={2}>
+                  <Text
+                    style={[styles.subtitle, isRTL && styles.rtlText]}
+                    numberOfLines={2}
+                  >
                     {headerSubtitle}
                   </Text>
                 </View>
                 <View style={styles.stateStack}>
-                  <View style={[styles.statePill, guideState === "speaking" && styles.statePillActive]}>
+                  <View
+                    style={[
+                      styles.statePill,
+                      guideState === "speaking" && styles.statePillActive,
+                    ]}
+                  >
                     <Text style={styles.statePillText}>{guideState}</Text>
                   </View>
-                  <TouchableOpacity style={styles.actionPill} onPress={handleMuteToggle} activeOpacity={0.85}>
-                    <Text style={styles.actionPillText}>{isMuted ? (isRTL ? "تشغيل" : "Unmute") : (isRTL ? "كتم" : "Mute")}</Text>
+                  <TouchableOpacity
+                    style={styles.actionPill}
+                    onPress={handleMuteToggle}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.actionPillText}>
+                      {isMuted
+                        ? isRTL
+                          ? "تشغيل"
+                          : "Unmute"
+                        : isRTL
+                          ? "كتم"
+                          : "Mute"}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
               <View style={styles.actionRow}>
-                <TouchableOpacity style={styles.secondaryButton} onPress={handleReplay} activeOpacity={0.85}>
-                  <Text style={styles.secondaryButtonText}>{isRTL ? "إعادة" : "Replay"}</Text>
+                <TouchableOpacity
+                  style={styles.secondaryButton}
+                  onPress={handleReplay}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.secondaryButtonText}>
+                    {isRTL ? "إعادة" : "Replay"}
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.secondaryButton} onPress={handleVoicePlaceholder} activeOpacity={0.85}>
-                  <Text style={styles.secondaryButtonText}>{isRTL ? "تحدث" : "Voice"}</Text>
+                <TouchableOpacity
+                  style={styles.secondaryButton}
+                  onPress={handleVoicePlaceholder}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.secondaryButtonText}>
+                    {isRTL ? "تحدث" : "Voice"}
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.secondaryButton} onPress={stopVoice} activeOpacity={0.85}>
-                  <Text style={styles.secondaryButtonText}>{isRTL ? "إيقاف" : "Stop"}</Text>
+                <TouchableOpacity
+                  style={styles.secondaryButton}
+                  onPress={stopVoice}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.secondaryButtonText}>
+                    {isRTL ? "إيقاف" : "Stop"}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </BlurView>
@@ -1601,9 +1745,15 @@ export default function VirtualGuide() {
           <View style={styles.chatPanelWrap}>
             <BlurView intensity={70} tint="dark" style={styles.chatPanel}>
               <View style={styles.suggestionsHeader}>
-                <Text style={[styles.sectionLabel, isRTL && styles.rtlText]}>{isRTL ? "أسئلة مقترحة" : "Suggested questions"}</Text>
+                <Text style={[styles.sectionLabel, isRTL && styles.rtlText]}>
+                  {isRTL ? "أسئلة مقترحة" : "Suggested questions"}
+                </Text>
               </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.suggestionRow}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.suggestionRow}
+              >
                 {suggestedQuestions.slice(0, 3).map((question) => (
                   <TouchableOpacity
                     key={question}
@@ -1612,7 +1762,10 @@ export default function VirtualGuide() {
                     activeOpacity={0.86}
                     disabled={isThinking}
                   >
-                    <Text style={[styles.suggestionText, isRTL && styles.rtlText]} numberOfLines={2}>
+                    <Text
+                      style={[styles.suggestionText, isRTL && styles.rtlText]}
+                      numberOfLines={2}
+                    >
                       {question}
                     </Text>
                   </TouchableOpacity>
@@ -1628,16 +1781,30 @@ export default function VirtualGuide() {
                 {messages.slice(-3).map(renderMessage)}
                 {isThinking ? (
                   <View style={[styles.messageRow, styles.assistantRow]}>
-                    <View style={[styles.messageBubble, styles.assistantBubble, styles.typingBubble]}>
+                    <View
+                      style={[
+                        styles.messageBubble,
+                        styles.assistantBubble,
+                        styles.typingBubble,
+                      ]}
+                    >
                       <ActivityIndicator size="small" color="#F0C86B" />
-                      <Text style={[styles.typingText, isRTL && styles.rtlText]}>{isRTL ? "المرشد يفكر..." : "The guide is thinking..."}</Text>
+                      <Text
+                        style={[styles.typingText, isRTL && styles.rtlText]}
+                      >
+                        {isRTL ? "المرشد يفكر..." : "The guide is thinking..."}
+                      </Text>
                     </View>
                   </View>
                 ) : null}
               </ScrollView>
 
               <View style={styles.inputWrap}>
-                <TouchableOpacity style={styles.micButton} onPress={handleVoicePlaceholder} activeOpacity={0.85}>
+                <TouchableOpacity
+                  style={styles.micButton}
+                  onPress={handleVoicePlaceholder}
+                  activeOpacity={0.85}
+                >
                   <Text style={styles.micButtonText}>STT</Text>
                 </TouchableOpacity>
                 <TextInput
@@ -1653,19 +1820,28 @@ export default function VirtualGuide() {
                   returnKeyType="send"
                 />
                 <TouchableOpacity
-                  style={[styles.sendButton, (!draft.trim() || isThinking) && styles.sendButtonDisabled]}
+                  style={[
+                    styles.sendButton,
+                    (!draft.trim() || isThinking) && styles.sendButtonDisabled,
+                  ]}
                   onPress={() => sendMessage(draft)}
                   activeOpacity={0.85}
                   disabled={!draft.trim() || isThinking}
                 >
-                  <Text style={styles.sendButtonText}>{isRTL ? "إرسال" : "Send"}</Text>
+                  <Text style={styles.sendButtonText}>
+                    {isRTL ? "إرسال" : "Send"}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </BlurView>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.backButton} onPress={handleBack} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={handleBack}
+          activeOpacity={0.8}
+        >
           <Text style={styles.backIcon}>{isRTL ? "رجوع" : "Back"}</Text>
         </TouchableOpacity>
 
@@ -1677,7 +1853,9 @@ export default function VirtualGuide() {
                 {isRTL ? "جاري تجهيز المرشد" : "Preparing your guide"}
               </Text>
               <Text style={[styles.loadingSubtitle, isRTL && styles.rtlText]}>
-                {isRTL ? "تحميل الصوت والسياق والمحادثة المحفوظة..." : "Loading audio, context, and your saved conversation..."}
+                {isRTL
+                  ? "تحميل الصوت والسياق والمحادثة المحفوظة..."
+                  : "Loading audio, context, and your saved conversation..."}
               </Text>
             </BlurView>
           </View>

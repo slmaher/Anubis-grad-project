@@ -108,7 +108,11 @@ export default function ShoppingBagScreen() {
             {items.map((item) => (
               <View key={item.id} style={styles.cartCard}>
                 <Image
-                  source={item.image}
+                  source={
+                    typeof item.image === "string"
+                      ? { uri: item.image }
+                      : item.image
+                  }
                   style={styles.productImage}
                   resizeMode="cover"
                 />
@@ -123,7 +127,7 @@ export default function ShoppingBagScreen() {
                     style={[styles.productName, isRTL && styles.textRtl]}
                     numberOfLines={2}
                   >
-                    {t(item.nameKey, item.nameKey)}
+                    {t(item.nameKey, item.name || item.nameKey)}
                   </Text>
                   <Text style={[styles.productPrice, isRTL && styles.textRtl]}>
                     {item.price} LE

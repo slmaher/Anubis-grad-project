@@ -9,13 +9,15 @@ import {
   SafeAreaView,
   StatusBar,
   TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTranslation } from "react-i18next";
 import { useFocusEffect } from "@react-navigation/native";
+import { api } from "../api/client";
 import {
   addItemToCart,
   getCartItems,
@@ -25,11 +27,18 @@ import {
 export default function Marketplace() {
   const router = useRouter();
   const { t } = useTranslation();
-  const [activeCategory, setActiveCategory] = useState("jewelry");
+  const [activeCategory, setActiveCategory] = useState("all");
   const [cart, setCart] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   const categories = [
+    {
+      id: "all",
+      labelKey: "marketplace.categories.all",
+      icon: "view-grid-outline",
+    },
     {
       id: "jewelry",
       labelKey: "marketplace.categories.jewelry",
@@ -45,52 +54,49 @@ export default function Marketplace() {
       labelKey: "marketplace.categories.books",
       icon: "book-open-page-variant-outline",
     },
+    {
+      id: "other",
+      labelKey: "marketplace.categories.other",
+      icon: "shape-outline",
+    },
   ];
 
-  const products = [
-    {
-      id: 1,
-      nameKey: "marketplace.products.egyptian_keychain",
-      price: 100,
-      image: require("../../assets/images/souvenir-1.jpeg"),
-      category: "jewelry",
-    },
-    {
-      id: 2,
-      nameKey: "marketplace.products.cleopatra_keychain",
-      price: 150,
-      image: require("../../assets/images/souvenir-2.jpeg"),
-      category: "jewelry",
-    },
-    {
-      id: 3,
-      nameKey: "marketplace.products.egyptian_pottery",
-      price: 300,
-      image: require("../../assets/images/souvenir-3.jpeg"),
-      category: "artifact",
-    },
-    {
-      id: 4,
-      nameKey: "marketplace.products.egyptian_hand_mirror",
-      price: 400,
-      image: require("../../assets/images/souvenir-4.jpeg"),
-      category: "artifact",
-    },
-    {
-      id: 5,
-      nameKey: "marketplace.products.pharaonic_pyramid_keychain",
-      price: 120,
-      image: require("../../assets/images/souvenir-5.jpg"),
-      category: "jewelry",
-    },
-    {
-      id: 6,
-      nameKey: "marketplace.products.pharaonic_keychain",
-      price: 110,
-      image: require("../../assets/images/souvenir-6.jpg"),
-      category: "jewelry",
-    },
-  ];
+  useEffect(() => {
+    let isActive = true;
+
+    const loadProducts = async () => {
+      try {
+        setLoadingProducts(true);
+        const response = await api.admin.getMarketplace();
+        if (isActive) {
+          const normalized = Array.isArray(response?.data)
+            ? response.data.map((product) => ({
+                ...product,
+                id: String(product?._id || product?.id),
+                name: product?.name || product?.title || "Untitled product",
+                imageUrl: product?.imageUrl || "",
+              }))
+            : [];
+          setProducts(normalized);
+        }
+      } catch (error) {
+        console.error("Marketplace load error:", error);
+        if (isActive) {
+          setProducts([]);
+        }
+      } finally {
+        if (isActive) {
+          setLoadingProducts(false);
+        }
+      }
+    };
+
+    loadProducts();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const getCartCount = () => {
     return cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -116,7 +122,11 @@ export default function Marketplace() {
   );
 
   const addToCart = async (product) => {
-    const updated = await addItemToCart(product);
+    const updated = await addItemToCart({
+      ...product,
+      nameKey: product.name,
+      image: product.imageUrl,
+    });
     setCart(updated);
   };
 
@@ -130,6 +140,14 @@ export default function Marketplace() {
     return item ? item.quantity : 0;
   };
 
+  const getProductImageSource = (product) => {
+    if (product?.imageUrl) {
+      return { uri: product.imageUrl };
+    }
+
+    return null;
+  };
+
   const handleBackPress = () => {
     if (router.canGoBack()) {
       router.back();
@@ -140,14 +158,32 @@ export default function Marketplace() {
   };
 
   const filteredProducts = products.filter((product) => {
-    const matchesCategory = product.category === activeCategory;
-    const translatedName = t(product.nameKey);
+    const matchesCategory =
+      activeCategory === "all" || product.category === activeCategory;
+    const translatedName = t(product.name || product.nameKey, product.name);
     const matchesSearch =
       !searchQuery.trim() ||
       translatedName.toLowerCase().includes(searchQuery.trim().toLowerCase());
 
     return matchesCategory && matchesSearch;
   });
+
+  if (loadingProducts) {
+    return (
+      <ImageBackground
+        source={require("../../assets/images/beige-background.jpeg")}
+        style={styles.mainContainer}
+        resizeMode="cover"
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.loadingState}>
+            <ActivityIndicator size="large" color="#D9A441" />
+            <Text style={styles.loadingText}>Loading marketplace...</Text>
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
+    );
+  }
 
   return (
     <ImageBackground
@@ -263,15 +299,28 @@ export default function Marketplace() {
                 const quantity = getProductQuantity(product.id);
                 return (
                   <View key={product.id} style={styles.productCard}>
-                    <Image
-                      source={product.image}
-                      style={styles.productImage}
-                      resizeMode="cover"
-                    />
+                    {getProductImageSource(product) ? (
+                      <Image
+                        source={getProductImageSource(product)}
+                        style={styles.productImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={styles.productImagePlaceholder}>
+                        <MaterialCommunityIcons
+                          name="image-outline"
+                          size={28}
+                          color="#B39E8C"
+                        />
+                      </View>
+                    )}
 
                     <View style={styles.productBottomSection}>
                       <Text style={styles.productName} numberOfLines={2}>
-                        {t(product.nameKey)}
+                        {t(product.name || product.nameKey, product.name)}
+                      </Text>
+                      <Text style={styles.productDescription} numberOfLines={2}>
+                        {product.description || t("marketplace.product_description", "Authentic souvenir")}
                       </Text>
 
                       <View style={styles.productFooter}>
@@ -500,6 +549,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 10,
   },
+  productImagePlaceholder: {
+    width: "100%",
+    height: 155,
+    borderRadius: 12,
+    marginBottom: 10,
+    backgroundColor: "#EFE6DD",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   productBottomSection: {
     gap: 8,
   },
@@ -514,6 +572,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  productDescription: {
+    fontSize: 11,
+    color: "#8B7B6C",
+    lineHeight: 15,
+    minHeight: 30,
   },
   priceTag: {
     backgroundColor: "#ECE5DE",
@@ -575,5 +639,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#8B7B6C",
     fontWeight: "500",
+  },
+  loadingState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#2C2010",
   },
 });

@@ -302,31 +302,45 @@ export default function VolunteeringManagement() {
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {editingId ? "Edit Opportunity" : "New Opportunity"}
-            </Text>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {editingId ? "Edit Opportunity" : "New Opportunity"}
+              </Text>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setModalVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Close modal"
+              >
+                <Text style={styles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
             <ScrollView>
               <TextInput
                 style={styles.input}
                 placeholder="Title"
+                placeholderTextColor="#A79B91"
                 value={formData.title}
                 onChangeText={(t) => setFormData({ ...formData, title: t })}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Location"
+                placeholderTextColor="#A79B91"
                 value={formData.location}
                 onChangeText={(t) => setFormData({ ...formData, location: t })}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Duration"
+                placeholderTextColor="#A79B91"
                 value={formData.duration}
                 onChangeText={(t) => setFormData({ ...formData, duration: t })}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Requirements"
+                placeholderTextColor="#A79B91"
                 value={formData.requirements}
                 onChangeText={(t) =>
                   setFormData({ ...formData, requirements: t })
@@ -335,6 +349,7 @@ export default function VolunteeringManagement() {
               <TextInput
                 style={[styles.input, { height: 80 }]}
                 placeholder="Description"
+                placeholderTextColor="#A79B91"
                 value={formData.description}
                 multiline
                 onChangeText={(t) =>
@@ -424,7 +439,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
+    color: "#2C2010",
   },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F5EFE7",
+  },
+  closeBtnText: { color: "#2C2010", fontSize: 16, fontWeight: "700" },
   modalButtons: { flexDirection: "row", justifyContent: "flex-end", gap: 12 },
   cancelBtn: { paddingHorizontal: 20, paddingVertical: 10 },
   saveBtn: {

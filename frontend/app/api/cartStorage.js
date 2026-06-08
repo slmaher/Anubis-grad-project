@@ -9,11 +9,15 @@ const clampQuantity = (value) => {
 };
 
 const normalizeItem = (item) => {
+  const resolvedImage = item.image || item.imageUrl || null;
+  const resolvedName = item.nameKey || item.name || "";
+
   return {
     id: String(item.id),
-    nameKey: item.nameKey,
+    nameKey: resolvedName,
+    name: item.name || item.nameKey || "",
     price: Number(item.price || 0),
-    image: item.image,
+    image: resolvedImage,
     quantity: clampQuantity(item.quantity),
   };
 };

@@ -289,31 +289,45 @@ export default function MuseumManagement() {
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {editingMuseum ? "Edit Museum" : "Add New Museum"}
-            </Text>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {editingMuseum ? "Edit Museum" : "Add New Museum"}
+              </Text>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setModalVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Close modal"
+              >
+                <Text style={styles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
             <ScrollView>
               <TextInput
                 style={styles.input}
                 placeholder="Name"
+                placeholderTextColor="#A79B91"
                 value={formData.name}
                 onChangeText={(t) => setFormData({ ...formData, name: t })}
               />
               <TextInput
                 style={styles.input}
                 placeholder="City"
+                placeholderTextColor="#A79B91"
                 value={formData.city}
                 onChangeText={(t) => setFormData({ ...formData, city: t })}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Location"
+                placeholderTextColor="#A79B91"
                 value={formData.location}
                 onChangeText={(t) => setFormData({ ...formData, location: t })}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Image URL (optional)"
+                placeholderTextColor="#A79B91"
                 value={formData.imageUrl}
                 onChangeText={(t) => {
                   setFormData({ ...formData, imageUrl: t });
@@ -364,6 +378,7 @@ export default function MuseumManagement() {
               <TextInput
                 style={[styles.input, { height: 100 }]}
                 placeholder="Description"
+                placeholderTextColor="#A79B91"
                 multiline
                 value={formData.description}
                 onChangeText={(t) =>
@@ -443,7 +458,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
+    color: "#2C2010",
   },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F5EFE7",
+  },
+  closeBtnText: { color: "#2C2010", fontSize: 16, fontWeight: "700" },
   imageActionsRow: {
     flexDirection: "row",
     alignItems: "center",
