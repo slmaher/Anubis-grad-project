@@ -6,6 +6,7 @@ import { UserRole } from '../users/user.roles';
 import { RegisterDto, LoginDto } from './auth.dto';
 import { validateBody } from '../../common/middleware/validationMiddleware';
 import { signJwt } from '../../common/utils/jwt';
+import { recordFailedLoginAttempt } from '../security/securityLog.service';
 
 const authRouter = Router();
 
@@ -64,11 +65,13 @@ authRouter.post(
 
       const user = await UserModel.findOne({ email });
       if (!user) {
+        await recordFailedLoginAttempt(req, email);
         return res.status(401).json({ success: false, message: 'Invalid credentials' });
       }
 
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
+        await recordFailedLoginAttempt(req, email);
         return res.status(401).json({ success: false, message: 'Invalid credentials' });
       }
 

@@ -210,9 +210,11 @@
     "available_items": "Articles disponibles",
     "no_items": "Aucun article trouvé",
     "categories": {
+      "all": "Tous",
       "jewelry": "Bijoux",
       "artifact": "Artéfact",
-      "books": "Livres"
+      "books": "Livres",
+      "other": "Autre"
     },
     "products": {
       "egyptian_keychain": "Porte-clés égyptien",
@@ -345,8 +347,8 @@
       "nearby": "À proximité"
     },
     "book_ticket": "Réserver un billet"
-  }
-  ,"admin": {
+  },
+  "admin": {
     "menu": {
       "dashboard": "Tableau de bord"
     }

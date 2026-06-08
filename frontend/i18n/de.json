@@ -215,9 +215,11 @@
     "available_items": "Verfügbare Artikel",
     "no_items": "Keine Artikel gefunden",
     "categories": {
+      "all": "Alle",
       "jewelry": "Schmuck",
       "artifact": "Artefakt",
-      "books": "Bücher"
+      "books": "Bücher",
+      "other": "Andere"
     },
     "products": {
       "egyptian_keychain": "Ägyptischer Schlüsselanhänger",

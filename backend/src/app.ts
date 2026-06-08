@@ -22,6 +22,7 @@ import { postsRouter } from "./modules/posts/posts.routes";
 import { marketplaceRouter } from "./modules/marketplace/marketplace.routes";
 import { friendsRouter } from "./modules/friends";
 import { aiRouter } from "./modules/ai/ai.routes";
+import { securityRouter } from "./modules/security/security.routes";
 
 const app = express();
 
@@ -53,6 +54,7 @@ app.use("/api/posts", postsRouter);
 app.use("/api/marketplace", marketplaceRouter);
 app.use("/api/friends", friendsRouter);
 app.use("/api/ai", aiRouter);
+app.use("/api/security", securityRouter);
 
 // 404 + error handlers
 app.use(notFoundHandler);

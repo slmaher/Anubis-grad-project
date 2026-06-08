@@ -210,9 +210,11 @@
     "available_items": "Available items",
     "no_items": "No items found",
     "categories": {
+      "all": "All",
       "jewelry": "Jewelry",
       "artifact": "Artifact",
-      "books": "Books"
+      "books": "Books",
+      "other": "Other"
     },
     "products": {
       "egyptian_keychain": "Egyptian keychain",

@@ -83,7 +83,10 @@ export default function MuseumManagement() {
       const selected = result.assets[0];
 
       // Upload to Cloudinary under the "categories" folder
-      const uploadResult = await uploadImageToCloudinary(selected.uri, "categories");
+      const uploadResult = await uploadImageToCloudinary(
+        selected.uri,
+        "categories",
+      );
 
       setFormData((prev) => ({
         ...prev,
@@ -93,7 +96,10 @@ export default function MuseumManagement() {
       Alert.alert("Success", "Museum image uploaded successfully!");
     } catch (error) {
       console.error("[Cloudinary] pickImage error:", error);
-      Alert.alert("Error", error.message || "Unable to upload image right now.");
+      Alert.alert(
+        "Error",
+        error.message || "Unable to upload image right now.",
+      );
     } finally {
       setUploading(false);
     }
@@ -343,7 +349,11 @@ export default function MuseumManagement() {
                   disabled={uploading}
                 >
                   {uploading ? (
-                    <ActivityIndicator size="small" color="#D9A441" style={{ marginRight: 4 }} />
+                    <ActivityIndicator
+                      size="small"
+                      color="#D9A441"
+                      style={{ marginRight: 4 }}
+                    />
                   ) : (
                     <MaterialCommunityIcons
                       name="image-plus"

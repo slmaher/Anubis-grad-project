@@ -215,9 +215,11 @@
     "available_items": "可用商品",
     "no_items": "未找到商品",
     "categories": {
+      "all": "全部",
       "jewelry": "珠宝",
       "artifact": "文物",
-      "books": "书籍"
+      "books": "书籍",
+      "other": "其他"
     },
     "products": {
       "egyptian_keychain": "埃及钥匙扣",

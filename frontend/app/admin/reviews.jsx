@@ -86,8 +86,12 @@ export default function ReviewManagement() {
 
   const renderReview = ({ item }) => (
     <View style={[styles.reviewCard, isCompact && styles.reviewCardCompact]}>
-      <View style={[styles.reviewHeader, isCompact && styles.reviewHeaderCompact]}>
-        <View style={[styles.reviewMeta, isCompact && styles.reviewMetaCompact]}>
+      <View
+        style={[styles.reviewHeader, isCompact && styles.reviewHeaderCompact]}
+      >
+        <View
+          style={[styles.reviewMeta, isCompact && styles.reviewMetaCompact]}
+        >
           <Text style={styles.userName}>{item.user?.name || "Anonymous"}</Text>
           <Text style={styles.museumName}>
             on {item.museum?.name || "Unknown"}

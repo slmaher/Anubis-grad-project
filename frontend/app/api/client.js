@@ -561,6 +561,19 @@ export const api = {
         token,
       });
     },
+
+    // Security
+    getSecurityLogs(token, params = {}) {
+      const query = new URLSearchParams();
+      if (params.includeAll) {
+        query.append("includeAll", "true");
+      }
+      if (params.limit) {
+        query.append("limit", String(params.limit));
+      }
+      const suffix = query.toString() ? `?${query.toString()}` : "";
+      return apiRequest(`/api/security/logs${suffix}`, { token });
+    },
   },
 };
 

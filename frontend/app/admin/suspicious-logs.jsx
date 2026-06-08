@@ -114,12 +114,19 @@ export default function SuspiciousLogsScreen() {
         return;
       }
 
-      const [usersResult, museumsResult, artifactsResult, eventsResult] =
+      const [
+        usersResult,
+        museumsResult,
+        artifactsResult,
+        eventsResult,
+        securityLogsResult,
+      ] =
         await Promise.allSettled([
           api.admin.getUsers(token),
           api.getMuseums(),
           api.admin.getArtifacts(token),
           api.getEvents(),
+          api.admin.getSecurityLogs(token, { limit: 100 }),
         ]);
 
       const toArray = (response) => {
@@ -134,6 +141,7 @@ export default function SuspiciousLogsScreen() {
       const museums = toArray(getSettledValue(museumsResult));
       const artifacts = toArray(getSettledValue(artifactsResult));
       const events = toArray(getSettledValue(eventsResult));
+      const securityLogs = toArray(getSettledValue(securityLogsResult));
       const usersById = users.reduce((acc, user) => {
         const id = toId(user?._id || user?.id);
         if (id) acc[id] = user;
@@ -259,6 +267,25 @@ export default function SuspiciousLogsScreen() {
         entries.push({ key, title, details, occurredAt, severity });
       };
 
+      securityLogs.forEach((log) => {
+        const id = toId(log?._id || log?.id) || Math.random();
+        const meta = [
+          log?.email ? `Email: ${log.email}` : "",
+          log?.ipAddress ? `IP: ${log.ipAddress}` : "",
+          log?.attemptCount ? `Attempts: ${log.attemptCount}` : "",
+        ]
+          .filter(Boolean)
+          .join(" - ");
+
+        pushEntry(
+          `security-${id}`,
+          log?.title || "Security warning",
+          [log?.details, meta].filter(Boolean).join(" "),
+          log?.createdAt || log?.updatedAt,
+          log?.severity || "high",
+        );
+      });
+
       activity.forEach((item) => {
         const searchable = [
           item?.category,
@@ -297,12 +324,15 @@ export default function SuspiciousLogsScreen() {
         }
 
         if (/(role|permission|privilege|admin action)/.test(searchable)) {
+          const changeContext = [item?.action, item?.details]
+            .filter(Boolean)
+            .join(" - ");
           pushEntry(
             `priv-${item.id}`,
             `${item.category} role or permission change`,
             item.subject
-              ? `${item.subject} changed access-sensitive fields.`
-              : "A role or permission change was recorded.",
+              ? `${item.subject} had a role, permission, or admin-controlled setting changed${changeContext ? `: ${changeContext}` : "."}`
+              : `A role or permission change was recorded${changeContext ? `: ${changeContext}` : "."}`,
             item?.occurredAt,
             "medium",
           );
@@ -327,6 +357,8 @@ export default function SuspiciousLogsScreen() {
 
       const scenarios = [
         "Repeated invalid credentials more than twice",
+        "Repeated invalid credentials from the same IP address",
+        "Invalid login attempts against an email that does not exist",
         "Multiple removals or deactivations in the same period",
         "Unexpected role or permission changes",
         "Bulk updates performed in a short time window",

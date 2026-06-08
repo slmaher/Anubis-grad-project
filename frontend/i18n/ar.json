@@ -210,9 +210,11 @@
     "available_items": "العناصر المتاحة",
     "no_items": "لم يتم العثور على عناصر",
     "categories": {
+      "all": "الكل",
       "jewelry": "المجوهرات",
       "artifact": "القطع الأثرية",
-      "books": "الكتب"
+      "books": "الكتب",
+      "other": "أخرى"
     },
     "products": {
       "egyptian_keychain": "سلسلة مفاتيح مصرية",

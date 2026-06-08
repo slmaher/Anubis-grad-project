@@ -258,7 +258,12 @@ export default function Marketplace() {
             />
           </View>
 
-          <View style={styles.categoriesContainer}>
+          <ScrollView
+            horizontal
+            style={styles.categoriesContainer}
+            contentContainerStyle={styles.categoriesContent}
+            showsHorizontalScrollIndicator={false}
+          >
             {categories.map((category) => (
               <TouchableOpacity
                 key={category.id}
@@ -283,7 +288,7 @@ export default function Marketplace() {
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
 
           <Text style={styles.sectionTitle}>
             {t("marketplace.available_items", "Available items")}
@@ -320,7 +325,11 @@ export default function Marketplace() {
                         {t(product.name || product.nameKey, product.name)}
                       </Text>
                       <Text style={styles.productDescription} numberOfLines={2}>
-                        {product.description || t("marketplace.product_description", "Authentic souvenir")}
+                        {product.description ||
+                          t(
+                            "marketplace.product_description",
+                            "Authentic souvenir",
+                          )}
                       </Text>
 
                       <View style={styles.productFooter}>
@@ -480,9 +489,13 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   categoriesContainer: {
+    marginBottom: 14,
+    flexGrow: 0,
+  },
+  categoriesContent: {
     flexDirection: "row",
     gap: 10,
-    marginBottom: 14,
+    paddingRight: 4,
   },
   categoryButton: {
     backgroundColor: "rgba(255, 255, 255, 0.6)",

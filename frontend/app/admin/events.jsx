@@ -151,7 +151,10 @@ export default function EventManagement() {
       const selected = result.assets[0];
 
       // Upload to Cloudinary under the "banners" folder
-      const uploadResult = await uploadImageToCloudinary(selected.uri, "banners");
+      const uploadResult = await uploadImageToCloudinary(
+        selected.uri,
+        "banners",
+      );
 
       setFormData((prev) => ({
         ...prev,
@@ -162,7 +165,10 @@ export default function EventManagement() {
       Alert.alert("Success", "Photo uploaded successfully!");
     } catch (error) {
       console.error("[Cloudinary] pickImage error:", error);
-      Alert.alert("Error", error.message || "Unable to upload image right now.");
+      Alert.alert(
+        "Error",
+        error.message || "Unable to upload image right now.",
+      );
     } finally {
       setUploading(false);
     }
@@ -552,13 +558,17 @@ export default function EventManagement() {
                 onChangeText={(t) => setFormData({ ...formData, imageUrl: t })}
               />
               <View style={styles.imageActionsRow}>
-                 <TouchableOpacity
+                <TouchableOpacity
                   style={[styles.pickImageBtn, uploading && { opacity: 0.7 }]}
                   onPress={pickImage}
                   disabled={uploading}
                 >
                   {uploading ? (
-                    <ActivityIndicator size="small" color="#D9A441" style={{ marginRight: 4 }} />
+                    <ActivityIndicator
+                      size="small"
+                      color="#D9A441"
+                      style={{ marginRight: 4 }}
+                    />
                   ) : (
                     <MaterialCommunityIcons
                       name="image-plus"

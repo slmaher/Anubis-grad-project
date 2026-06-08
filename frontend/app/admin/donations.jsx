@@ -137,39 +137,49 @@ export default function DonationManagement() {
     }
   };
 
-const deleteCampaign = (id) => {
-  Alert.alert("Delete Campaign", "Are you sure you want to delete this campaign?", [
-    { text: "Cancel", style: "cancel" },
-    {
-      text: "Delete",
-      style: "destructive",
-      onPress: async () => {
-        try {
-          const token = await getAuthToken();
+  const deleteCampaign = (id) => {
+    Alert.alert(
+      "Delete Campaign",
+      "Are you sure you want to delete this campaign?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const token = await getAuthToken();
 
-          const response = await fetch(`${API_URL}/donations/campaigns/${id}`, {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+              const response = await fetch(
+                `${API_URL}/donations/campaigns/${id}`,
+                {
+                  method: "DELETE",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                },
+              );
 
-          const res = await response.json();
+              const res = await response.json();
 
-          if (res.success) {
-            setCampaigns((prev) => prev.filter((item) => item._id !== id));
-            Alert.alert("Deleted", "Campaign deleted successfully.");
-          } else {
-            Alert.alert("Error", res.message || "Failed to delete campaign.");
-          }
-        } catch (error) {
-          console.error(error);
-          Alert.alert("Error", "Failed to delete campaign.");
-        }
-      },
-    },
-  ]);
-};
+              if (res.success) {
+                setCampaigns((prev) => prev.filter((item) => item._id !== id));
+                Alert.alert("Deleted", "Campaign deleted successfully.");
+              } else {
+                Alert.alert(
+                  "Error",
+                  res.message || "Failed to delete campaign.",
+                );
+              }
+            } catch (error) {
+              console.error(error);
+              Alert.alert("Error", "Failed to delete campaign.");
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const openEdit = (campaign) => {
     setEditingCampaign(campaign);
@@ -269,7 +279,12 @@ const deleteCampaign = (id) => {
 
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, isCompact && styles.modalContentCompact]}>
+          <View
+            style={[
+              styles.modalContent,
+              isCompact && styles.modalContentCompact,
+            ]}
+          >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
                 {editingCampaign ? "Edit Campaign" : "New Campaign"}
@@ -331,7 +346,9 @@ const deleteCampaign = (id) => {
 
               <Text style={styles.sectionLabel}>Select Icon</Text>
 
-              <View style={[styles.iconGrid, isCompact && styles.iconGridCompact]}>
+              <View
+                style={[styles.iconGrid, isCompact && styles.iconGridCompact]}
+              >
                 {AVAILABLE_ICONS.map((icon) => (
                   <TouchableOpacity
                     key={icon}
@@ -352,7 +369,12 @@ const deleteCampaign = (id) => {
               </View>
             </ScrollView>
 
-            <View style={[styles.modalButtons, isCompact && styles.modalButtonsCompact]}>
+            <View
+              style={[
+                styles.modalButtons,
+                isCompact && styles.modalButtonsCompact,
+              ]}
+            >
               <TouchableOpacity
                 style={styles.cancelBtn}
                 onPress={() => {

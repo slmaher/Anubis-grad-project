@@ -354,12 +354,15 @@ export default function AdminDashboard() {
       }
 
       if (isPrivilegeChange) {
+        const changeContext = [item?.action, item?.details]
+          .filter(Boolean)
+          .join(" - ");
         pushEntry(
           `priv-${item.id}`,
           `${item.category} role or permission change`,
           item.subject
-            ? `${item.subject} changed access-sensitive fields.`
-            : "A role or permission change was recorded.",
+            ? `${item.subject} had a role, permission, or admin-controlled setting changed${changeContext ? `: ${changeContext}` : "."}`
+            : `A role or permission change was recorded${changeContext ? `: ${changeContext}` : "."}`,
           item?.occurredAt,
           "medium",
         );
