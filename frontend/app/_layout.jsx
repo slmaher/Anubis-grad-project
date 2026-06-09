@@ -15,6 +15,14 @@ if (Image && !Image.__cloudinaryPatched) {
     const originalRender = Image.render;
     if (typeof originalRender === "function") {
       Image.render = function (props, ref) {
+        if (props && (props.bypassCloudinary || (props.source && props.source.bypassCloudinary))) {
+          const { bypassCloudinary, ...cleanProps } = props;
+          if (cleanProps.source && typeof cleanProps.source === "object") {
+            const { bypassCloudinary: _, ...cleanSource } = cleanProps.source;
+            cleanProps.source = cleanSource;
+          }
+          return originalRender.call(this, cleanProps, ref);
+        }
         const newProps = { ...props };
         if (props && props.source) {
           // If style has a width, we can use it to request an appropriately sized image from Cloudinary
@@ -41,6 +49,10 @@ if (Image && !Image.__cloudinaryPatched) {
     const originalResolveAssetSource = Image.resolveAssetSource;
     if (typeof originalResolveAssetSource === "function") {
       Image.resolveAssetSource = function (source) {
+        if (source && (source.bypassCloudinary || source.uri === "bypassCloudinary")) {
+          const { bypassCloudinary, ...cleanSource } = source;
+          return originalResolveAssetSource.call(this, cleanSource);
+        }
         const resolved = resolveImageSource(source);
         return originalResolveAssetSource.call(this, resolved);
       };

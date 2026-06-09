@@ -11,15 +11,96 @@ const CARD_WIDTH = 280;
 const CARD_MARGIN = 12;
 const CARD_SPACING = CARD_WIDTH + CARD_MARGIN;
 
+const MUSEUM_TRANSLATIONS = {
+  ar: {
+    "The Grand Egyptian Museum": "المتحف المصري الكبير",
+    "Giza, Cairo - Alexandria Desert Rd": "طريق الإسكندرية الصحراوي، الجيزة",
+    "A state-of-the-art museum housing the complete Tutankhamun collection near the Pyramids of Giza.": "متحف حديث يضم مجموعة توت عنخ آمون الكاملة بالقرب من أهرامات الجيزة.",
+    "2.5 km": "٢.٥ كم",
+
+    "The Egyptian Museum": "المتحف المصري",
+    "Tahrir Square, Downtown Cairo": "ميدان التحرير، وسط البلد، القاهرة",
+    "The historic treasure trove in Tahrir Square, showcasing an unparalleled classical collection of antiquities.": "الكنز التاريخي في ميدان التحرير، يعرض مجموعة كلاسيكية فريدة من الآثار القديمة.",
+    "1.2 km": "١.٢ كم",
+
+    "Museum of Islamic Art": "متحف الفن الإسلامي",
+    "Port Said St, Bab Al-Khalq": "شارع بورسعيد، باب الخلق، القاهرة",
+    "One of the world's greatest collections of Islamic art, showcasing woodcarving, ceramics, and rare manuscripts.": "واحد من أعظم متاحف الفن الإسلامي في العالم، يعرض الحفر على الخشب، الخزف، والمخطوطات النادرة.",
+    "3.1 km": "٣.١ كم",
+
+    "National Museum of Egyptian Civilization": "المتحف القومي للحضارة المصرية",
+    "Fustat, Old Cairo": "الفسطاط، مصر القديمة، القاهرة",
+    "A modern cultural hub in Old Cairo, housing the majestic Royal Mummies Hall and chronological Egyptian displays.": "مركز ثقافي حديث في مصر القديمة، يضم قاعة المومياوات الملكية المهيبة والعروض التاريخية لمصر.",
+    "4.5 km": "٤.٥ كم",
+
+    "Coptic Museum": "المتحف القبطي",
+    "Coptic Cairo, Babylon Fortress": "مصر القديمة، حصن بابليون، القاهرة",
+    "Located within the Babylon Fortress ruins, housing the largest collection of Coptic Christian art in the world.": "يقع داخل أنقاض حصن بابليون، ويضم أكبر مجموعة من الفن المسيحي القبطي في العالم.",
+    "5.0 km": "٥.٠ كم",
+
+    "Agricultural Museum": "المتحف الزراعي",
+    "Dokki, Giza": "الدقي، الجيزة",
+    "One of the oldest agricultural museums in the world, documenting agriculture in Egypt from ancient times.": "من أقدم المتاحف الزراعية في العالم، ويوثق تاريخ الزراعة في مصر منذ العصور القديمة.",
+    "2.8 km": "٢.٨ كم",
+
+    "Mukhtar Museum": "متحف محمود مختار",
+    "Gezira Island, Cairo": "الجزيرة، الزمالك، القاهرة",
+    "A museum dedicated to Mahmoud Mukhtar, displaying his famous granite and bronze pioneer sculptures.": "متحف مخصص للنحات الرائد محمود مختار، يعرض تماثيله الشهيرة من الجرانيت والبرونز.",
+    "2.1 km": "٢.١ كم",
+
+    "Royal Chariots Museum": "متحف المركبات الملكية",
+    "Boulaq, Cairo": "بولاق، القاهرة",
+    "A museum displaying royal carriages, historic chariots, and accessories of the Muhammad Ali family.": "متحف يعرض العربات الملكية التاريخية وإكسسوارات خيول أسرة محمد علي.",
+    "3.5 km": "٣.٥ كم",
+
+    "Manial Palace Museum": "متحف قصر المنيل",
+    "Al-Manial, Cairo": "المنيل، القاهرة",
+    "A gorgeous palace showing Ottoman-style architecture and the modern history of Prince Muhammad Ali Tewfik.": "قصر رائع يعرض العمارة ذات الطراز العثماني والتاريخ الحديث للأمير محمد علي توفيق.",
+    "3.2 km": "٣.٢ كم",
+
+    "No Museums Found": "لم يتم العثور على متاحف",
+    "Try searching for another keyword.": "حاول البحث عن كلمة رئيسية أخرى."
+  }
+};
+
 export default function MapScreen() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  const getTranslation = (text) => {
+    if (!text) return "";
+    const lang = i18n?.language || "en";
+    if (lang.startsWith("ar")) {
+      return MUSEUM_TRANSLATIONS.ar[text] || text;
+    }
+    return text;
+  };
   const mapRef = useRef(null);
   const flatListRef = useRef(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedId, setSelectedId] = useState(1);
   const [dbMuseums, setDbMuseums] = useState([]);
+  const [loadedMarkers, setLoadedMarkers] = useState({});
+
+  const handleImageLoad = (id) => {
+    if (loadedMarkers[id]) return;
+    setLoadedMarkers(prev => ({ ...prev, [id]: true }));
+  };
+
+  // Fallback: Force a redraw 800ms after mounting to guarantee images display
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoadedMarkers(prev => {
+        const next = { ...prev };
+        baseMuseums.forEach(m => {
+          next[m.id] = true;
+        });
+        return next;
+      });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Static fallback list with photos, descriptions, and real coordinates
   const baseMuseums = [
@@ -92,6 +173,62 @@ export default function MapScreen() {
       shortDescription: "Located within the Babylon Fortress ruins, housing the largest collection of Coptic Christian art in the world.",
       hours: "9:00 AM - 4:00 PM",
       price: "60 LE",
+    },
+    {
+      id: 6,
+      name: "Agricultural Museum",
+      address: "Dokki, Giza",
+      rating: 4.4,
+      reviews: 95,
+      distance: "2.8 km",
+      image: require("../../assets/images/egyptian-museum-interior.jpg"),
+      latitude: 30.0458,
+      longitude: 31.2052,
+      shortDescription: "One of the oldest agricultural museums in the world, documenting agriculture in Egypt from ancient times.",
+      hours: "9:00 AM - 3:00 PM",
+      price: "50 LE",
+    },
+    {
+      id: 7,
+      name: "Mukhtar Museum",
+      address: "Gezira Island, Cairo",
+      rating: 4.5,
+      reviews: 112,
+      distance: "2.1 km",
+      image: require("../../assets/images/Egyptian-Civilization.jpg"),
+      latitude: 30.0415,
+      longitude: 31.2241,
+      shortDescription: "A museum dedicated to Mahmoud Mukhtar, displaying his famous granite and bronze pioneer sculptures.",
+      hours: "9:00 AM - 3:00 PM",
+      price: "40 LE",
+    },
+    {
+      id: 8,
+      name: "Royal Chariots Museum",
+      address: "Boulaq, Cairo",
+      rating: 4.6,
+      reviews: 154,
+      distance: "3.5 km",
+      image: require("../../assets/images/egyptian-museum.png"),
+      latitude: 30.0573,
+      longitude: 31.2325,
+      shortDescription: "A museum displaying royal carriages, historic chariots, and accessories of the Muhammad Ali family.",
+      hours: "9:00 AM - 5:00 PM",
+      price: "60 LE",
+    },
+    {
+      id: 9,
+      name: "Manial Palace Museum",
+      address: "Al-Manial, Cairo",
+      rating: 4.7,
+      reviews: 289,
+      distance: "3.2 km",
+      image: require("../../assets/images/grand-museum.png"),
+      latitude: 30.0272,
+      longitude: 31.2263,
+      shortDescription: "A gorgeous palace showing Ottoman-style architecture and the modern history of Prince Muhammad Ali Tewfik.",
+      hours: "9:00 AM - 5:00 PM",
+      price: "100 LE",
     },
   ];
 
@@ -245,24 +382,31 @@ export default function MapScreen() {
       >
         {filteredMuseums.map((museum) => {
           const isSelected = museum.id === selectedId;
+          const isImageLoaded = loadedMarkers[museum.id];
           return (
             <Marker
-              key={museum.id}
+              key={`${museum.id}-${isImageLoaded ? "loaded" : "loading"}`}
               coordinate={{
                 latitude: museum.latitude,
                 longitude: museum.longitude,
               }}
               onPress={() => selectMuseum(museum, true)}
-              tracksViewChanges={false}
             >
-              <View style={styles.markerContainer}>
-                {isSelected && (
-                  <View style={styles.markerBadge}>
-                    <Text style={styles.markerBadgeText} numberOfLines={1}>
-                      {museum.name}
-                    </Text>
-                  </View>
-                )}
+              <View style={[
+                styles.markerContainer,
+                isSelected && styles.markerContainerSelected
+              ]}>
+                <View style={[
+                  styles.markerBadge,
+                  isSelected && styles.markerBadgeSelected
+                ]}>
+                  <Text style={[
+                    styles.markerBadgeText,
+                    isSelected && styles.markerBadgeTextSelected
+                  ]} numberOfLines={1}>
+                    {getTranslation(museum.name)}
+                  </Text>
+                </View>
                 <View style={[
                   styles.markerPinFrame,
                   isSelected && styles.markerPinFrameSelected
@@ -271,6 +415,8 @@ export default function MapScreen() {
                     source={museum.image}
                     style={styles.markerPhoto}
                     resizeMode="cover"
+                    onLoad={() => handleImageLoad(museum.id)}
+                    bypassCloudinary
                   />
                 </View>
                 <View style={[
@@ -346,8 +492,8 @@ export default function MapScreen() {
           ListEmptyComponent={
             <View style={styles.emptyCard}>
               <MaterialCommunityIcons name="map-marker-off" size={40} color="#C5A880" />
-              <Text style={styles.emptyTitle}>No Museums Found</Text>
-              <Text style={styles.emptySub}>Try searching for another keyword.</Text>
+              <Text style={styles.emptyTitle}>{getTranslation("No Museums Found")}</Text>
+              <Text style={styles.emptySub}>{getTranslation("Try searching for another keyword.")}</Text>
             </View>
           }
           renderItem={({ item }) => {
@@ -373,19 +519,19 @@ export default function MapScreen() {
                 {/* Museum Details Body */}
                 <View style={styles.museumInfo}>
                   <View style={styles.museumHeader}>
-                    <Text style={styles.museumName} numberOfLines={1}>
-                      {item.name}
+                    <Text style={styles.museumName} numberOfLines={2}>
+                      {getTranslation(item.name)}
                     </Text>
-                    <Text style={styles.museumDistance}>{item.distance}</Text>
+                    <Text style={styles.museumDistance}>{getTranslation(item.distance)}</Text>
                   </View>
-
+ 
                   <Text style={styles.museumAddress} numberOfLines={1}>
                     <MaterialCommunityIcons name="map-marker" size={12} color="#C5A880" />
-                    {" "}{item.address}
+                    {" "}{getTranslation(item.address)}
                   </Text>
-
+ 
                   <Text style={styles.shortDescription} numberOfLines={2}>
-                    {item.shortDescription}
+                    {getTranslation(item.shortDescription)}
                   </Text>
 
                   {/* Divider */}
@@ -433,9 +579,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 55,
+    paddingTop: 40,
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: 12,
     backgroundColor: "rgba(253, 251, 247, 0.94)",
     borderBottomWidth: 1,
     borderBottomColor: "rgba(197, 168, 128, 0.2)",
@@ -450,7 +596,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.9)",
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
     color: "#31241B",
     letterSpacing: 0.5,
@@ -470,9 +616,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
     gap: 10,
     borderWidth: 1,
     borderColor: "rgba(197, 168, 128, 0.35)",
@@ -513,34 +659,53 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  markerContainerSelected: {
+    transform: [{ scale: 1.25 }],
+    zIndex: 999,
+  },
   markerBadge: {
-    backgroundColor: "#31241B",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
+    backgroundColor: "rgba(49, 36, 27, 0.9)",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#e2c36d",
-    marginBottom: 4,
-    maxWidth: 140,
+    borderColor: "#C5A880",
+    marginBottom: 3,
+    maxWidth: 200,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  markerBadgeSelected: {
+    backgroundColor: "#31241B",
+    borderColor: "#E2C36D",
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   markerBadgeText: {
     color: "#FFF8E8",
-    fontSize: 11,
+    fontSize: 10,
+    fontWeight: "600",
+    textAlign: "center",
+    lineHeight: 16,
+    numberOfLines: 2,
+  },
+  markerBadgeTextSelected: {
+    fontSize: 10.5,
     fontWeight: "700",
   },
   markerPinFrame: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     borderWidth: 3,
     borderColor: "#C5A880",
     backgroundColor: "#FFF8E8",
-    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
@@ -548,19 +713,12 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   markerPinFrameSelected: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
     borderColor: "#E2C36D",
-    borderWidth: 4,
-    shadowColor: "#E2C36D",
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 10,
   },
   markerPhoto: {
-    width: "100%",
-    height: "100%",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   markerArrow: {
     width: 0,
@@ -575,7 +733,6 @@ const styles = StyleSheet.create({
   },
   markerArrowSelected: {
     borderTopColor: "#E2C36D",
-    borderTopWidth: 11,
   },
   floatingBottomSection: {
     position: "absolute",
@@ -646,11 +803,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   museumName: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#31241B",
-    flex: 1,
-    marginRight: 6,
+    flexWrap: "wrap",
+    lineHeight: 20,
   },
   museumDistance: {
     fontSize: 12,
