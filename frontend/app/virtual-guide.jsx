@@ -999,6 +999,7 @@ export default function VirtualGuide() {
   const [isStreamingReply, setIsStreamingReply] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [lastSpokenText, setLastSpokenText] = useState("");
+  const [showDetails, setShowDetails] = useState(false);
 
   const audioUrl = params?.audioUrl ? safeDecode(params.audioUrl) : null;
   const guideText = params?.text ? safeDecode(params.text) : "";
@@ -1629,8 +1630,6 @@ export default function VirtualGuide() {
                 isUser ? styles.userMessageText : styles.assistantMessageText,
                 isRTL && styles.rtlText,
               ]}
-              numberOfLines={isUser ? 2 : 4}
-              ellipsizeMode="tail"
             >
               {messageText || (isRTL ? "..." : "...")}
             </Text>
@@ -1663,179 +1662,156 @@ export default function VirtualGuide() {
           onError={(error) => console.error("WebView error:", error)}
         />
 
-        <View pointerEvents="box-none" style={styles.overlay}>
-          <View style={styles.headerWrap}>
-            <BlurView intensity={45} tint="dark" style={styles.headerCard}>
-              <View style={styles.headerTopRow}>
-                <View style={styles.headerCopy}>
-                  <Text style={[styles.kicker, isRTL && styles.rtlText]}>
-                    Immersive AI Museum Companion
-                  </Text>
-                  <Text
-                    style={[styles.title, isRTL && styles.rtlText]}
-                    numberOfLines={1}
-                  >
-                    {headerTitle}
-                  </Text>
-                  <Text
-                    style={[styles.subtitle, isRTL && styles.rtlText]}
-                    numberOfLines={2}
-                  >
-                    {headerSubtitle}
-                  </Text>
-                </View>
-                <View style={styles.stateStack}>
-                  <View
-                    style={[
-                      styles.statePill,
-                      guideState === "speaking" && styles.statePillActive,
-                    ]}
-                  >
-                    <Text style={styles.statePillText}>{guideState}</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.actionPill}
-                    onPress={handleMuteToggle}
-                    activeOpacity={0.85}
-                  >
-                    <Text style={styles.actionPillText}>
-                      {isMuted
-                        ? isRTL
-                          ? "تشغيل"
-                          : "Unmute"
-                        : isRTL
-                          ? "كتم"
-                          : "Mute"}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-              <View style={styles.actionRow}>
+        {/* ── Expanded UI: slim top bar + bottom suggestions/input ── */}
+        {showDetails && (
+          <View pointerEvents="box-none" style={styles.overlay}>
+            {/* ── Slim top action bar ── */}
+            <View style={styles.topBarWrap}>
+              <BlurView intensity={40} tint="dark" style={styles.topBar}>
                 <TouchableOpacity
-                  style={styles.secondaryButton}
+                  style={styles.topBarPill}
                   onPress={handleReplay}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.secondaryButtonText}>
+                  <Text style={styles.topBarPillText}>
                     {isRTL ? "إعادة" : "Replay"}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.secondaryButton}
+                  style={styles.topBarPill}
                   onPress={handleVoicePlaceholder}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.secondaryButtonText}>
+                  <Text style={styles.topBarPillText}>
                     {isRTL ? "تحدث" : "Voice"}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.secondaryButton}
+                  style={styles.topBarPill}
                   onPress={stopVoice}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.secondaryButtonText}>
+                  <Text style={styles.topBarPillText}>
                     {isRTL ? "إيقاف" : "Stop"}
                   </Text>
                 </TouchableOpacity>
-              </View>
-            </BlurView>
-          </View>
+                <TouchableOpacity
+                  style={[styles.topBarPill, styles.topBarShowLess]}
+                  onPress={() => setShowDetails(false)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={[styles.topBarPillText, styles.topBarShowLessText]}>
+                    {isRTL ? "إخفاء" : "Show Less"}
+                  </Text>
+                </TouchableOpacity>
+              </BlurView>
+            </View>
 
-          <View style={styles.chatPanelWrap}>
-            <BlurView intensity={70} tint="dark" style={styles.chatPanel}>
-              <View style={styles.suggestionsHeader}>
+            {/* ── Bottom: suggestions + input ── */}
+            <View style={styles.bottomStripWrap}>
+              <BlurView intensity={55} tint="dark" style={styles.bottomStrip}>
+                {/* ── Chat messages ── */}
+                {messages.length > 0 && (
+                  <ScrollView
+                    ref={messageScrollRef}
+                    style={styles.chatScrollArea}
+                    contentContainerStyle={styles.chatScrollContent}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                  >
+                    {messages.map((msg) => renderMessage(msg))}
+                  </ScrollView>
+                )}
+
                 <Text style={[styles.sectionLabel, isRTL && styles.rtlText]}>
                   {isRTL ? "أسئلة مقترحة" : "Suggested questions"}
                 </Text>
-              </View>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.suggestionRow}
-              >
-                {suggestedQuestions.slice(0, 3).map((question) => (
-                  <TouchableOpacity
-                    key={question}
-                    style={styles.suggestionChip}
-                    onPress={() => handleSuggestionPress(question)}
-                    activeOpacity={0.86}
-                    disabled={isThinking}
-                  >
-                    <Text
-                      style={[styles.suggestionText, isRTL && styles.rtlText]}
-                      numberOfLines={2}
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.suggestionRow}
+                >
+                  {suggestedQuestions.map((question) => (
+                    <TouchableOpacity
+                      key={question}
+                      style={styles.suggestionChip}
+                      onPress={() => handleSuggestionPress(question)}
+                      activeOpacity={0.86}
+                      disabled={isThinking}
                     >
-                      {question}
+                      <Text
+                        style={[styles.suggestionText, isRTL && styles.rtlText]}
+                      >
+                        {question}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                {isThinking && (
+                  <View style={styles.thinkingRow}>
+                    <ActivityIndicator size="small" color="#F0C86B" />
+                    <Text style={[styles.typingText, isRTL && styles.rtlText]}>
+                      {isRTL ? "المرشد يفكر..." : "The guide is thinking..."}
+                    </Text>
+                  </View>
+                )}
+
+                <View style={styles.inputWrap}>
+                  <TouchableOpacity
+                    style={styles.micButton}
+                    onPress={handleVoicePlaceholder}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.micButtonText}>STT</Text>
+                  </TouchableOpacity>
+                  <TextInput
+                    value={draft}
+                    onChangeText={setDraft}
+                    placeholder={inputPlaceholder}
+                    placeholderTextColor="#8D846B"
+                    style={[styles.input, isRTL && styles.rtlInput]}
+                    multiline
+                    textAlignVertical="center"
+                    editable={!isThinking}
+                    onSubmitEditing={() => sendMessage(draft)}
+                    returnKeyType="send"
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.sendButton,
+                      (!draft.trim() || isThinking) && styles.sendButtonDisabled,
+                    ]}
+                    onPress={() => sendMessage(draft)}
+                    activeOpacity={0.85}
+                    disabled={!draft.trim() || isThinking}
+                  >
+                    <Text style={styles.sendButtonText}>
+                      {isRTL ? "إرسال" : "Send"}
                     </Text>
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              <ScrollView
-                ref={messageScrollRef}
-                style={styles.messageList}
-                contentContainerStyle={styles.messageListContent}
-                showsVerticalScrollIndicator={false}
-              >
-                {messages.slice(-3).map(renderMessage)}
-                {isThinking ? (
-                  <View style={[styles.messageRow, styles.assistantRow]}>
-                    <View
-                      style={[
-                        styles.messageBubble,
-                        styles.assistantBubble,
-                        styles.typingBubble,
-                      ]}
-                    >
-                      <ActivityIndicator size="small" color="#F0C86B" />
-                      <Text
-                        style={[styles.typingText, isRTL && styles.rtlText]}
-                      >
-                        {isRTL ? "المرشد يفكر..." : "The guide is thinking..."}
-                      </Text>
-                    </View>
-                  </View>
-                ) : null}
-              </ScrollView>
-
-              <View style={styles.inputWrap}>
-                <TouchableOpacity
-                  style={styles.micButton}
-                  onPress={handleVoicePlaceholder}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.micButtonText}>STT</Text>
-                </TouchableOpacity>
-                <TextInput
-                  value={draft}
-                  onChangeText={setDraft}
-                  placeholder={inputPlaceholder}
-                  placeholderTextColor="#8D846B"
-                  style={[styles.input, isRTL && styles.rtlInput]}
-                  multiline
-                  textAlignVertical="center"
-                  editable={!isThinking}
-                  onSubmitEditing={() => sendMessage(draft)}
-                  returnKeyType="send"
-                />
-                <TouchableOpacity
-                  style={[
-                    styles.sendButton,
-                    (!draft.trim() || isThinking) && styles.sendButtonDisabled,
-                  ]}
-                  onPress={() => sendMessage(draft)}
-                  activeOpacity={0.85}
-                  disabled={!draft.trim() || isThinking}
-                >
-                  <Text style={styles.sendButtonText}>
-                    {isRTL ? "إرسال" : "Send"}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </BlurView>
+                </View>
+              </BlurView>
+            </View>
           </View>
-        </View>
+        )}
+
+        {/* ── Collapsed: floating "Ask More" button ── */}
+        {!showDetails && (
+          <View pointerEvents="box-none" style={styles.floatingAskWrap}>
+            <TouchableOpacity
+              style={styles.floatingAskButton}
+              onPress={() => setShowDetails(true)}
+              activeOpacity={0.85}
+            >
+              <BlurView intensity={50} tint="dark" style={styles.floatingAskInner}>
+                <Text style={styles.floatingAskText}>
+                  {isRTL ? "اسأل المزيد" : "Ask More"}
+                </Text>
+              </BlurView>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <TouchableOpacity
           style={styles.backButton}
@@ -1873,61 +1849,61 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: "space-between",
     paddingHorizontal: 14,
-    paddingTop: 44,
+    paddingTop: 48,
     paddingBottom: 10,
   },
-  headerWrap: { width: "100%" },
-  headerCard: {
-    borderRadius: 22,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(240, 200, 107, 0.16)",
-    backgroundColor: "rgba(9, 7, 4, 0.7)",
-  },
-  headerTopRow: {
+  topBarWrap: { width: "100%", paddingLeft: 60 },
+  topBar: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  headerCopy: { flex: 1 },
-  kicker: {
-    color: "#C79B3B",
-    fontSize: 9,
-    letterSpacing: 2,
-    textTransform: "uppercase",
-    marginBottom: 6,
-  },
-  title: {
-    color: "#F5E8CB",
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  subtitle: {
-    color: "#C9BA9C",
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  stateStack: { alignItems: "flex-end", gap: 8 },
-  statePill: {
-    minWidth: 82,
+    alignItems: "center",
+    gap: 8,
     borderRadius: 999,
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    paddingVertical: 8,
+    overflow: "hidden",
+    backgroundColor: "rgba(9, 7, 4, 0.55)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+  },
+  topBarPill: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  topBarPillText: {
+    color: "#EDE0BE",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  topBarShowLess: {
+    backgroundColor: "rgba(240, 200, 107, 0.15)",
+    borderColor: "rgba(240, 200, 107, 0.3)",
+    marginLeft: "auto",
+  },
+  topBarShowLessText: {
+    color: "#F0C86B",
+    fontWeight: "700",
+  },
+  bottomStripWrap: { width: "100%" },
+  bottomStrip: {
+    borderRadius: 22,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 10,
+    overflow: "hidden",
+    backgroundColor: "rgba(7, 6, 4, 0.7)",
+    borderWidth: 1,
+    borderColor: "rgba(240, 200, 107, 0.14)",
+  },
+  thinkingRow: {
+    flexDirection: "row",
     alignItems: "center",
-  },
-  statePillActive: {
-    backgroundColor: "rgba(240, 200, 107, 0.18)",
-  },
-  statePillText: {
-    color: "#F5E8CB",
-    textTransform: "uppercase",
-    fontSize: 10,
-    letterSpacing: 1.6,
+    gap: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
   },
   actionPill: {
     borderRadius: 999,
@@ -1965,6 +1941,42 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     minHeight: 240,
     maxHeight: "64%",
+  },
+  chatScrollArea: {
+    maxHeight: 180,
+    marginBottom: 10,
+  },
+  chatScrollContent: {
+    gap: 8,
+    paddingBottom: 4,
+  },
+  floatingAskWrap: {
+    position: "absolute",
+    bottom: 36,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 15,
+  },
+  floatingAskButton: {
+    borderRadius: 999,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(240, 200, 107, 0.35)",
+  },
+  floatingAskInner: {
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(12, 9, 3, 0.65)",
+  },
+  floatingAskText: {
+    color: "#F0C86B",
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
   },
   suggestionsHeader: { marginBottom: 10 },
   sectionLabel: {

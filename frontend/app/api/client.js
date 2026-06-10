@@ -49,6 +49,11 @@ function expandMuseumCandidates(values) {
   return [...expanded];
 }
 
+function getUserIdFromReview(review) {
+  const user = review?.user;
+  return typeof user === "string" ? user : user?._id || user?.id;
+}
+
 async function resolveMuseumId({ museumId, museumLookupName, museumName }) {
   const rawMuseumId = museumId == null ? "" : String(museumId).trim();
 
@@ -193,16 +198,66 @@ export const api = {
         throw new Error("Unable to resolve the selected museum.");
       }
 
+      const reviewBody = {
+        museum: resolvedMuseumId,
+        rating: payload.rating,
+        title: payload.title,
+        comment: payload.comment,
+        recommend: payload.recommend,
+        easeRating: payload.easeRating,
+        facilitiesRating: payload.facilitiesRating,
+        images: payload.images,
+      };
+
       return apiRequest("/api/reviews", {
         method: "POST",
-        body: {
-          museum: resolvedMuseumId,
-          rating: payload.rating,
-          comment: payload.comment,
-          images: payload.images,
-        },
+        body: reviewBody,
         token,
+      }).catch(async (error) => {
+        if (error?.status !== 409) {
+          throw error;
+        }
+
+        const [reviewsResponse, meResponse] = await Promise.all([
+          apiRequest(`/api/reviews?museumId=${resolvedMuseumId}`),
+          apiRequest("/api/users/me", { token }),
+        ]);
+        const currentUserId = meResponse?.data?._id || meResponse?.data?.id;
+        const existingReview = (reviewsResponse?.data || []).find(
+          (review) => getUserIdFromReview(review) === currentUserId,
+        );
+
+        if (!existingReview?._id) {
+          throw error;
+        }
+
+        const existingImages = Array.isArray(existingReview.images)
+          ? existingReview.images
+          : [];
+        const nextImages = Array.isArray(payload.images) ? payload.images : [];
+        const mergedImages = [...new Set([...existingImages, ...nextImages])];
+
+        return apiRequest(`/api/reviews/${existingReview._id}`, {
+          method: "PATCH",
+          body: {
+            rating: payload.rating,
+            title: payload.title,
+            comment: payload.comment,
+            recommend: payload.recommend,
+            easeRating: payload.easeRating,
+            facilitiesRating: payload.facilitiesRating,
+            images: mergedImages,
+          },
+          token,
+        });
       });
+    });
+  },
+  updateReview(id, payload, token) {
+    return apiRequest(`/api/reviews/${id}`, {
+      method: "PATCH",
+      body: payload,
+      token,
     });
   },
 

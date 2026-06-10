@@ -100,8 +100,10 @@ export default function WriteReview() {
       if (photos && photos.length > 0) {
         for (const localUri of photos) {
           const uploadResult = await uploadImageToCloudinary(localUri, "reviews");
-          if (uploadResult?.secure_url) {
-            uploadedImageUrls.push(uploadResult.secure_url);
+          const uploadedUrl =
+            uploadResult?.secure_url || uploadResult?.url || uploadResult;
+          if (typeof uploadedUrl === "string" && uploadedUrl.trim()) {
+            uploadedImageUrls.push(uploadedUrl.trim());
           }
         }
       }
@@ -111,7 +113,11 @@ export default function WriteReview() {
         museumName,
         museumLookupName,
         rating: overallRating,
-        comment: reviewText || title || undefined,
+        title: title || undefined,
+        comment: reviewText || undefined,
+        recommend,
+        easeRating: easeRating || undefined,
+        facilitiesRating: facilitiesRating || undefined,
         images: uploadedImageUrls,
       };
 
@@ -391,6 +397,7 @@ export default function WriteReview() {
           visible={selfieModalVisible}
           onClose={() => setSelfieModalVisible(false)}
           artifactTitle={museumName || ""}
+          museumName={museumName || ""}
           initialModelId={selfieModelId}
           onSaved={(savedUri) => {
             console.log("Selfie souvenir saved:", savedUri);

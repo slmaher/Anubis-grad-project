@@ -14,6 +14,28 @@ import { UserRole } from "../users/user.roles";
 
 const reviewsRouter = Router();
 
+const normalizeReviewImages = (review: any) => {
+  const object = typeof review.toObject === "function" ? review.toObject() : review;
+  const rawImages = [
+    ...(Array.isArray(object.images) ? object.images : []),
+    object.image,
+    object.imageUrl,
+    object.photo,
+    object.photoUrl,
+  ];
+
+  return {
+    ...object,
+    images: rawImages
+      .map((item) => {
+        if (typeof item === "string") return item;
+        return item?.secure_url || item?.url || item?.uri;
+      })
+      .filter((uri) => typeof uri === "string" && uri.trim())
+      .map((uri) => uri.trim()),
+  };
+};
+
 // GET /api/reviews - list reviews (public, optional ?museumId= filter)
 reviewsRouter.get("/", async (req, res: Response, next: NextFunction) => {
   try {
@@ -33,8 +55,8 @@ reviewsRouter.get("/", async (req, res: Response, next: NextFunction) => {
     }
 
     const reviews = await ReviewModel.find(filter)
-      .populate("user", "name email")
-      .populate("museum", "name city")
+      .populate("user", "name email avatar role")
+      .populate("museum", "name city imageUrl")
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(skip);
@@ -51,7 +73,7 @@ reviewsRouter.get("/", async (req, res: Response, next: NextFunction) => {
 
     return res.json({
       success: true,
-      data: reviews,
+      data: reviews.map(normalizeReviewImages),
       pagination: { limit, skip, total },
       averageRating: avgRating ? Number(avgRating.toFixed(2)) : 0,
     });
@@ -81,7 +103,7 @@ reviewsRouter.get(
 
       return res.json({
         success: true,
-        data: reviews,
+        data: reviews.map(normalizeReviewImages),
         pagination: { limit, skip, total },
       });
     } catch (err) {
@@ -94,8 +116,8 @@ reviewsRouter.get(
 reviewsRouter.get("/:id", async (req, res: Response, next: NextFunction) => {
   try {
     const review = await ReviewModel.findById(req.params.id)
-      .populate("user", "name email")
-      .populate("museum", "name description city location");
+      .populate("user", "name email avatar role")
+      .populate("museum", "name description city location imageUrl");
 
     if (!review) {
       return res
@@ -103,7 +125,7 @@ reviewsRouter.get("/:id", async (req, res: Response, next: NextFunction) => {
         .json({ success: false, message: "Review not found" });
     }
 
-    return res.json({ success: true, data: review });
+    return res.json({ success: true, data: normalizeReviewImages(review) });
   } catch (err) {
     next(err);
   }
@@ -142,10 +164,34 @@ reviewsRouter.post(
       });
 
       if (existingReview) {
-        return res.status(409).json({
-          success: false,
-          message:
-            "You have already reviewed this museum. Use PATCH to update your review.",
+        const mergedImages =
+          Array.isArray(dto.images) && dto.images.length > 0
+            ? [...new Set([...(existingReview.images || []), ...dto.images])]
+            : existingReview.images || [];
+
+        const updated = await ReviewModel.findByIdAndUpdate(
+          existingReview._id,
+          {
+            $set: {
+              rating: dto.rating,
+              title: dto.title,
+              comment: dto.comment,
+              recommend: dto.recommend,
+              easeRating: dto.easeRating,
+              facilitiesRating: dto.facilitiesRating,
+              images: mergedImages,
+            },
+          },
+          { new: true },
+        ).populate([
+          { path: "user", select: "name email avatar role" },
+          { path: "museum", select: "name city imageUrl" },
+        ]);
+
+        return res.json({
+          success: true,
+          data: updated ? normalizeReviewImages(updated) : updated,
+          updated: true,
         });
       }
 
@@ -153,13 +199,17 @@ reviewsRouter.post(
         user: userId,
         museum: museumObjectId,
         rating: dto.rating,
+        title: dto.title,
         comment: dto.comment,
+        recommend: dto.recommend,
+        easeRating: dto.easeRating,
+        facilitiesRating: dto.facilitiesRating,
         images: dto.images,
       });
 
       const populated = await review.populate([
-        { path: "user", select: "name email" },
-        { path: "museum", select: "name city" },
+        { path: "user", select: "name email avatar role" },
+        { path: "museum", select: "name city imageUrl" },
       ]);
 
       return res.status(201).json({ success: true, data: populated });
@@ -198,14 +248,18 @@ reviewsRouter.patch(
         {
           $set: {
             ...(dto.rating != null && { rating: dto.rating }),
+            ...(dto.title !== undefined && { title: dto.title }),
             ...(dto.comment !== undefined && { comment: dto.comment }),
+            ...(dto.recommend !== undefined && { recommend: dto.recommend }),
+            ...(dto.easeRating !== undefined && { easeRating: dto.easeRating }),
+            ...(dto.facilitiesRating !== undefined && { facilitiesRating: dto.facilitiesRating }),
             ...(dto.images !== undefined && { images: dto.images }),
           },
         },
         { new: true },
       ).populate([
-        { path: "user", select: "name email" },
-        { path: "museum", select: "name city" },
+        { path: "user", select: "name email avatar role" },
+        { path: "museum", select: "name city imageUrl" },
       ]);
 
       return res.json({ success: true, data: updated });

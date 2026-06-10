@@ -35,14 +35,58 @@ const DEFAULT_TRANSFORM = {
   rotation: 0,
 };
 
+const MUSEUM_ARABIC_NAMES = [
+  {
+    keywords: ["grand egyptian museum", "gem"],
+    ar: "المتحف المصري الكبير",
+  },
+  {
+    keywords: ["egyptian museum", "tahrir"],
+    ar: "المتحف المصري",
+  },
+  {
+    keywords: [
+      "national museum of egyptian civilization",
+      "national museum of egypt",
+      "egyptian civilization",
+      "nmec",
+    ],
+    ar: "المتحف القومي للحضارة المصرية",
+  },
+  {
+    keywords: ["museum of islamic art"],
+    ar: "متحف الفن الإسلامي",
+  },
+  {
+    keywords: ["coptic museum"],
+    ar: "المتحف القبطي",
+  },
+];
+
+const getMuseumWatermark = (name) => {
+  const english = String(name || "Anubis Museum")
+    .replace(/\s+/g, " ")
+    .trim();
+  const normalized = english.toLowerCase();
+  const matched = MUSEUM_ARABIC_NAMES.find((entry) =>
+    entry.keywords.some((keyword) => normalized.includes(keyword)),
+  );
+
+  return {
+    english,
+    arabic: matched?.ar || english,
+  };
+};
+
 const sanitizeModelName = (name) =>
   String(name || "artifact")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "") || "artifact";
 
-const makeModelHtml = (modelUri) => {
+const makeModelHtml = (modelUri, watermark) => {
   const safeSrc = JSON.stringify(modelUri || "");
+  const safeWatermark = JSON.stringify(watermark || getMuseumWatermark(""));
 
   return `<!doctype html>
 <html lang="en">
@@ -105,6 +149,7 @@ const makeModelHtml = (modelUri) => {
     <script>
       const stage = document.getElementById('stage');
       const viewer = document.getElementById('viewer');
+      const watermark = ${safeWatermark};
 
       const transform = {
         translateX: 0,
@@ -130,6 +175,84 @@ const makeModelHtml = (modelUri) => {
         image.src = src;
       });
 
+      const roundedRect = (ctx, x, y, width, height, radius) => {
+        const r = Math.min(radius, width / 2, height / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + width, y, x + width, y + height, r);
+        ctx.arcTo(x + width, y + height, x, y + height, r);
+        ctx.arcTo(x, y + height, x, y, r);
+        ctx.arcTo(x, y, x + width, y, r);
+        ctx.closePath();
+      };
+
+      const fitText = (ctx, text, maxWidth, startSize, minSize, fontFamily, weight = '700') => {
+        let size = startSize;
+        do {
+          ctx.font = weight + ' ' + size + 'px ' + fontFamily;
+          if (ctx.measureText(text).width <= maxWidth || size <= minSize) {
+            return size;
+          }
+          size -= 2;
+        } while (size > minSize);
+        return minSize;
+      };
+
+      const drawWatermark = (ctx, canvasWidth, canvasHeight) => {
+        const english = String(watermark?.english || '').trim();
+        const arabic = String(watermark?.arabic || '').trim();
+        if (!english && !arabic) return;
+
+        const margin = Math.max(22, canvasWidth * 0.045);
+        const boxWidth = canvasWidth - margin * 2;
+        const boxHeight = Math.max(116, canvasHeight * 0.13);
+        const x = margin;
+        const y = canvasHeight - boxHeight - margin;
+        const radius = Math.max(24, boxHeight * 0.22);
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+        ctx.shadowBlur = Math.max(18, canvasWidth * 0.025);
+        ctx.shadowOffsetY = Math.max(8, canvasHeight * 0.008);
+        roundedRect(ctx, x, y, boxWidth, boxHeight, radius);
+        const gradient = ctx.createLinearGradient(x, y, x + boxWidth, y + boxHeight);
+        gradient.addColorStop(0, 'rgba(18, 11, 7, 0.82)');
+        gradient.addColorStop(0.55, 'rgba(45, 31, 18, 0.72)');
+        gradient.addColorStop(1, 'rgba(108, 72, 25, 0.72)');
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        ctx.shadowColor = 'transparent';
+        ctx.lineWidth = Math.max(2, canvasWidth * 0.002);
+        ctx.strokeStyle = 'rgba(245, 202, 92, 0.72)';
+        roundedRect(ctx, x + 2, y + 2, boxWidth - 4, boxHeight - 4, radius - 2);
+        ctx.stroke();
+
+        const accentWidth = Math.max(54, canvasWidth * 0.12);
+        ctx.fillStyle = '#D4AF37';
+        roundedRect(ctx, x + margin * 0.55, y + boxHeight * 0.2, accentWidth, Math.max(5, boxHeight * 0.045), 20);
+        ctx.fill();
+
+        const textX = x + margin * 0.55;
+        const textMaxWidth = boxWidth - margin * 1.1;
+        const englishSize = fitText(ctx, english, textMaxWidth, Math.max(30, canvasWidth * 0.038), 22, 'Georgia, serif', '800');
+        ctx.direction = 'ltr';
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#FFF4DC';
+        ctx.font = '800 ' + englishSize + 'px Georgia, serif';
+        ctx.fillText(english, textX, y + boxHeight * 0.55);
+
+        if (arabic) {
+          const arabicSize = fitText(ctx, arabic, textMaxWidth, Math.max(28, canvasWidth * 0.035), 20, 'Tahoma, Arial, sans-serif', '800');
+          ctx.direction = 'rtl';
+          ctx.textAlign = 'right';
+          ctx.fillStyle = '#F5CA5C';
+          ctx.font = '800 ' + arabicSize + 'px Tahoma, Arial, sans-serif';
+          ctx.fillText(arabic, x + boxWidth - margin * 0.55, y + boxHeight * 0.82);
+        }
+        ctx.restore();
+      };
+
       window.__composeCapture = async ({ requestId, cameraDataUrl }) => {
         try {
           const overlayDataUrl = await viewer.toDataURL('image/png');
@@ -145,6 +268,7 @@ const makeModelHtml = (modelUri) => {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(cameraImage, 0, 0, canvas.width, canvas.height);
           ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
+          drawWatermark(ctx, canvas.width, canvas.height);
 
           window.ReactNativeWebView.postMessage(JSON.stringify({
             type: 'captureResult',
@@ -172,6 +296,7 @@ export default function SelfieArModal({
   visible,
   onClose,
   artifactTitle = "",
+  museumName = "",
   initialModelId = "",
   onSaved,
 }) {
@@ -206,6 +331,10 @@ export default function SelfieArModal({
   );
 
   const isPrefilledModel = Boolean(initialModelId || artifactTitle);
+  const watermark = useMemo(
+    () => getMuseumWatermark(museumName || artifactTitle),
+    [artifactTitle, museumName],
+  );
 
   useEffect(() => {
     if (!visible) {
@@ -496,8 +625,8 @@ export default function SelfieArModal({
       return null;
     }
 
-    return makeModelHtml(modelUri);
-  }, [modelUri]);
+    return makeModelHtml(modelUri, watermark);
+  }, [modelUri, watermark]);
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -641,6 +770,18 @@ export default function SelfieArModal({
                 </RotationGestureHandler>
               </PanGestureHandler>
             )}
+
+            {permission?.granted && (
+              <View pointerEvents="none" style={styles.watermarkPreview}>
+                <View style={styles.watermarkAccent} />
+                <Text style={styles.watermarkEnglish} numberOfLines={1}>
+                  {watermark.english}
+                </Text>
+                <Text style={styles.watermarkArabic} numberOfLines={1}>
+                  {watermark.arabic}
+                </Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.footer}>
@@ -709,7 +850,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#090603",
-    paddingTop: Platform.OS === "ios" ? 20: 14,
+    paddingTop: Platform.OS === "ios" ? 45: 20,
     paddingHorizontal: 18,
     paddingBottom: 18,
   },
@@ -830,6 +971,44 @@ const styles = StyleSheet.create({
   webView: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "transparent",
+  },
+  watermarkPreview: {
+    position: "absolute",
+    left: 18,
+    right: 18,
+    bottom: 18,
+    borderRadius: 22,
+    paddingHorizontal: 18,
+    paddingVertical: 13,
+    borderWidth: 1,
+    borderColor: "rgba(245,202,92,0.62)",
+    backgroundColor: "rgba(18,11,7,0.72)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 8,
+  },
+  watermarkAccent: {
+    width: 58,
+    height: 4,
+    borderRadius: 4,
+    backgroundColor: "#D4AF37",
+    marginBottom: 7,
+  },
+  watermarkEnglish: {
+    color: "#FFF4DC",
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "900",
+  },
+  watermarkArabic: {
+    color: "#F5CA5C",
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "900",
+    textAlign: "right",
+    marginTop: 2,
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,

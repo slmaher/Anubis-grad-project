@@ -29,6 +29,23 @@ const { width } = Dimensions.get("window");
 
 const CACHE_KEY_PREFIX = "tour_guide_cache_";
 
+const CURATED_RESTORED_IMAGES = [
+  {
+    key: "tut",
+    label: "Tutankhamun",
+    subtitle: "Final restored result",
+    source: require("../../assets/images/restoration_results/tutankhamun_final_result.png"),
+    keywords: ["tutankhamun", "tut", "king tut", "golden mask", "pharaoh mask"],
+  },
+  {
+    key: "nefertiti",
+    label: "Nefertiti",
+    subtitle: "Final restored result",
+    source: require("../../assets/images/restoration_results/nefertiti_final_result.png"),
+    keywords: ["nefertiti", "bust of nefertiti", "queen nefertiti"],
+  },
+];
+
 // In-memory cache to avoid AsyncStorage reads and duplicate network calls
 const inMemoryAudioCache = new Map(); // key -> audioUri
 const generationPromises = new Map(); // key -> Promise resolving to audioUri
@@ -766,31 +783,10 @@ export default function ScanResult() {
     );
   };
 
-  const restoredImageUrl = aiResult?.restoration?.final_image_url || null;
-  const resolvedRestoredImageUrl = restoredImageUrl && !restoredImageUrl.startsWith('http') ? `${API_BASE_URL}${restoredImageUrl}` : restoredImageUrl;
-
-  // Static restored images for Tut and Cleopatra
-  const STATIC_RESTORED_IMAGES = [
-    {
-      key: 'tut',
-      label: 'Tutankhamun',
-      subtitle: 'The Golden King — Restored',
-      source: require('../../assets/images/tutankhamun.jpg'),
-      keywords: ['tutankhamun', 'tut', 'king tut', 'golden mask', 'pharaoh mask'],
-    },
-    {
-      key: 'cleopatra',
-      label: 'Cleopatra VII',
-      subtitle: 'Queen of Egypt — Restored',
-      source: require('../../assets/images/cleopatra-restored.png'),
-      keywords: ['cleopatra', 'queen', 'ptolemaic'],
-    },
-  ];
-
   const matchedStaticImage = useMemo(() => {
     if (!artifactTitle) return null;
     const titleLower = artifactTitle.toLowerCase();
-    return STATIC_RESTORED_IMAGES.find((img) =>
+    return CURATED_RESTORED_IMAGES.find((img) =>
       img.keywords.some((kw) => titleLower.includes(kw))
     ) || null;
   }, [artifactTitle]);
@@ -1132,9 +1128,7 @@ export default function ScanResult() {
                 <View style={styles.restorationSection}>
                   <Text style={styles.sectionSubtitle}>Restored Result</Text>
 
-                  {/* Prioritize predefined static restoration images */}
                   {matchedStaticImage ? (
-                    /* Single matched static image */
                     <View style={styles.staticImageCard}>
                       <Image
                         source={matchedStaticImage.source}
@@ -1146,35 +1140,10 @@ export default function ScanResult() {
                         <Text style={styles.staticImageSubtitle}>{matchedStaticImage.subtitle}</Text>
                       </View>
                     </View>
-                  ) : resolvedRestoredImageUrl ? (
-                    /* Dynamic restoration from AI */
-                    <Image
-                      source={{ uri: resolvedRestoredImageUrl }}
-                      style={styles.restoredImage}
-                      resizeMode="contain"
-                    />
                   ) : (
-                    /* Show both Tut and Cleopatra as restoration showcase */
-                    <View>
-                      <Text style={styles.restorationShowcaseHint}>
-                        Example restorations from our collection
-                      </Text>
-                      <View style={styles.staticImageRow}>
-                        {STATIC_RESTORED_IMAGES.map((img) => (
-                          <View key={img.key} style={styles.staticImageCardHalf}>
-                            <Image
-                              source={img.source}
-                              style={styles.restoredImageHalf}
-                              resizeMode="cover"
-                            />
-                            <View style={styles.staticImageOverlayHalf}>
-                              <Text style={styles.staticImageLabelSmall}>{img.label}</Text>
-                              <Text style={styles.staticImageSubtitleSmall}>{img.subtitle}</Text>
-                            </View>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
+                    <Text style={styles.restorationShowcaseHint}>
+                      No curated restored result is available for this artifact.
+                    </Text>
                   )}
                 </View>
               </View>
