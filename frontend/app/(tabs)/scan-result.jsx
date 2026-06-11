@@ -22,7 +22,7 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { API_BASE_URL } from "../api/baseUrl";
 import { analyzeArtifactImage } from "../api/ai";
-import artifactModels from "../../src/data/artifactModels";
+import { resolveArtifactModelUrl } from "../../src/data/artifactModels";
 import AR_MODELS, { getSuggestedArModel } from "../../src/data/arModels";
 
 const { width } = Dimensions.get("window");
@@ -729,23 +729,10 @@ export default function ScanResult() {
     return `${(value * 100).toFixed(1)}%`;
   }, [aiResult]);
 
-  const sketchfabUrl = useMemo(() => {
-    if (!artifactTitle) return null;
-    const exactMatch = artifactModels[artifactTitle];
-    if (exactMatch) return exactMatch;
-
-    // Fallback: try finding a key that is a substring
-    const titleLower = artifactTitle.toLowerCase();
-    for (const key of Object.keys(artifactModels)) {
-      if (
-        titleLower.includes(key.toLowerCase()) ||
-        key.toLowerCase().includes(titleLower)
-      ) {
-        return artifactModels[key];
-      }
-    }
-    return null;
-  }, [artifactTitle]);
+  const sketchfabUrl = useMemo(
+    () => resolveArtifactModelUrl(artifactTitle),
+    [artifactTitle],
+  );
 
   const modelType = useMemo(() => {
     if (!aiResult) return null;
