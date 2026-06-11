@@ -110,6 +110,14 @@ export default function MenuScreen({ onClose }) {
       iconName: "location-outline",
       route: "/map",
     },
+    {
+      id: "ar_souvenir",
+      label: t("menu.ar_souvenir"),
+      iconLib: "material",
+      iconName: "cube-scan",
+      route: "/ar-souvenir",
+      themed: true,
+    },
   ];
 
   const [counts, setCounts] = React.useState({
@@ -330,22 +338,41 @@ export default function MenuScreen({ onClose }) {
               {renderedMenuItems.map((item, index) => (
                 <React.Fragment key={item.id || item.label}>
                   <TouchableOpacity
-                    style={styles.menuRow}
+                    style={[
+                      styles.menuRow,
+                      item.themed && styles.menuRowThemed,
+                    ]}
                     onPress={() => handleMenuPress(item)}
                   >
-                    <View style={styles.iconBox}>
+                    <View
+                      style={[
+                        styles.iconBox,
+                        item.themed && styles.iconBoxThemed,
+                      ]}
+                    >
                       {item.iconLib === "material" ? (
                         <MaterialCommunityIcons
                           name={item.iconName}
                           size={24}
-                          color={DARK}
+                          color={item.themed ? "#D4AF37" : DARK}
                         />
                       ) : (
-                        <Ionicons name={item.iconName} size={22} color={DARK} />
+                        <Ionicons
+                          name={item.iconName}
+                          size={22}
+                          color={item.themed ? "#D4AF37" : DARK}
+                        />
                       )}
                     </View>
                     <View style={styles.labelRow}>
-                      <Text style={styles.menuLabel}>{item.label}</Text>
+                      <Text
+                        style={[
+                          styles.menuLabel,
+                          item.themed && styles.menuLabelThemed,
+                        ]}
+                      >
+                        {item.label}
+                      </Text>
                       {item.countKey && counts[item.countKey] > 0 && (
                         <View style={styles.badge}>
                           <Text style={styles.badgeText}>
@@ -359,6 +386,7 @@ export default function MenuScreen({ onClose }) {
                     <Text
                       style={[
                         styles.chevron,
+                        item.themed && styles.chevronThemed,
                         item.isLanguage &&
                           languageMenuVisible && {
                             transform: [{ rotate: "90deg" }],
@@ -493,6 +521,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: DIVIDER,
   },
+  menuRowThemed: {
+    marginHorizontal: 12,
+    marginVertical: 4,
+    paddingVertical: 12,
+    borderRadius: 18,
+    borderBottomWidth: 0,
+    backgroundColor: "rgba(26, 19, 12, 0.92)",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.24)",
+  },
   iconBox: {
     width: 40,
     height: 40,
@@ -501,12 +539,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 16,
   },
+  iconBoxThemed: {
+    backgroundColor: "rgba(212, 175, 55, 0.12)",
+  },
   iconText: { fontSize: 24 },
   menuLabel: {
     fontSize: 16,
     fontWeight: "500",
     color: DARK,
     letterSpacing: 0.2,
+  },
+  menuLabelThemed: {
+    color: "#F5E8CB",
+    fontWeight: "700",
   },
   labelRow: {
     flex: 1,
@@ -533,6 +578,9 @@ const styles = StyleSheet.create({
     fontSize: 26,
     color: MUTED,
     lineHeight: 30,
+  },
+  chevronThemed: {
+    color: "#D4AF37",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

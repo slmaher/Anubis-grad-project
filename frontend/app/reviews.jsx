@@ -12,6 +12,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "./api/client";
+import SelfieArModal from "../src/components/SelfieArModal";
+import { getSuggestedArModel } from "../src/data/arModels";
 
 const DEFAULT_AVATAR = require("../assets/images/profile-you.png");
 
@@ -32,6 +34,10 @@ export default function Reviews() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selfieModalVisible, setSelfieModalVisible] = useState(false);
+  const suggestedArModel = getSuggestedArModel(
+    typeof museumName === "string" ? museumName : "",
+  );
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -149,14 +155,14 @@ export default function Reviews() {
           </Text>
           <TouchableOpacity
             style={styles.selfieQuickButton}
-            onPress={() =>
-              router.push({
-                pathname: "/write-review",
-                params: { museumId, museumName, museumLookupName },
-              })
-            }
+            onPress={() => setSelfieModalVisible(true)}
             activeOpacity={0.9}
           >
+            <MaterialCommunityIcons
+              name="camera-iris"
+              size={14}
+              color="#FFF4DC"
+            />
             <Text style={styles.selfieQuickButtonText}>Take Selfie</Text>
           </TouchableOpacity>
         </View>
@@ -315,6 +321,14 @@ export default function Reviews() {
       >
         <Text style={styles.addButtonText}>+</Text>
       </TouchableOpacity>
+
+      <SelfieArModal
+        visible={selfieModalVisible}
+        onClose={() => setSelfieModalVisible(false)}
+        artifactTitle={typeof museumName === "string" ? museumName : ""}
+        museumName={typeof museumName === "string" ? museumName : ""}
+        initialModelId={suggestedArModel.id}
+      />
     </View>
   );
 }
@@ -359,6 +373,9 @@ const styles = StyleSheet.create({
     width: 40,
   },
   selfieQuickButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     borderRadius: 999,
     backgroundColor: "#000",
     paddingHorizontal: 14,
